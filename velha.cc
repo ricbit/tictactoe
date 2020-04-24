@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <cstdlib>
+#include <algorithm>
 
 using namespace std;
 
@@ -26,7 +26,11 @@ class Geometry {
   }
   void fill_terrain(vector<Direction>& terrain, int pos) {
     if (pos == D) {
-      winning_lines.push_back(terrain);
+      auto it = find_if(begin(terrain), end(terrain),
+          [](auto& elem) { return elem != Direction::equal; });
+      if (it != end(terrain) && *it == Direction::up) {
+        winning_lines.push_back(terrain);
+      }
       return;
     }
     for (auto dir : all_directions) {
@@ -42,7 +46,7 @@ class Geometry {
 };
 
 int main() {
-  Geometry<3, 2> geom;
+  Geometry<5, 3> geom;
   for (auto line : geom.winning_lines) {
     for (auto elem : line) {
       cout << static_cast<int>(elem) << " ";
