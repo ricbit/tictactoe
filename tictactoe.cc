@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <ctgmath>
 
 using namespace std;
 
@@ -21,9 +22,10 @@ constexpr initializer_list<Direction> all_directions {
 template<int N, int D>
 class Geometry {
  public:
-  Geometry() {
+  Geometry() : accumulation_points(pow(N, D)) {
     construct_unique_terrains();
     construct_winning_lines();
+    construct_accumulation_points();
   }
   void fill_terrain(vector<Direction>& terrain, int pos) {
     if (pos == D) {
@@ -105,10 +107,18 @@ class Geometry {
     return ans;
   }
 
+  void construct_accumulation_points() {
+    for (const auto& line : winning_lines) {
+      for (const auto code : line) {
+        accumulation_points[code]++;
+      }
+    }
+  }
+
   void print_line(vector<Code>& line) {
     static_assert(D == 3);
     vector<vector<vector<char>>> board(N, vector<vector<char>>(
-      N, vector<char>(N, '.')));
+        N, vector<char>(N, '.')));
     for (int k = 0; k < N; k++) {
       vector<int> decoded = decode(line[k]);
       board[decoded[0]][decoded[1]][decoded[2]] = 'X';
@@ -124,12 +134,38 @@ class Geometry {
     }
   }
 
+  void print_points() {
+    static_assert(D == 3);
+    vector<vector<vector<char>>> board(N, vector<vector<char>>(
+        N, vector<char>(N, '.')));
+    for (int k = 0; k < pow(N, D); k++) {
+      vector<int> decoded = decode(k);
+      int points = accumulation_points[k];
+      board[decoded[0]][decoded[1]][decoded[2]] = encode_points(points);
+    }
+    for (int k = 0; k < N; k++) {
+      for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++) {
+          cout << board[k][j][i];
+        }
+        cout << "\n";
+      }
+      cout << "\n";
+    }
+  }
+
+  char encode_points(int points) {
+    return points < 10 ? '0' + points : 
+        points < 10 + 26 ? 'A' + points - 10 : '-';
+  }
+
   vector<vector<Direction>> unique_terrains;
   vector<vector<Code>> winning_lines;
+  vector<int> accumulation_points;
 };
 
 int main() {
-  Geometry<5, 3> geom;
+  Geometry<3, 3> geom;
   for (auto line : geom.winning_lines) {
     for (auto elem : line) {
       cout << static_cast<int>(elem) << " ";
@@ -137,5 +173,6 @@ int main() {
     cout << "\n";
     geom.print_line(line);
   }
+  geom.print_points();
   return 0;
 }
