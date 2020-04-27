@@ -22,10 +22,11 @@ constexpr initializer_list<Direction> all_directions {
 template<int N, int D>
 class Geometry {
  public:
-  Geometry() : accumulation_points(pow(N, D)) {
+  Geometry() : accumulation_points(pow(N, D)), winning_positions(pow(N, D)) {
     construct_unique_terrains();
     construct_winning_lines();
     construct_accumulation_points();
+    construct_winning_positions();
   }
   void fill_terrain(vector<Direction>& terrain, int pos) {
     if (pos == D) {
@@ -159,14 +160,39 @@ class Geometry {
         points < 10 + 26 ? 'A' + points - 10 : '-';
   }
 
+  void construct_winning_positions() {
+    int size = static_cast<int>(winning_lines.size());
+    for (int i = 0; i < size; i++) {
+      for (auto code : winning_lines[i]) {
+        winning_positions[code].push_back(i);
+      }
+    }
+  }
+
   vector<vector<Direction>> unique_terrains;
   vector<vector<Code>> winning_lines;
   vector<int> accumulation_points;
+  vector<vector<int>> winning_positions;
+};
+
+enum class Position {
+  X,
+  O,
+  empty
+};
+
+template<int N, int D>
+class Board {
+ public:
+  Board(const Geometry<N, D>& geom) : geom(geom), board(pow(N, D)) {
+  }
+  const Geometry<N, D>& geom;
+  vector<Position> board;
 };
 
 int main() {
   Geometry<3, 3> geom;
-  for (auto line : geom.winning_lines) {
+  for (auto& line : geom.winning_lines) {
     for (auto elem : line) {
       cout << static_cast<int>(elem) << " ";
     }
@@ -174,5 +200,12 @@ int main() {
     geom.print_line(line);
   }
   geom.print_points();
+  for (auto& lines : geom.winning_positions) {
+    for (auto line : lines) {
+      cout << line << " ";
+    }
+    cout << "\n";
+  }
+  Board b(geom);
   return 0;
 }
