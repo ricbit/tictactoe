@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <ctgmath>
+#include <random>
 
 using namespace std;
 
@@ -99,7 +100,7 @@ class Geometry {
     }
   }
 
-  vector<int> decode(Code code) {
+  vector<int> decode(Code code) const {
     vector<int> ans;
     for (int i = 0; i < D; i++) {
       ans.push_back(code % N);
@@ -175,7 +176,7 @@ class Geometry {
   vector<vector<int>> winning_positions;
 };
 
-enum class Position {
+enum class Mark {
   X,
   O,
   empty
@@ -184,10 +185,79 @@ enum class Position {
 template<int N, int D>
 class Board {
  public:
-  Board(const Geometry<N, D>& geom) : geom(geom), board(pow(N, D)) {
+  Board(const Geometry<N, D>& geom, vector<int>& search_tree) :
+      geom(geom),
+      board(pow(N, D), Mark::empty),
+      x_lines(geom.winning_lines.size()),
+      o_lines(geom.winning_lines.size()),
+      generator(1),
+      random_position(0, pow(N, D) - 1),
+      open_positions(0),
+      search_tree(search_tree) {
+  }
+  bool play(Code pos, Mark mark) {
+    board[pos] = mark;
+    open_positions++;
+    search_tree[pow(N, D) - open_positions] += open_positions;
+    for (auto line : geom.winning_positions[pos]) {
+      vector<int>& lines = mark == Mark::X ? x_lines : o_lines;
+      lines[line]++;
+      if (lines[line] == N) {
+        return true;
+      }
+    }
+    return false;
+  }
+  Code random_open_position() {
+    while (true) {
+      int i = random_position(generator);
+      if (board[i] == Mark::empty) {
+        return i;
+      }
+    }
+  }
+  void play() {
+    Mark current_mark = Mark::X;
+    while (true) {
+      int i = random_open_position();
+      if (play(i, current_mark)) {
+        cout << "win!\n";
+        return;
+      }
+      current_mark = current_mark == Mark::X ? Mark::O : Mark::X;
+    }
+  }
+  void print() {
+    static_assert(D == 3);
+    vector<vector<vector<char>>> printing_board(N, vector<vector<char>>(
+        N, vector<char>(N, '.')));
+    for (int k = 0; k < pow(N, D); k++) {
+      vector<int> decoded = geom.decode(static_cast<Code>(k));
+      printing_board[decoded[0]][decoded[1]][decoded[2]] =
+          encode_position(board[k]);
+    }
+    for (int k = 0; k < N; k++) {
+      for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++) {
+          cout << printing_board[k][j][i];
+        }
+        cout << "\n";
+      }
+      cout << "\n";
+    }
+  }
+  char encode_position(Mark pos) {
+    return pos == Mark::X ? 'X'
+        : pos == Mark::O ? 'O' 
+        : '.';
   }
   const Geometry<N, D>& geom;
-  vector<Position> board;
+  vector<Mark> board;
+  vector<int> x_lines, o_lines;
+  default_random_engine generator;
+  uniform_int_distribution<int> random_position;
+  int open_positions;
+  vector<int>& search_tree;
 };
 
 int main() {
@@ -206,6 +276,9 @@ int main() {
     }
     cout << "\n";
   }
-  Board b(geom);
+  vector<int> search_tree(pow(N, D));
+  Board b(geom, search_tree);
+  b.play();
+  b.print();
   return 0;
 }
