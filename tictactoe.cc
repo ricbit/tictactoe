@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <ctgmath>
 #include <random>
+#include <chrono>
 
 using namespace std;
 
@@ -185,20 +186,22 @@ enum class Mark {
 template<int N, int D>
 class Board {
  public:
-  Board(const Geometry<N, D>& geom, vector<int>& search_tree) :
+  Board(const Geometry<N, D>& geom, 
+    default_random_engine& generator,
+    vector<int>& search_tree) :
       geom(geom),
+      generator(generator),
       board(pow(N, D), Mark::empty),
       x_lines(geom.winning_lines.size()),
       o_lines(geom.winning_lines.size()),
-      generator(1),
       random_position(0, pow(N, D) - 1),
-      open_positions(0),
+      open_positions(pow(N, D)),
       search_tree(search_tree) {
   }
   bool play(Code pos, Mark mark) {
     board[pos] = mark;
-    open_positions++;
     search_tree[pow(N, D) - open_positions] += open_positions;
+    open_positions--;
     for (auto line : geom.winning_positions[pos]) {
       vector<int>& lines = mark == Mark::X ? x_lines : o_lines;
       lines[line]++;
@@ -218,10 +221,10 @@ class Board {
   }
   void play() {
     Mark current_mark = Mark::X;
-    while (true) {
+    while (open_positions) {
       int i = random_open_position();
       if (play(i, current_mark)) {
-        cout << "win!\n";
+        //cout << "win!\n";
         return;
       }
       current_mark = current_mark == Mark::X ? Mark::O : Mark::X;
@@ -252,9 +255,9 @@ class Board {
         : '.';
   }
   const Geometry<N, D>& geom;
+  default_random_engine& generator;
   vector<Mark> board;
   vector<int> x_lines, o_lines;
-  default_random_engine generator;
   uniform_int_distribution<int> random_position;
   int open_positions;
   vector<int>& search_tree;
@@ -262,7 +265,7 @@ class Board {
 
 int main() {
   Geometry<3, 3> geom;
-  for (auto& line : geom.winning_lines) {
+  /*for (auto& line : geom.winning_lines) {
     for (auto elem : line) {
       cout << static_cast<int>(elem) << " ";
     }
@@ -275,10 +278,24 @@ int main() {
       cout << line << " ";
     }
     cout << "\n";
+  }*/
+  vector<int> search_tree(geom.winning_positions.size());
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  default_random_engine generator(seed);
+  int max_plays = 1000;
+  for (int i = 0; i < max_plays; i++) {
+    Board b(geom, generator, search_tree);
+    b.play();
+    //b.print();
   }
-  vector<int> search_tree(pow(N, D));
-  Board b(geom, search_tree);
-  b.play();
-  b.print();
+  double total = 0;
+  for (int i = 0; i < static_cast<int>(search_tree.size()); i++) {
+    double level = static_cast<double>(search_tree[i]) / max_plays;
+    cout << "level " << i << " : " << level << "\n";
+    if (level > 0) {
+      total += log10(level);
+    }
+  }
+  cout << "\ntotal : 10 ^ " << total << "\n";
   return 0;
 }
