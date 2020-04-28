@@ -219,10 +219,33 @@ class Board {
       }
     }
   }
+  Code choose_position(Mark mark) {
+    vector<int>& current = mark == Mark::X ? x_lines : o_lines;
+    vector<int>& opponent = mark == Mark::X ? o_lines : x_lines;
+    for (int i = 0; i < static_cast<int>(geom.winning_lines.size()); i++) {
+      if (current[i] == N - 1 && opponent[i] == 0) {
+        for (int j = 0; j < N; j++) {
+          if (board[geom.winning_lines[i][j]] == Mark::empty) {
+            return geom.winning_lines[i][j];
+          }
+        }
+      }
+    }
+    /*for (int i = 0; i < static_cast<int>(geom.winning_lines.size()); i++) {
+      if (opponent[i] == N - 1 && current[i] == 0) {
+        for (int j = 0; j < N; j++) {
+          if (board[geom.winning_lines[i][j]] == Mark::empty) {
+            return geom.winning_lines[i][j];
+          }
+        }
+      }
+    }*/
+    return random_open_position();
+  }
   void play() {
     Mark current_mark = Mark::X;
     while (open_positions) {
-      int i = random_open_position();
+      int i = choose_position(current_mark);
       if (play(i, current_mark)) {
         //cout << "win!\n";
         return;
@@ -282,18 +305,21 @@ int main() {
   vector<int> search_tree(geom.winning_positions.size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  int max_plays = 1000;
+  int max_plays = 100;
   for (int i = 0; i < max_plays; i++) {
     Board b(geom, generator, search_tree);
     b.play();
-    //b.print();
+    cout << "\n---\n";
+    b.print();
   }
   double total = 0;
   for (int i = 0; i < static_cast<int>(search_tree.size()); i++) {
     double level = static_cast<double>(search_tree[i]) / max_plays;
     cout << "level " << i << " : " << level << "\n";
     if (level > 0) {
-      total += log10(level);
+      double log_level = log10(level < 1 ? 1 : level);
+      total += log_level;
+      cout << log_level << "\n";
     }
   }
   cout << "\ntotal : 10 ^ " << total << "\n";
