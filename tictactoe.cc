@@ -182,9 +182,9 @@ enum class Mark {
 };
 
 template<int N, int D>
-class Board {
+class GameEngine {
  public:
-  Board(const Geometry<N, D>& geom, 
+  GameEngine(const Geometry<N, D>& geom, 
     default_random_engine& generator,
     vector<int>& search_tree) :
       geom(geom),
@@ -213,9 +213,9 @@ class Board {
 
   Code random_open_position() {
     while (true) {
-      int i = random_position(generator);
-      if (board[i] == Mark::empty) {
-        return i;
+      int pos = random_position(generator);
+      if (board[pos] == Mark::empty) {
+        return pos;
       }
     }
   }
@@ -249,12 +249,15 @@ class Board {
     while (open_positions) {
       int i = choose_position(current_mark);
       if (play(i, current_mark)) {
-        //cout << "win!\n";
         return current_mark;
       }
-      current_mark = current_mark == Mark::X ? Mark::O : Mark::X;
+      current_mark = flip(current_mark);
     }
     return Mark::empty;
+  }
+
+  Mark flip(Mark mark) {
+    return mark == Mark::X ? Mark::O : Mark::X;
   }
 
   void print() {
@@ -267,8 +270,8 @@ class Board {
   
   char encode_position(Mark pos) {
     return pos == Mark::X ? 'X'
-        : pos == Mark::O ? 'O' 
-        : '.';
+         : pos == Mark::O ? 'O' 
+         : '.';
   }
 
   const Geometry<N, D>& geom;
@@ -281,31 +284,17 @@ class Board {
 };
 
 int main() {
-  Geometry<3, 3> geom;
-  /*for (auto& line : geom.winning_lines) {
-    for (auto elem : line) {
-      cout << static_cast<int>(elem) << " ";
-    }
-    cout << "\n";
-    geom.print_line(line);
-  }
-  geom.print_points();*/
-  /*for (auto& lines : geom.winning_positions) {
-    for (auto line : lines) {
-      cout << line << " ";
-    }
-    cout << "\n";
-  }*/
+  Geometry<4, 3> geom;
   vector<int> search_tree(geom.winning_positions.size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  int max_plays = 10000;
+  int max_plays = 100000;
   vector<int> win_counts(3);
   for (int i = 0; i < max_plays; i++) {
-    Board b(geom, generator, search_tree);
+    GameEngine b(geom, generator, search_tree);
     win_counts[static_cast<int>(b.play())]++;
-    cout << "\n---\n";
-    b.print();
+    //cout << "\n---\n";
+    //b.print();
   }
   double total = 0;
   for (int i = 0; i < static_cast<int>(search_tree.size()); i++) {
