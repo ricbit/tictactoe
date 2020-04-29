@@ -29,6 +29,7 @@ class Geometry {
     construct_winning_lines();
     construct_accumulation_points();
     construct_winning_positions();
+    construct_xor_table();
   }
   void fill_terrain(vector<Direction>& terrain, int pos) {
     if (pos == D) {
@@ -169,10 +170,21 @@ class Geometry {
     }
   }
 
+  void construct_xor_table() {
+    for (auto& line : winning_lines) {
+      int ans = 0;
+      for (auto& code : line) {
+        ans ^= code;
+      }
+      xor_table.push_back(ans);
+    }
+  }
+
   vector<vector<Direction>> unique_terrains;
   vector<vector<Code>> winning_lines;
   vector<int> accumulation_points;
   vector<vector<int>> winning_positions;
+  vector<int> xor_table;
 };
 
 enum class Mark {
@@ -194,7 +206,8 @@ class GameEngine {
       o_lines(geom.winning_lines.size()),
       random_position(0, pow(N, D) - 1),
       open_positions(pow(N, D)),
-      search_tree(search_tree) {
+      search_tree(search_tree),
+      xor_table(geom.xor_table) {
   }
 
   bool play(Code pos, Mark mark) {
@@ -204,6 +217,7 @@ class GameEngine {
     for (auto line : geom.winning_positions[pos]) {
       vector<int>& current = mark == Mark::X ? x_lines : o_lines;
       current[line]++;
+      xor_table[line] ^= pos;
       if (current[line] == N) {
         return true;
       }
@@ -220,26 +234,25 @@ class GameEngine {
     }
   }
 
+  optional<Code> find_forcing_move(vector<int>& current, vector<int>& opponent) {
+    for (int i = 0; i < static_cast<int>(geom.winning_lines.size()); i++) {
+      if (current[i] == N - 1 && opponent[i] == 0) {
+        return xor_table[i];
+      }
+    }
+    return {};
+  }
+
   Code choose_position(Mark mark) {
     vector<int>& current = mark == Mark::X ? x_lines : o_lines;
     vector<int>& opponent = mark == Mark::X ? o_lines : x_lines;
-    for (int i = 0; i < static_cast<int>(geom.winning_lines.size()); i++) {
-      if (current[i] == N - 1 && opponent[i] == 0) {
-        for (int j = 0; j < N; j++) {
-          if (board[geom.winning_lines[i][j]] == Mark::empty) {
-            return geom.winning_lines[i][j];
-          }
-        }
-      }
+    optional<Code> attack = find_forcing_move(current, opponent);
+    if (attack.has_value()) {
+      return *attack;
     }
-    for (int i = 0; i < static_cast<int>(geom.winning_lines.size()); i++) {
-      if (opponent[i] == N - 1 && current[i] == 0) {
-        for (int j = 0; j < N; j++) {
-          if (board[geom.winning_lines[i][j]] == Mark::empty) {
-            return geom.winning_lines[i][j];
-          }
-        }
-      }
+    optional<Code> defend = find_forcing_move(opponent, current);
+    if (defend.has_value()) {
+      return *defend;
     }
     return random_open_position();
   }
@@ -281,15 +294,17 @@ class GameEngine {
   uniform_int_distribution<int> random_position;
   int open_positions;
   vector<int>& search_tree;
+  vector<int> xor_table;
 };
 
 int main() {
-  Geometry<4, 3> geom;
+  Geometry<5, 3> geom;
   vector<int> search_tree(geom.winning_positions.size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  int max_plays = 100000;
+  int max_plays = 10000;
   vector<int> win_counts(3);
+  geom.print_points();
   for (int i = 0; i < max_plays; i++) {
     GameEngine b(geom, generator, search_tree);
     win_counts[static_cast<int>(b.play())]++;
