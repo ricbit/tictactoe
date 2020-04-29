@@ -194,25 +194,24 @@ enum class Mark {
 };
 
 template<int N, int D>
-class GameEngine {
+class State {
  public:
-  GameEngine(const Geometry<N, D>& geom, 
-    default_random_engine& generator,
-    vector<int>& search_tree) :
+  State(const Geometry<N, D>& geom) :
       geom(geom),
-      generator(generator),
       board(pow(N, D), Mark::empty),
       x_lines(geom.winning_lines.size()),
       o_lines(geom.winning_lines.size()),
-      random_position(0, pow(N, D) - 1),
       open_positions(pow(N, D)),
-      search_tree(search_tree),
       xor_table(geom.xor_table) {
   }
+  const Geometry<N, D>& geom;
+  vector<Mark> board;
+  vector<int> x_lines, o_lines;
+  int open_positions;
+  vector<int> xor_table;
 
   bool play(Code pos, Mark mark) {
     board[pos] = mark;
-    search_tree[pow(N, D) - open_positions] += open_positions;
     open_positions--;
     for (auto line : geom.winning_positions[pos]) {
       vector<int>& current = mark == Mark::X ? x_lines : o_lines;
@@ -224,11 +223,30 @@ class GameEngine {
     }
     return false;
   }
+};
+
+template<int N, int D>
+class GameEngine {
+ public:
+  GameEngine(const Geometry<N, D>& geom, 
+    default_random_engine& generator,
+    vector<int>& search_tree) :
+      geom(geom),
+      generator(generator),
+      state(geom),
+      random_position(0, pow(N, D) - 1),
+      search_tree(search_tree) {
+  }
+
+  bool play(Code pos, Mark mark) {
+    search_tree[pow(N, D) - state.open_positions] += state.open_positions;
+    return state.play(pos, mark);
+  }
 
   Code random_open_position() {
     while (true) {
       int pos = random_position(generator);
-      if (board[pos] == Mark::empty) {
+      if (state.board[pos] == Mark::empty) {
         return pos;
       }
     }
@@ -237,15 +255,15 @@ class GameEngine {
   optional<Code> find_forcing_move(vector<int>& current, vector<int>& opponent) {
     for (int i = 0; i < static_cast<int>(geom.winning_lines.size()); i++) {
       if (current[i] == N - 1 && opponent[i] == 0) {
-        return xor_table[i];
+        return state.xor_table[i];
       }
     }
     return {};
   }
 
   Code choose_position(Mark mark) {
-    vector<int>& current = mark == Mark::X ? x_lines : o_lines;
-    vector<int>& opponent = mark == Mark::X ? o_lines : x_lines;
+    vector<int>& current = mark == Mark::X ? state.x_lines : state.o_lines;
+    vector<int>& opponent = mark == Mark::X ? state.o_lines : state.x_lines;
     optional<Code> attack = find_forcing_move(current, opponent);
     if (attack.has_value()) {
       return *attack;
@@ -259,7 +277,7 @@ class GameEngine {
 
   Mark play() {
     Mark current_mark = Mark::X;
-    while (open_positions) {
+    while (state.open_positions) {
       int i = choose_position(current_mark);
       if (play(i, current_mark)) {
         return current_mark;
@@ -277,7 +295,7 @@ class GameEngine {
     geom.print(pow(N, D), [&](int k) {
       return geom.decode(k);
     }, [&](int k) {
-      return encode_position(board[k]);
+      return encode_position(state.board[k]);
     });
   }
   
@@ -289,12 +307,9 @@ class GameEngine {
 
   const Geometry<N, D>& geom;
   default_random_engine& generator;
-  vector<Mark> board;
-  vector<int> x_lines, o_lines;
+  State<N, D> state;
   uniform_int_distribution<int> random_position;
-  int open_positions;
   vector<int>& search_tree;
-  vector<int> xor_table;
 };
 
 int main() {
