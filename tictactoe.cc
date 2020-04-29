@@ -214,7 +214,7 @@ class State {
     board[pos] = mark;
     open_positions--;
     for (auto line : geom.winning_positions[pos]) {
-      vector<int>& current = mark == Mark::X ? x_lines : o_lines;
+      vector<int>& current = get_current(mark);
       current[line]++;
       xor_table[line] ^= pos;
       if (current[line] == N) {
@@ -222,6 +222,14 @@ class State {
       }
     }
     return false;
+  }
+
+  vector<int>& get_current(Mark mark) {
+    return mark == Mark::X ? state.x_lines : state.o_lines;
+  }
+
+  vector<int>& get_opponent(Mark mark) {
+    return mark == Mark::X ? state.o_lines : state.x_lines;
   }
 };
 
@@ -262,8 +270,8 @@ class GameEngine {
   }
 
   Code choose_position(Mark mark) {
-    vector<int>& current = mark == Mark::X ? state.x_lines : state.o_lines;
-    vector<int>& opponent = mark == Mark::X ? state.o_lines : state.x_lines;
+    vector<int>& current = state.get_current(mark);
+    vector<int>& opponent = state.get_opponent(mark);
     optional<Code> attack = find_forcing_move(current, opponent);
     if (attack.has_value()) {
       return *attack;
@@ -295,7 +303,7 @@ class GameEngine {
     geom.print(pow(N, D), [&](int k) {
       return geom.decode(k);
     }, [&](int k) {
-      return encode_position(state.board[k]);
+      return encode_position(state.tboard[k]);
     });
   }
   
