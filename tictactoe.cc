@@ -224,13 +224,38 @@ class State {
     return false;
   }
 
+  vector<Code> get_open_positions() {
+    vector<Code> ans;
+    for (int i = 0; i < pow(N, D); i++) {
+      if (board[i] == Mark::empty) {
+        ans.push_back(i);
+      }
+    }
+    return ans;
+  }
+
   vector<int>& get_current(Mark mark) {
-    return mark == Mark::X ? state.x_lines : state.o_lines;
+    return mark == Mark::X ? x_lines : o_lines;
   }
 
   vector<int>& get_opponent(Mark mark) {
-    return mark == Mark::X ? state.o_lines : state.x_lines;
+    return mark == Mark::X ? o_lines : x_lines;
   }
+
+  void print() {
+    geom.print(pow(N, D), [&](int k) {
+      return geom.decode(k);
+    }, [&](int k) {
+      return encode_position(board[k]);
+    });
+  }
+  
+  char encode_position(Mark pos) {
+    return pos == Mark::X ? 'X'
+         : pos == Mark::O ? 'O' 
+         : '.';
+  }
+
 };
 
 template<int N, int D>
@@ -252,12 +277,9 @@ class GameEngine {
   }
 
   Code random_open_position() {
-    while (true) {
-      int pos = random_position(generator);
-      if (state.board[pos] == Mark::empty) {
-        return pos;
-      }
-    }
+    vector<Code> pos = state.get_open_positions();
+    uniform_int_distribution<int> random_position(0, pos.size() - 1);
+    return pos[random_position(generator)];
   }
 
   optional<Code> find_forcing_move(vector<int>& current, vector<int>& opponent) {
@@ -297,20 +319,6 @@ class GameEngine {
 
   Mark flip(Mark mark) {
     return mark == Mark::X ? Mark::O : Mark::X;
-  }
-
-  void print() {
-    geom.print(pow(N, D), [&](int k) {
-      return geom.decode(k);
-    }, [&](int k) {
-      return encode_position(state.tboard[k]);
-    });
-  }
-  
-  char encode_position(Mark pos) {
-    return pos == Mark::X ? 'X'
-         : pos == Mark::O ? 'O' 
-         : '.';
   }
 
   const Geometry<N, D>& geom;
