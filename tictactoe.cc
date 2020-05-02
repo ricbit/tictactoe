@@ -156,7 +156,7 @@ class Geometry {
     });
   }
 
-  char encode_points(int points) {
+  char encode_points(int points) const {
     return points < 10 ? '0' + points : 
         points < 10 + 26 ? 'A' + points - 10 : '-';
   }
@@ -199,26 +199,46 @@ class State {
   State(const Geometry<N, D>& geom) :
       geom(geom),
       board(pow(N, D), Mark::empty),
-      x_lines(geom.winning_lines.size()),
-      o_lines(geom.winning_lines.size()),
+      x_marks_on_line(geom.winning_lines.size()),
+      o_marks_on_line(geom.winning_lines.size()),
       open_positions(pow(N, D)),
-      xor_table(geom.xor_table) {
+      xor_table(geom.xor_table),
+      active_line(geom.winning_lines.size(), true),
+      current_accumulation(geom.accumulation_points) {
   }
   const Geometry<N, D>& geom;
   vector<Mark> board;
-  vector<int> x_lines, o_lines;
+  vector<int> x_marks_on_line, o_marks_on_line;
   int open_positions;
   vector<int> xor_table;
+  vector<bool> active_line;
+  vector<int> current_accumulation;
 
   bool play(Code pos, Mark mark) {
     board[pos] = mark;
     open_positions--;
-    for (auto line : geom.winning_positions[pos]) {
+    for (auto line : geom.winning_positions[pos]) {      
       vector<int>& current = get_current(mark);
       current[line]++;
       xor_table[line] ^= pos;
       if (current[line] == N) {
         return true;
+      }
+      int x_count = 0;
+      int o_count = 0;
+      for (int i = 0; i < N; i++) {
+        if (board[geom.winning_lines[line][i]] == Mark::X) {
+          x_count++;
+        }
+        if (board[geom.winning_lines[line][i]] == Mark::O) {
+          o_count++;
+        }
+      }
+      if (x_count > 0 && o_count > 0 && active_line[line]) {
+        active_line[line] = false;
+        for (int j = 0; j < N; j++) {
+          current_accumulation[geom.winning_lines[line][j]]--;
+        }
       }
     }
     return false;
@@ -227,7 +247,7 @@ class State {
   vector<Code> get_open_positions() {
     vector<Code> ans;
     for (int i = 0; i < pow(N, D); i++) {
-      if (board[i] == Mark::empty) {
+      if (board[i] == Mark::empty && current_accumulation[i] > 0) {
         ans.push_back(i);
       }
     }
@@ -235,11 +255,11 @@ class State {
   }
 
   vector<int>& get_current(Mark mark) {
-    return mark == Mark::X ? x_lines : o_lines;
+    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
   }
 
   vector<int>& get_opponent(Mark mark) {
-    return mark == Mark::X ? o_lines : x_lines;
+    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
   }
 
   void print() {
@@ -247,6 +267,14 @@ class State {
       return geom.decode(k);
     }, [&](int k) {
       return encode_position(board[k]);
+    });
+  }
+
+  void print_accumulation() {
+    geom.print(pow(N, D), [&](int k) {
+      return geom.decode(k);
+    }, [&](int k) {
+      return geom.encode_points(current_accumulation[k]);
     });
   }
   
@@ -272,7 +300,6 @@ class GameEngine {
   }
 
   bool play(Code pos, Mark mark) {
-    search_tree[pow(N, D) - state.open_positions] += state.open_positions;
     return state.play(pos, mark);
   }
 
@@ -282,23 +309,29 @@ class GameEngine {
     return pos[random_position(generator)];
   }
 
-  optional<Code> find_forcing_move(vector<int>& current, vector<int>& opponent) {
+  optional<Code> find_forcing_move(
+      vector<int>& current, vector<int>& opponent,
+      const vector<Code>& open_positions) {
     for (int i = 0; i < static_cast<int>(geom.winning_lines.size()); i++) {
       if (current[i] == N - 1 && opponent[i] == 0) {
-        return state.xor_table[i];
+        Code trial = state.xor_table[i];
+        auto found = find(begin(open_positions), end(open_positions), trial);
+        if (found != end(open_positions)) {
+          return state.xor_table[i];
+        }
       }
     }
     return {};
   }
 
-  Code choose_position(Mark mark) {
+  Code choose_position(Mark mark, const vector<Code>& open_positions) {
     vector<int>& current = state.get_current(mark);
     vector<int>& opponent = state.get_opponent(mark);
-    optional<Code> attack = find_forcing_move(current, opponent);
+    optional<Code> attack = find_forcing_move(current, opponent, open_positions);
     if (attack.has_value()) {
       return *attack;
     }
-    optional<Code> defend = find_forcing_move(opponent, current);
+    optional<Code> defend = find_forcing_move(opponent, current, open_positions);
     if (defend.has_value()) {
       return *defend;
     }
@@ -307,14 +340,23 @@ class GameEngine {
 
   Mark play() {
     Mark current_mark = Mark::X;
-    while (state.open_positions) {
-      int i = choose_position(current_mark);
-      if (play(i, current_mark)) {
+    int level = 0;
+    while (true) {
+      auto open_positions = state.get_open_positions();
+      if (open_positions.empty()) {
+        return Mark::empty;
+      }
+      search_tree[level++] += open_positions.size();
+      int i = choose_position(current_mark, open_positions);
+      auto result = play(i, current_mark);
+      /*state.print();
+      state.print_accumulation();
+      cout << "\n------\n\n";*/
+      if (result) {
         return current_mark;
       }
       current_mark = flip(current_mark);
     }
-    return Mark::empty;
   }
 
   Mark flip(Mark mark) {
@@ -329,13 +371,14 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<5, 3> geom;
+  Geometry<4, 3> geom;
   vector<int> search_tree(geom.winning_positions.size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   int max_plays = 10000;
   vector<int> win_counts(3);
   geom.print_points();
+  cout << "winning lines " << geom.winning_lines.size() << "\n";
   for (int i = 0; i < max_plays; i++) {
     GameEngine b(geom, generator, search_tree);
     win_counts[static_cast<int>(b.play())]++;
