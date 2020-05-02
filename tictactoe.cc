@@ -201,7 +201,6 @@ class State {
       board(pow(N, D), Mark::empty),
       x_marks_on_line(geom.winning_lines.size()),
       o_marks_on_line(geom.winning_lines.size()),
-      open_positions(pow(N, D)),
       xor_table(geom.xor_table),
       active_line(geom.winning_lines.size(), true),
       current_accumulation(geom.accumulation_points) {
@@ -209,14 +208,12 @@ class State {
   const Geometry<N, D>& geom;
   vector<Mark> board;
   vector<int> x_marks_on_line, o_marks_on_line;
-  int open_positions;
   vector<int> xor_table;
   vector<bool> active_line;
   vector<int> current_accumulation;
 
   bool play(Code pos, Mark mark) {
     board[pos] = mark;
-    open_positions--;
     for (auto line : geom.winning_positions[pos]) {      
       vector<int>& current = get_current(mark);
       current[line]++;
