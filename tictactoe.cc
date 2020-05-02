@@ -221,17 +221,9 @@ class State {
       if (current[line] == N) {
         return true;
       }
-      int x_count = 0;
-      int o_count = 0;
-      for (int i = 0; i < N; i++) {
-        if (board[geom.winning_lines[line][i]] == Mark::X) {
-          x_count++;
-        }
-        if (board[geom.winning_lines[line][i]] == Mark::O) {
-          o_count++;
-        }
-      }
-      if (x_count > 0 && o_count > 0 && active_line[line]) {
+      if (x_marks_on_line[line] > 0 && 
+          o_marks_on_line[line] > 0 && 
+          active_line[line]) {
         active_line[line] = false;
         for (int j = 0; j < N; j++) {
           current_accumulation[geom.winning_lines[line][j]]--;
@@ -368,7 +360,7 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<4, 3> geom;
+  Geometry<5, 3> geom;
   vector<int> search_tree(geom.winning_positions.size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
