@@ -294,10 +294,10 @@ class GameEngine {
     return state.play(pos, mark);
   }
 
-  Code random_open_position() {
-    vector<Code> pos = state.get_open_positions();
-    uniform_int_distribution<int> random_position(0, pos.size() - 1);
-    return pos[random_position(generator)];
+  Code random_open_position(const vector<Code>& open_positions) {
+    uniform_int_distribution<int> random_position(
+        0, open_positions.size() - 1);
+    return open_positions[random_position(generator)];
   }
 
   optional<Code> find_forcing_move(
@@ -326,7 +326,7 @@ class GameEngine {
     if (defend.has_value()) {
       return *defend;
     }
-    return random_open_position();
+    return random_open_position(open_positions);
   }
 
   Mark play() {
