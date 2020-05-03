@@ -85,7 +85,7 @@ class Geometry {
     }
   }
 
-  Code encode(vector<int> dim_index) {
+  Code encode(vector<int> dim_index) const {
     Code ans = 0;
     int factor = 1;
     for (int i = 0; i < D; i++) {
@@ -278,6 +278,55 @@ class State {
 };
 
 template<int N, int D>
+class Symmetry {
+ public:
+  Symmetry(const Geometry<N, D>& geom) : geom(geom) {
+    generate_all_symmetries();
+  }
+  const Geometry<N, D>& geom;
+  void generate_all_symmetries() {
+    vector<int> index(D);
+    iota(begin(index), end(index), 0);
+    do {
+      for (int i = 0; i < (1 << D); i++) {
+        symmetries.push_back(generate_symmetry(index, i));
+      }
+    } while (next_permutation(begin(index), end(index)));
+  }
+  vector<Code> generate_symmetry(const vector<int>& index, int bits) {
+    vector<Code> symmetry;
+    for (Code i = 0; i < pow(N, D); i++) {
+      auto decoded = geom.decode(i);
+      Code ans = 0;
+      int current_bits = bits;
+      for (int j = 0; j < D; j++) {
+        int column = decoded[index[j]];
+        ans = ans * N + ((current_bits & 1) == 0 ? column : N - column - 1);
+        current_bits >>= 1;
+      }
+      symmetry.push_back(ans);
+    }
+    return symmetry;
+  }
+  void print_symmetry(const vector<Code>& symmetry) {
+    geom.print(pow(N, D), [&](int k) {
+      return geom.decode(k);
+    }, [&](int k) {
+      return geom.encode_points(symmetry[k]);
+    });
+  }
+
+  void print() {
+    for (auto& symmetry : symmetries) {
+      print_symmetry(symmetry);
+      cout << "\n---\n\n";
+    }
+  }
+
+  vector<vector<Code>> symmetries;
+};
+
+template<int N, int D>
 class GameEngine {
  public:
   GameEngine(const Geometry<N, D>& geom, 
@@ -362,13 +411,15 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<5, 3> geom;
+  Geometry<3, 3> geom;
   vector<int> search_tree(geom.winning_positions.size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   int max_plays = 10000;
   vector<int> win_counts(3);
   geom.print_points();
+  Symmetry sym(geom);
+  sym.print();
   cout << "winning lines " << geom.winning_lines.size() << "\n";
   for (int i = 0; i < max_plays; i++) {
     GameEngine b(geom, generator, search_tree);
