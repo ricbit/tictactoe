@@ -4,6 +4,7 @@
 #include <ctgmath>
 #include <random>
 #include <chrono>
+#include <set>
 
 using namespace std;
 
@@ -194,90 +195,6 @@ enum class Mark {
 };
 
 template<int N, int D>
-class State {
- public:
-  State(const Geometry<N, D>& geom) :
-      geom(geom),
-      board(pow(N, D), Mark::empty),
-      x_marks_on_line(geom.winning_lines.size()),
-      o_marks_on_line(geom.winning_lines.size()),
-      xor_table(geom.xor_table),
-      active_line(geom.winning_lines.size(), true),
-      current_accumulation(geom.accumulation_points) {
-    open_positions.reserve(pow(N, D));
-  }
-  const Geometry<N, D>& geom;
-  vector<Mark> board;
-  vector<int> x_marks_on_line, o_marks_on_line;
-  vector<int> xor_table;
-  vector<bool> active_line;
-  vector<int> current_accumulation;
-  vector<Code> open_positions;
-
-  bool play(Code pos, Mark mark) {
-    board[pos] = mark;
-    for (auto line : geom.winning_positions[pos]) {      
-      vector<int>& current = get_current(mark);
-      current[line]++;
-      xor_table[line] ^= pos;
-      if (current[line] == N) {
-        return true;
-      }
-      if (x_marks_on_line[line] > 0 && 
-          o_marks_on_line[line] > 0 && 
-          active_line[line]) {
-        active_line[line] = false;
-        for (int j = 0; j < N; j++) {
-          current_accumulation[geom.winning_lines[line][j]]--;
-        }
-      }
-    }
-    return false;
-  }
-
-  const vector<Code>& get_open_positions() {
-    open_positions.erase(begin(open_positions), end(open_positions));
-    for (int i = 0; i < pow(N, D); i++) {
-      if (board[i] == Mark::empty && current_accumulation[i] > 0) {
-        open_positions.push_back(i);
-      }
-    }
-    return open_positions;
-  }
-
-  vector<int>& get_current(Mark mark) {
-    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
-  }
-
-  vector<int>& get_opponent(Mark mark) {
-    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
-  }
-
-  void print() {
-    geom.print(pow(N, D), [&](int k) {
-      return geom.decode(k);
-    }, [&](int k) {
-      return encode_position(board[k]);
-    });
-  }
-
-  void print_accumulation() {
-    geom.print(pow(N, D), [&](int k) {
-      return geom.decode(k);
-    }, [&](int k) {
-      return geom.encode_points(current_accumulation[k]);
-    });
-  }
-  
-  char encode_position(Mark pos) {
-    return pos == Mark::X ? 'X'
-         : pos == Mark::O ? 'O' 
-         : '.';
-  }
-
-};
-
-template<int N, int D>
 class Symmetry {
  public:
   Symmetry(const Geometry<N, D>& geom) : geom(geom) {
@@ -326,13 +243,117 @@ class Symmetry {
   vector<vector<Code>> symmetries;
 };
 
+
+template<int N, int D>
+class State {
+ public:
+  State(const Geometry<N, D>& geom) :
+      geom(geom),
+      board(pow(N, D), Mark::empty),
+      x_marks_on_line(geom.winning_lines.size()),
+      o_marks_on_line(geom.winning_lines.size()),
+      xor_table(geom.xor_table),
+      active_line(geom.winning_lines.size(), true),
+      current_accumulation(geom.accumulation_points) {
+    open_positions.reserve(pow(N, D));
+  }
+  const Geometry<N, D>& geom;
+  vector<Mark> board;
+  vector<int> x_marks_on_line, o_marks_on_line;
+  vector<int> xor_table;
+  vector<bool> active_line;
+  vector<int> current_accumulation;
+  vector<Code> open_positions;
+
+  bool play(Code pos, Mark mark) {
+    board[pos] = mark;
+    for (auto line : geom.winning_positions[pos]) {      
+      vector<int>& current = get_current(mark);
+      current[line]++;
+      xor_table[line] ^= pos;
+      if (current[line] == N) {
+        return true;
+      }
+      if (x_marks_on_line[line] > 0 && 
+          o_marks_on_line[line] > 0 && 
+          active_line[line]) {
+        active_line[line] = false;
+        for (int j = 0; j < N; j++) {
+          current_accumulation[geom.winning_lines[line][j]]--;
+        }
+      }
+    }
+    return false;
+  }
+
+  const vector<Code>& get_open_positions(const Symmetry<N, D>& sym, Mark mark) {
+    open_positions.erase(begin(open_positions), end(open_positions));
+    set<vector<Mark>> accepted;
+    vector<Mark> current(board);
+    vector<Mark> rotated(current.size());
+    for (int i = 0; i < pow(N, D); i++) {
+      if (board[i] == Mark::empty && current_accumulation[i] > 0) {
+        current[i] = mark;
+        bool found = false;
+        for (const auto& symmetry : sym.symmetries) {
+          for (int i = 0; i < pow(N, D); i++) {
+            rotated[i] = current[symmetry[i]];
+          }
+          if (find(begin(accepted), end(accepted), rotated) != end(accepted)) {
+            found = true;
+          }
+        }
+        if (!found) {
+          accepted.insert(current);
+          open_positions.push_back(i);
+        }
+        current[i] = Mark::empty;
+      }
+    }
+    return open_positions;
+  }
+
+  vector<int>& get_current(Mark mark) {
+    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
+  }
+
+  vector<int>& get_opponent(Mark mark) {
+    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
+  }
+
+  void print() {
+    geom.print(pow(N, D), [&](int k) {
+      return geom.decode(k);
+    }, [&](int k) {
+      return encode_position(board[k]);
+    });
+  }
+
+  void print_accumulation() {
+    geom.print(pow(N, D), [&](int k) {
+      return geom.decode(k);
+    }, [&](int k) {
+      return geom.encode_points(current_accumulation[k]);
+    });
+  }
+  
+  char encode_position(Mark pos) {
+    return pos == Mark::X ? 'X'
+         : pos == Mark::O ? 'O' 
+         : '.';
+  }
+
+};
+
 template<int N, int D>
 class GameEngine {
  public:
-  GameEngine(const Geometry<N, D>& geom, 
+  GameEngine(const Geometry<N, D>& geom,
+    const Symmetry<N, D>& sym,
     default_random_engine& generator,
     vector<int>& search_tree) :
       geom(geom),
+      sym(sym),
       generator(generator),
       state(geom),
       random_position(0, pow(N, D) - 1),
@@ -382,7 +403,7 @@ class GameEngine {
     Mark current_mark = Mark::X;
     int level = 0;
     while (true) {
-      auto open_positions = state.get_open_positions();
+      auto open_positions = state.get_open_positions(sym, current_mark);
       if (open_positions.empty()) {
         return Mark::empty;
       }
@@ -404,6 +425,7 @@ class GameEngine {
   }
 
   const Geometry<N, D>& geom;
+  const Symmetry<N, D>& sym;
   default_random_engine& generator;
   State<N, D> state;
   uniform_int_distribution<int> random_position;
@@ -411,18 +433,18 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<3, 3> geom;
+  Geometry<5, 3> geom;
+  Symmetry sym(geom);
+  sym.print();
   vector<int> search_tree(geom.winning_positions.size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  int max_plays = 10000;
+  int max_plays = 100;
   vector<int> win_counts(3);
   geom.print_points();
-  Symmetry sym(geom);
-  sym.print();
   cout << "winning lines " << geom.winning_lines.size() << "\n";
   for (int i = 0; i < max_plays; i++) {
-    GameEngine b(geom, generator, search_tree);
+    GameEngine b(geom, sym, generator, search_tree);
     win_counts[static_cast<int>(b.play())]++;
     //cout << "\n---\n";
     //b.print();
