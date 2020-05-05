@@ -433,9 +433,10 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<5, 3> geom;
+  Geometry<4, 3> geom;
   Symmetry sym(geom);
   sym.print();
+  cout << "num symmetries " << sym.symmetries.size() << "\n";
   vector<int> search_tree(geom.winning_positions.size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
@@ -456,7 +457,7 @@ int main() {
     if (level > 0) {
       double log_level = log10(level < 1 ? 1 : level);
       total += log_level;
-      cout << log_level << "\n";
+      //cout << log_level << "\n";
     }
   }
   cout << "\ntotal : 10 ^ " << total << "\n";
