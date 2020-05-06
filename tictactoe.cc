@@ -319,8 +319,9 @@ class Symmetry {
 template<int N, int D>
 class State {
  public:
-  State(const Geometry<N, D>& geom) :
+  State(const Geometry<N, D>& geom, const Symmetry<N, D>& sym) :
       geom(geom),
+      sym(sym),
       board(pow(N, D), Mark::empty),
       x_marks_on_line(geom.winning_lines.size()),
       o_marks_on_line(geom.winning_lines.size()),
@@ -330,6 +331,7 @@ class State {
     open_positions.reserve(pow(N, D));
   }
   const Geometry<N, D>& geom;
+  const Symmetry<N, D>& sym;
   vector<Mark> board;
   vector<int> x_marks_on_line, o_marks_on_line;
   vector<int> xor_table;
@@ -358,7 +360,7 @@ class State {
     return false;
   }
 
-  const vector<Code>& get_open_positions(const Symmetry<N, D>& sym, Mark mark) {
+  const vector<Code>& get_open_positions(Mark mark) {
     open_positions.erase(begin(open_positions), end(open_positions));
     set<vector<Mark>> accepted;
     vector<Mark> current(board);
@@ -366,16 +368,7 @@ class State {
     for (int i = 0; i < pow(N, D); i++) {
       if (board[i] == Mark::empty && current_accumulation[i] > 0) {
         current[i] = mark;
-        bool found = false;
-        for (const auto& symmetry : sym.symmetries) {
-          for (int i = 0; i < pow(N, D); i++) {
-            rotated[i] = current[symmetry[i]];
-          }
-          if (find(begin(accepted), end(accepted), rotated) != end(accepted)) {
-            found = true;
-          }
-        }
-        if (!found) {
+        if (!find_symmetry(current, rotated, accepted)) {
           accepted.insert(current);
           open_positions.push_back(i);
         }
@@ -383,6 +376,19 @@ class State {
       }
     }
     return open_positions;
+  }
+
+  bool find_symmetry(const vector<Mark>& current, vector<Mark>& rotated,
+      const set<vector<Mark>>& accepted) {
+    for (const auto& symmetry : sym.symmetries) {
+      for (int i = 0; i < pow(N, D); i++) {
+        rotated[i] = current[symmetry[i]];
+      }
+      if (find(begin(accepted), end(accepted), rotated) != end(accepted)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   vector<int>& get_current(Mark mark) {
@@ -427,7 +433,7 @@ class GameEngine {
       geom(geom),
       sym(sym),
       generator(generator),
-      state(geom),
+      state(geom, sym),
       random_position(0, pow(N, D) - 1),
       search_tree(search_tree) {
   }
@@ -475,7 +481,7 @@ class GameEngine {
     Mark current_mark = Mark::X;
     int level = 0;
     while (true) {
-      auto open_positions = state.get_open_positions(sym, current_mark);
+      auto open_positions = state.get_open_positions(current_mark);
       if (open_positions.empty()) {
         return Mark::empty;
       }
