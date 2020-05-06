@@ -200,6 +200,21 @@ class Symmetry {
   Symmetry(const Geometry<N, D>& geom) : geom(geom) {
     generate_all_rotations();
     generate_all_eviscerations();
+    multiply_groups();
+  }
+
+  void multiply_groups() {
+    set<vector<Code>> unique;
+    for (const auto& rotation : rotations) {
+      for (const auto& evisceration : eviscerations) {
+        vector<Code> symmetry(pow(N, D));
+        for (int i = 0; i < pow(N, D); i++) {
+          symmetry[rotation[evisceration[i]]] = i;
+        }
+        unique.insert(symmetry);
+      }
+    }
+    copy(begin(unique), end(unique), back_inserter(symmetries));
   }
 
   void generate_all_eviscerations() {
@@ -218,7 +233,16 @@ class Symmetry {
   }
 
   void generate_evisceration(const vector<int>& index) {
-    cout << "good\n";
+    vector<int> symmetry(pow(N, D));
+    iota(begin(symmetry), end(symmetry), 0);
+    transform(begin(symmetry), end(symmetry), begin(symmetry), [&](Code code) {
+      auto decoded = geom.decode(code);
+      transform(begin(decoded), end(decoded), begin(decoded), [&](int x) {
+        return index[x];
+      });
+      return geom.encode(decoded);
+    });
+    eviscerations.push_back(symmetry);
   }
 
   bool validate_evisceration(const vector<int>& index) {
@@ -497,7 +521,7 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<4, 3> geom;
+  Geometry<5, 3> geom;
   Symmetry sym(geom);
   sym.print();
   cout << "num symmetries " << sym.symmetries.size() << "\n";
