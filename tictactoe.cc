@@ -112,6 +112,14 @@ class Geometry {
     return ans;
   }
 
+  Code transform_code(const vector<int>& permutation, Code code) const {
+    auto decoded = decode(code);
+    transform(begin(decoded), end(decoded), begin(decoded), [&](int x) {
+      return permutation[x];
+    });
+    return encode(decoded);
+  }
+
   void construct_accumulation_points() {
     for (const auto& line : winning_lines) {
       for (const auto code : line) {
@@ -235,12 +243,9 @@ class Symmetry {
   void generate_evisceration(const vector<int>& index) {
     vector<int> symmetry(pow(N, D));
     iota(begin(symmetry), end(symmetry), 0);
-    transform(begin(symmetry), end(symmetry), begin(symmetry), [&](Code code) {
-      auto decoded = geom.decode(code);
-      transform(begin(decoded), end(decoded), begin(decoded), [&](int x) {
-        return index[x];
-      });
-      return geom.encode(decoded);
+    transform(begin(symmetry), end(symmetry), begin(symmetry),
+        [&](Code code) {
+      return geom.transform_code(index, code);
     });
     eviscerations.push_back(symmetry);
   }
@@ -249,11 +254,7 @@ class Symmetry {
     for (const auto& line : geom.winning_lines) {
       vector<Code> transformed(N);
       transform(begin(line), end(line), begin(transformed), [&](Code code) {
-        auto decoded = geom.decode(code);
-        transform(begin(decoded), end(decoded), begin(decoded), [&](int x) {
-          return index[x];
-        });
-        return geom.encode(decoded);
+        return geom.transform_code(index, code);
       });
       sort(begin(transformed), end(transformed));
       if (!search_line(transformed)) {
@@ -521,16 +522,16 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<5, 3> geom;
+  Geometry<3, 3> geom;
   Symmetry sym(geom);
-  sym.print();
+  //sym.print();
   cout << "num symmetries " << sym.symmetries.size() << "\n";
   vector<int> search_tree(geom.winning_positions.size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   int max_plays = 100;
   vector<int> win_counts(3);
-  geom.print_points();
+  //geom.print_points();
   cout << "winning lines " << geom.winning_lines.size() << "\n";
   for (int i = 0; i < max_plays; i++) {
     GameEngine b(geom, sym, generator, search_tree);
