@@ -59,6 +59,7 @@ class Geometry {
       for (int j = 0; j < N; j++) {
         line[j] = encode(current_line[j]);
       }
+      sort(begin(line), end(line));
       winning_lines.push_back(line);
       return;
     }
@@ -101,6 +102,7 @@ class Geometry {
     for (auto terrain : unique_terrains) {
       generate_lines(terrain, current_line, 0);
     }
+    sort(begin(winning_lines), end(winning_lines));
   }
 
   vector<int> decode(Code code) const {
@@ -229,11 +231,6 @@ class Symmetry {
     vector<int> index(N);
     iota(begin(index), end(index), 0);
     do {
-      /*cout << "index ";
-      for (int i = 0; i < N; i++) {
-        cout << index[i] << " ";
-      }
-      cout << "\n\n";*/
       if (validate_evisceration(index)) {
         generate_evisceration(index);
       }
@@ -265,24 +262,8 @@ class Symmetry {
   }
 
   bool search_line(const vector<Code>& transformed) {
-    for (const auto& line : geom.winning_lines) {
-      vector<Code> sorted(line);
-      sort(begin(sorted), end(sorted));
-      /*cout << "comparing ";
-      for (int i = 0; i < N; i++) {
-        cout << transformed[i] << " ";
-      }
-      cout << " with ";
-      for (int i = 0; i < N; i++) {
-        cout << sorted[i] << " ";
-      }*/
-      if (sorted == transformed) {
-        //cout << " : true\n";
-        return true;
-      }
-      //cout << " : false\n";
-    }
-    return false;
+    return binary_search(
+        begin(geom.winning_lines), end(geom.winning_lines), transformed);
   }
 
   void generate_all_rotations() {
@@ -522,7 +503,7 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<3, 3> geom;
+  Geometry<5, 3> geom;
   Symmetry sym(geom);
   //sym.print();
   cout << "num symmetries " << sym.symmetries.size() << "\n";
