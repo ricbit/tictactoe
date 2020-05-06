@@ -198,18 +198,78 @@ template<int N, int D>
 class Symmetry {
  public:
   Symmetry(const Geometry<N, D>& geom) : geom(geom) {
-    generate_all_symmetries();
+    generate_all_rotations();
+    generate_all_eviscerations();
   }
-  const Geometry<N, D>& geom;
-  void generate_all_symmetries() {
+
+  void generate_all_eviscerations() {
+    vector<int> index(N);
+    iota(begin(index), end(index), 0);
+    do {
+      /*cout << "index ";
+      for (int i = 0; i < N; i++) {
+        cout << index[i] << " ";
+      }
+      cout << "\n\n";*/
+      if (validate_evisceration(index)) {
+        generate_evisceration(index);
+      }
+    } while (next_permutation(begin(index), end(index)));
+  }
+
+  void generate_evisceration(const vector<int>& index) {
+    cout << "good\n";
+  }
+
+  bool validate_evisceration(const vector<int>& index) {
+    for (const auto& line : geom.winning_lines) {
+      vector<Code> transformed(N);
+      transform(begin(line), end(line), begin(transformed), [&](Code code) {
+        auto decoded = geom.decode(code);
+        transform(begin(decoded), end(decoded), begin(decoded), [&](int x) {
+          return index[x];
+        });
+        return geom.encode(decoded);
+      });
+      sort(begin(transformed), end(transformed));
+      if (!search_line(transformed)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool search_line(const vector<Code>& transformed) {
+    for (const auto& line : geom.winning_lines) {
+      vector<Code> sorted(line);
+      sort(begin(sorted), end(sorted));
+      /*cout << "comparing ";
+      for (int i = 0; i < N; i++) {
+        cout << transformed[i] << " ";
+      }
+      cout << " with ";
+      for (int i = 0; i < N; i++) {
+        cout << sorted[i] << " ";
+      }*/
+      if (sorted == transformed) {
+        //cout << " : true\n";
+        return true;
+      }
+      //cout << " : false\n";
+    }
+    return false;
+  }
+
+  void generate_all_rotations() {
     vector<int> index(D);
     iota(begin(index), end(index), 0);
     do {
       for (int i = 0; i < (1 << D); i++) {
-        symmetries.push_back(generate_symmetry(index, i));
+        rotations.push_back(generate_symmetry(index, i));
       }
     } while (next_permutation(begin(index), end(index)));
   }
+
   vector<Code> generate_symmetry(const vector<int>& index, int bits) {
     vector<Code> symmetry;
     for (Code i = 0; i < pow(N, D); i++) {
@@ -225,6 +285,7 @@ class Symmetry {
     }
     return symmetry;
   }
+
   void print_symmetry(const vector<Code>& symmetry) {
     geom.print(pow(N, D), [&](int k) {
       return geom.decode(k);
@@ -240,7 +301,10 @@ class Symmetry {
     }
   }
 
+  const Geometry<N, D>& geom;
   vector<vector<Code>> symmetries;
+  vector<vector<Code>> rotations;
+  vector<vector<Code>> eviscerations;
 };
 
 
