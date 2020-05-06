@@ -114,12 +114,19 @@ class Geometry {
     return ans;
   }
 
-  Code transform_code(const vector<int>& permutation, Code code) const {
+  Code apply_permutation(const vector<int>& permutation, Code code) const {
     auto decoded = decode(code);
     transform(begin(decoded), end(decoded), begin(decoded), [&](int x) {
       return permutation[x];
     });
     return encode(decoded);
+  }
+
+  void apply_permutation(const vector<Code>& source, vector<Code>& dest,
+      const vector<int>& permutation) const {
+    transform(begin(source), end(source), begin(dest), [&](Code code) {
+      return apply_permutation(permutation, code);
+    });
   }
 
   void construct_accumulation_points() {
@@ -240,19 +247,14 @@ class Symmetry {
   void generate_evisceration(const vector<int>& index) {
     vector<int> symmetry(pow(N, D));
     iota(begin(symmetry), end(symmetry), 0);
-    transform(begin(symmetry), end(symmetry), begin(symmetry),
-        [&](Code code) {
-      return geom.transform_code(index, code);
-    });
+    geom.apply_permutation(symmetry, symmetry, index);
     eviscerations.push_back(symmetry);
   }
 
   bool validate_evisceration(const vector<int>& index) {
     for (const auto& line : geom.winning_lines) {
       vector<Code> transformed(N);
-      transform(begin(line), end(line), begin(transformed), [&](Code code) {
-        return geom.transform_code(index, code);
-      });
+      geom.apply_permutation(line, transformed, index);
       sort(begin(transformed), end(transformed));
       if (!search_line(transformed)) {
         return false;
@@ -271,12 +273,12 @@ class Symmetry {
     iota(begin(index), end(index), 0);
     do {
       for (int i = 0; i < (1 << D); i++) {
-        rotations.push_back(generate_symmetry(index, i));
+        rotations.push_back(generate_rotation(index, i));
       }
     } while (next_permutation(begin(index), end(index)));
   }
 
-  vector<Code> generate_symmetry(const vector<int>& index, int bits) {
+  vector<Code> generate_rotation(const vector<int>& index, int bits) {
     vector<Code> symmetry;
     for (Code i = 0; i < pow(N, D); i++) {
       auto decoded = geom.decode(i);
@@ -503,7 +505,7 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<5, 3> geom;
+  Geometry<4, 3> geom;
   Symmetry sym(geom);
   //sym.print();
   cout << "num symmetries " << sym.symmetries.size() << "\n";
