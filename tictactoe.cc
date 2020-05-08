@@ -330,6 +330,7 @@ class State {
       current_accumulation(geom.accumulation_points),
       level(0) {
     open_positions.reserve(pow(N, D));
+    accepted.reserve(sym.symmetries.size());
   }
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
@@ -339,6 +340,7 @@ class State {
   vector<bool> active_line;
   vector<int> current_accumulation;
   vector<Code> open_positions;
+  vector<vector<Mark>> accepted;
   int level;
 
   bool play(Code pos, Mark mark) {
@@ -367,14 +369,14 @@ class State {
     open_positions.erase(begin(open_positions), end(open_positions));
     constexpr int threshold = 6;
     if (level <= threshold) {
-      set<vector<Mark>> accepted;
+      accepted.erase(begin(accepted), end(accepted));
       vector<Mark> current(board);
       vector<Mark> rotated(current.size());
       for (int i = 0; i < pow(N, D); i++) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           current[i] = mark;
           if (!find_symmetry(current, rotated, accepted)) {
-            accepted.insert(current);
+            accepted.push_back(current);
             open_positions.push_back(i);
           }
           current[i] = Mark::empty;
@@ -391,7 +393,7 @@ class State {
   }
 
   bool find_symmetry(const vector<Mark>& current, vector<Mark>& rotated,
-      const set<vector<Mark>>& accepted) {
+      const vector<vector<Mark>>& accepted) {
     for (const auto& symmetry : sym.symmetries) {
       for (int i = 0; i < pow(N, D); i++) {
         rotated[i] = current[symmetry[i]];
