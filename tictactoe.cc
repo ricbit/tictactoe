@@ -327,7 +327,8 @@ class State {
       o_marks_on_line(geom.winning_lines.size()),
       xor_table(geom.xor_table),
       active_line(geom.winning_lines.size(), true),
-      current_accumulation(geom.accumulation_points) {
+      current_accumulation(geom.accumulation_points),
+      level(0) {
     open_positions.reserve(pow(N, D));
   }
   const Geometry<N, D>& geom;
@@ -338,9 +339,11 @@ class State {
   vector<bool> active_line;
   vector<int> current_accumulation;
   vector<Code> open_positions;
+  int level;
 
   bool play(Code pos, Mark mark) {
     board[pos] = mark;
+    level++;
     for (auto line : geom.winning_positions[pos]) {      
       vector<int>& current = get_current(mark);
       current[line]++;
@@ -362,17 +365,26 @@ class State {
 
   const vector<Code>& get_open_positions(Mark mark) {
     open_positions.erase(begin(open_positions), end(open_positions));
-    set<vector<Mark>> accepted;
-    vector<Mark> current(board);
-    vector<Mark> rotated(current.size());
-    for (int i = 0; i < pow(N, D); i++) {
-      if (board[i] == Mark::empty && current_accumulation[i] > 0) {
-        current[i] = mark;
-        if (!find_symmetry(current, rotated, accepted)) {
-          accepted.insert(current);
+    constexpr int threshold = 6;
+    if (level <= threshold) {
+      set<vector<Mark>> accepted;
+      vector<Mark> current(board);
+      vector<Mark> rotated(current.size());
+      for (int i = 0; i < pow(N, D); i++) {
+        if (board[i] == Mark::empty && current_accumulation[i] > 0) {
+          current[i] = mark;
+          if (!find_symmetry(current, rotated, accepted)) {
+            accepted.insert(current);
+            open_positions.push_back(i);
+          }
+          current[i] = Mark::empty;
+        }
+      }
+    } else {
+      for (int i = 0; i < pow(N, D); i++) {
+        if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           open_positions.push_back(i);
         }
-        current[i] = Mark::empty;
       }
     }
     return open_positions;
@@ -511,7 +523,7 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<4, 3> geom;
+  Geometry<5, 3> geom;
   Symmetry sym(geom);
   //sym.print();
   cout << "num symmetries " << sym.symmetries.size() << "\n";
