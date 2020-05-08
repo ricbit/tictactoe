@@ -211,71 +211,13 @@ enum class Mark {
   empty
 };
 
-struct TrieNode {
-  Code code;
-  vector<TrieNode*> sibling;
-};
-
 template<int N, int D>
 class Symmetry {
  public:
-  Symmetry(const Geometry<N, D>& geom) : geom(geom), root(nullptr) {
+  Symmetry(const Geometry<N, D>& geom) : geom(geom) {
     generate_all_rotations();
     generate_all_eviscerations();
     multiply_groups();
-    create_trie();
-    print_trie();
-  }
-
-  void print_trie() {
-    print_trie(root, vector<int>());
-  }
-
-  void print_trie(TrieNode* node, vector<int> current) {
-    if (node->sibling.empty()) {
-      vector<int> next(current);
-      next.push_back(node->code);
-      cout << "trie elem : ";
-      for (int x : next) {
-        cout << x << " ";
-      }
-      cout << "\n";
-    } else {
-      vector<int> next(current);
-      next.push_back(node->code);
-      for (TrieNode* sibling : node->sibling) {
-        print_trie(sibling, next);
-      }
-    }
-  }
-
-  void create_trie() {
-    root = new TrieNode{-1};
-    for (const auto& symmetry : symmetries) {
-      insert_trie(root, symmetry);
-    }
-  }
-
-  void insert_trie(TrieNode* root, const vector<Code>& symmetry) {
-    TrieNode* current = root;
-    for (Code code : symmetry) {
-      TrieNode *next = nullptr;
-      if (current->sibling.empty()) {
-        current->sibling.push_back(new TrieNode{code});
-        next = current->sibling[0];
-      } else {
-        for (TrieNode* sibling : current->sibling) {
-          if (sibling->code == code) {
-            next = sibling;
-          }
-        }
-        if (next == nullptr) {
-          current->sibling.push_back(new TrieNode{code});
-          next = current->sibling[0];
-        }
-      }
-      current = next;
-    }
   }
 
   void multiply_groups() {
@@ -371,7 +313,6 @@ class Symmetry {
   vector<vector<Code>> symmetries;
   vector<vector<Code>> rotations;
   vector<vector<Code>> eviscerations;
-  TrieNode *root;
 };
 
 
@@ -570,9 +511,8 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<3, 2> geom;
+  Geometry<4, 3> geom;
   Symmetry sym(geom);
-  sym.print_trie();
   //sym.print();
   cout << "num symmetries " << sym.symmetries.size() << "\n";
   vector<int> search_tree(geom.winning_positions.size());
