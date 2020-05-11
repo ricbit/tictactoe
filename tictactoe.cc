@@ -328,7 +328,7 @@ class State {
       xor_table(geom.xor_table),
       active_line(geom.winning_lines.size(), true),
       current_accumulation(geom.accumulation_points),
-      level(0) {
+      has_symmetry(true) {
     open_positions.reserve(pow(N, D));
     accepted.reserve(sym.symmetries.size());
   }
@@ -341,11 +341,10 @@ class State {
   vector<int> current_accumulation;
   vector<Code> open_positions;
   vector<vector<Mark>> accepted;
-  int level;
+  bool has_symmetry;
 
   bool play(Code pos, Mark mark) {
     board[pos] = mark;
-    level++;
     for (auto line : geom.winning_positions[pos]) {      
       vector<int>& current = get_current(mark);
       current[line]++;
@@ -367,15 +366,17 @@ class State {
 
   const vector<Code>& get_open_positions(Mark mark) {
     open_positions.erase(begin(open_positions), end(open_positions));
-    constexpr int threshold = 6;
-    if (level <= threshold) {
+    if (has_symmetry) {
       accepted.erase(begin(accepted), end(accepted));
       vector<Mark> current(board);
       vector<Mark> rotated(current.size());
+      has_symmetry = false;
       for (int i = 0; i < pow(N, D); i++) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           current[i] = mark;
-          if (!find_symmetry(current, rotated, accepted)) {
+          if (find_symmetry(current, rotated, accepted)) {
+            has_symmetry = true;
+          } else {
             accepted.push_back(current);
             open_positions.push_back(i);
           }
@@ -525,7 +526,7 @@ class GameEngine {
 };
 
 int main() {
-  Geometry<5, 3> geom;
+  Geometry<4, 3> geom;
   Symmetry sym(geom);
   //sym.print();
   cout << "num symmetries " << sym.symmetries.size() << "\n";
