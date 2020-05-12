@@ -37,7 +37,7 @@ class Geometry {
     return _winning_positions;
   }
 
-  const vector<vector<int>>& winning_lines() const {
+  const vector<vector<Code>>& winning_lines() const {
     return _winning_lines;
   }
 
@@ -262,7 +262,7 @@ class Symmetry {
   }
 
   void generate_evisceration(const vector<int>& index) {
-    vector<int> symmetry(pow(N, D));
+    vector<Code> symmetry(pow(N, D));
     iota(begin(symmetry), end(symmetry), 0);
     geom.apply_permutation(symmetry, symmetry, index);
     eviscerations.push_back(symmetry);
