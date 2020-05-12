@@ -9,6 +9,7 @@
 using namespace std;
 
 using Position = int;
+using Line = int;
 
 enum class Direction {
   equal,
@@ -34,7 +35,7 @@ class Geometry {
     construct_xor_table();
   }
 
-  const vector<vector<int>>& lines_through_position() const {
+  const vector<vector<Line>>& lines_through_position() const {
     return _lines_through_position;
   }
 
@@ -219,7 +220,7 @@ class Geometry {
   vector<vector<Direction>> unique_terrains;
   vector<vector<Position>> _winning_lines;
   vector<int> _accumulation_points;
-  vector<vector<int>> _lines_through_position;
+  vector<vector<Line>> _lines_through_position;
   vector<int> _xor_table;
 };
 
@@ -564,11 +565,11 @@ int main() {
     //cout << "\n---\n";
     //b.print();
   }
-  double total = 0;
+  double total = 0.0;
   for (int i = 0; i < static_cast<int>(search_tree.size()); i++) {
     double level = static_cast<double>(search_tree[i]) / max_plays;
     cout << "level " << i << " : " << level << "\n";
-    if (level > 0) {
+    if (level > 0.0) {
       double log_level = log10(level < 1.0 ? 1.0 : level);
       total += log_level;
       //cout << log_level << "\n";
