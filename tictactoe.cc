@@ -35,7 +35,7 @@ class Geometry {
   void fill_terrain(vector<Direction>& terrain, int pos) {
     if (pos == D) {
       auto it = find_if(begin(terrain), end(terrain),
-          [](auto& elem) { return elem != Direction::equal; });
+          [](const auto& elem) { return elem != Direction::equal; });
       if (it != end(terrain) && *it == Direction::up) {
         unique_terrains.push_back(terrain);
       }
@@ -137,7 +137,7 @@ class Geometry {
     }
   }
 
-  void print_line(vector<Code>& line) {
+  void print_line(const vector<Code>& line) {
     print(N, [&](int k) {
       return decode(line[k]);
     }, [&](int k) {
@@ -213,7 +213,7 @@ enum class Mark {
 template<int N, int D>
 class Symmetry {
  public:
-  Symmetry(const Geometry<N, D>& geom) : geom(geom) {
+  explicit Symmetry(const Geometry<N, D>& geom) : geom(geom) {
     generate_all_rotations();
     generate_all_eviscerations();
     multiply_groups();
@@ -448,7 +448,6 @@ class GameEngine {
       sym(sym),
       generator(generator),
       state(geom, sym),
-      random_position(0, pow(N, D) - 1),
       search_tree(search_tree) {
   }
 
@@ -463,7 +462,7 @@ class GameEngine {
   }
 
   optional<Code> find_forcing_move(
-      vector<int>& current, vector<int>& opponent,
+      const vector<int>& current, const vector<int>& opponent,
       const vector<Code>& open_positions) {
     for (int i = 0; i < static_cast<int>(geom.winning_lines.size()); i++) {
       if (current[i] == N - 1 && opponent[i] == 0) {
@@ -478,8 +477,8 @@ class GameEngine {
   }
 
   Code choose_position(Mark mark, const vector<Code>& open_positions) {
-    vector<int>& current = state.get_current(mark);
-    vector<int>& opponent = state.get_opponent(mark);
+    const vector<int>& current = state.get_current(mark);
+    const vector<int>& opponent = state.get_opponent(mark);
     optional<Code> attack = find_forcing_move(current, opponent, open_positions);
     if (attack.has_value()) {
       return *attack;
@@ -520,7 +519,6 @@ class GameEngine {
   const Symmetry<N, D>& sym;
   default_random_engine& generator;
   State<N, D> state;
-  uniform_int_distribution<int> random_position;
   vector<int>& search_tree;
 };
 
@@ -547,7 +545,7 @@ int main() {
     double level = static_cast<double>(search_tree[i]) / max_plays;
     cout << "level " << i << " : " << level << "\n";
     if (level > 0) {
-      double log_level = log10(level < 1 ? 1 : level);
+      double log_level = log10(level < 1.0 ? 1.0 : level);
       total += log_level;
       //cout << log_level << "\n";
     }
