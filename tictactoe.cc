@@ -524,7 +524,7 @@ class GameEngine {
         return Mark::empty;
       }
       search_tree[level++] += open_positions.size();
-      int i = choose_position(current_mark, open_positions);
+      Position i = choose_position(current_mark, open_positions);
       auto result = play(i, current_mark);
       /*state.print();
       state.print_accumulation();
