@@ -25,16 +25,17 @@ constexpr initializer_list<Direction> all_directions {
 template<int N, int D>
 class Geometry {
  public:
-  Geometry() : _accumulation_points(pow(N, D)), _winning_positions(pow(N, D)) {
+  Geometry() 
+      : _accumulation_points(pow(N, D)), _lines_through_position(pow(N, D)) {
     construct_unique_terrains();
     construct_winning_lines();
     construct_accumulation_points();
-    construct_winning_positions();
+    construct_lines_through_position();
     construct_xor_table();
   }
 
-  const vector<vector<int>>& winning_positions() const {
-    return _winning_positions;
+  const vector<vector<int>>& lines_through_position() const {
+    return _lines_through_position;
   }
 
   const vector<vector<Code>>& winning_lines() const {
@@ -197,11 +198,11 @@ class Geometry {
         points < 10 + 26 ? 'A' + points - 10 : '-';
   }
 
-  void construct_winning_positions() {
+  void construct_lines_through_position() {
     int size = static_cast<int>(_winning_lines.size());
     for (int i = 0; i < size; i++) {
       for (auto code : _winning_lines[i]) {
-        _winning_positions[code].push_back(i);
+        _lines_through_position[code].push_back(i);
       }
     }
   }
@@ -218,7 +219,7 @@ class Geometry {
   vector<vector<Direction>> unique_terrains;
   vector<vector<Code>> _winning_lines;
   vector<int> _accumulation_points;
-  vector<vector<int>> _winning_positions;
+  vector<vector<int>> _lines_through_position;
   vector<int> _xor_table;
 };
 
@@ -367,7 +368,7 @@ class State {
 
   bool play(Code pos, Mark mark) {
     board[pos] = mark;
-    for (auto line : geom.winning_positions()[pos]) {      
+    for (auto line : geom.lines_through_position()[pos]) {      
       vector<int>& current = get_current(mark);
       current[line]++;
       xor_table[line] ^= pos;
@@ -550,7 +551,7 @@ int main() {
   Symmetry sym(geom);
   //sym.print();
   cout << "num symmetries " << sym.symmetries().size() << "\n";
-  vector<int> search_tree(geom.winning_positions().size());
+  vector<int> search_tree(geom.lines_through_position().size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   int max_plays = 100;
