@@ -65,6 +65,43 @@ class Geometry {
     });
   }
 
+  void print_line(const vector<Code>& line) {
+    print(N, [&](int k) {
+      return decode(line[k]);
+    }, [&](int k) {
+      return 'X';
+    });
+  }
+
+  template<typename X, typename T>
+  void print(int limit, X decoder, T func) const {
+    static_assert(D == 3);
+    vector<vector<vector<char>>> board(N, vector<vector<char>>(
+        N, vector<char>(N, '.')));
+    for (int k = 0; k < limit; k++) {
+      vector<int> decoded = decoder(k);
+      board[decoded[0]][decoded[1]][decoded[2]] = func(k);
+    }
+    for (int k = 0; k < N; k++) {
+      for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++) {
+          cout << board[k][j][i];
+        }
+        cout << "\n";
+      }
+      cout << "\n";
+    }
+  }
+
+  void print_points() {
+    print(pow(N, D), [&](int k) {
+      return decode(k);
+    }, [&](int k) {
+      int points = _accumulation_points[k];
+      return encode_points(points);
+    });
+  }
+
  private:
   Code apply_permutation(const vector<int>& permutation, Code code) const {
     auto decoded = decode(code);
@@ -155,43 +192,6 @@ class Geometry {
     }
   }
 
-  void print_line(const vector<Code>& line) {
-    print(N, [&](int k) {
-      return decode(line[k]);
-    }, [&](int k) {
-      return 'X';
-    });
-  }
-
-  template<typename X, typename T>
-  void print(int limit, X decoder, T func) const {
-    static_assert(D == 3);
-    vector<vector<vector<char>>> board(N, vector<vector<char>>(
-        N, vector<char>(N, '.')));
-    for (int k = 0; k < limit; k++) {
-      vector<int> decoded = decoder(k);
-      board[decoded[0]][decoded[1]][decoded[2]] = func(k);
-    }
-    for (int k = 0; k < N; k++) {
-      for (int j = 0; j < N; j++) {
-        for (int i = 0; i < N; i++) {
-          cout << board[k][j][i];
-        }
-        cout << "\n";
-      }
-      cout << "\n";
-    }
-  }
-
-  void print_points() {
-    print(pow(N, D), [&](int k) {
-      return decode(k);
-    }, [&](int k) {
-      int points = _accumulation_points[k];
-      return encode_points(points);
-    });
-  }
-
   char encode_points(int points) const {
     return points < 10 ? '0' + points : 
         points < 10 + 26 ? 'A' + points - 10 : '-';
@@ -237,6 +237,11 @@ class Symmetry {
     multiply_groups();
   }
 
+  const vector<vector<Code>>& symmetries() const {
+    return _symmetries;
+  }
+
+ private:
   void multiply_groups() {
     set<vector<Code>> unique;
     for (const auto& rotation : rotations) {
@@ -248,7 +253,7 @@ class Symmetry {
         unique.insert(symmetry);
       }
     }
-    copy(begin(unique), end(unique), back_inserter(symmetries));
+    copy(begin(unique), end(unique), back_inserter(_symmetries));
   }
 
   void generate_all_eviscerations() {
@@ -327,7 +332,7 @@ class Symmetry {
   }
 
   const Geometry<N, D>& geom;
-  vector<vector<Code>> symmetries;
+  vector<vector<Code>> _symmetries;
   vector<vector<Code>> rotations;
   vector<vector<Code>> eviscerations;
 };
@@ -347,7 +352,7 @@ class State {
       current_accumulation(geom.accumulation_points()),
       has_symmetry(true) {
     open_positions.reserve(pow(N, D));
-    accepted.reserve(sym.symmetries.size());
+    accepted.reserve(sym.symmetries().size());
   }
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
@@ -412,7 +417,7 @@ class State {
 
   bool find_symmetry(const vector<Mark>& current, vector<Mark>& rotated,
       const vector<vector<Mark>>& accepted) {
-    for (const auto& symmetry : sym.symmetries) {
+    for (const auto& symmetry : sym.symmetries()) {
       for (int i = 0; i < pow(N, D); i++) {
         rotated[i] = current[symmetry[i]];
       }
@@ -544,7 +549,7 @@ int main() {
   Geometry<4, 3> geom;
   Symmetry sym(geom);
   //sym.print();
-  cout << "num symmetries " << sym.symmetries.size() << "\n";
+  cout << "num symmetries " << sym.symmetries().size() << "\n";
   vector<int> search_tree(geom.winning_positions().size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
