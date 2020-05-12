@@ -200,8 +200,8 @@ class Geometry {
   }
 
   void construct_lines_through_position() {
-    int size = static_cast<int>(_winning_lines.size());
-    for (int i = 0; i < size; i++) {
+    Line size = static_cast<Line>(_winning_lines.size());
+    for (Line i = 0; i < size; i++) {
       for (auto code : _winning_lines[i]) {
         _lines_through_position[code].push_back(i);
       }
@@ -395,7 +395,7 @@ class State {
       vector<Mark> current(board);
       vector<Mark> rotated(current.size());
       has_symmetry = false;
-      for (int i = 0; i < pow(N, D); i++) {
+      for (Position i = 0; i < pow(N, D); i++) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           current[i] = mark;
           if (find_symmetry(current, rotated, accepted)) {
@@ -408,7 +408,7 @@ class State {
         }
       }
     } else {
-      for (int i = 0; i < pow(N, D); i++) {
+      for (Position i = 0; i < pow(N, D); i++) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           open_positions.push_back(i);
         }
