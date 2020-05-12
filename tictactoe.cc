@@ -190,10 +190,9 @@ class Geometry {
 
   void construct_xor_table() {
     for (auto& line : winning_lines) {
-      int ans = 0;
-      for (auto& code : line) {
-        ans ^= code;
-      }
+      int ans = accumulate(begin(line), end(line), 0, [](auto x, auto y) {
+        return x ^ y;
+      });
       xor_table.push_back(ans);
     }
   }
