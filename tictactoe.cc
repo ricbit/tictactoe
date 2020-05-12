@@ -105,9 +105,9 @@ class Geometry {
   }
 
  private:
-  Position apply_permutation(const vector<int>& permutation, Position code) const {
+  Position apply_permutation(const vector<Position>& permutation, Position code) const {
     auto decoded = decode(code);
-    transform(begin(decoded), end(decoded), begin(decoded), [&](int x) {
+    transform(begin(decoded), end(decoded), begin(decoded), [&](Position x) {
       return permutation[x];
     });
     return encode(decoded);
@@ -249,7 +249,7 @@ class Symmetry {
     for (const auto& rotation : rotations) {
       for (const auto& evisceration : eviscerations) {
         vector<Position> symmetry(pow(N, D));
-        for (int i = 0; i < pow(N, D); i++) {
+        for (Position i = 0; i < pow(N, D); i++) {
           symmetry[rotation[evisceration[i]]] = i;
         }
         unique.insert(symmetry);
@@ -420,7 +420,7 @@ class State {
   bool find_symmetry(const vector<Mark>& current, vector<Mark>& rotated,
       const vector<vector<Mark>>& accepted) {
     for (const auto& symmetry : sym.symmetries()) {
-      for (int i = 0; i < pow(N, D); i++) {
+      for (Position i = 0; i < pow(N, D); i++) {
         rotated[i] = current[symmetry[i]];
       }
       if (find(begin(accepted), end(accepted), rotated) != end(accepted)) {
