@@ -17,15 +17,15 @@ enum class Direction {
 };
 
 constexpr initializer_list<Direction> all_directions {
-  Direction::equal, 
-  Direction::up, 
+  Direction::equal,
+  Direction::up,
   Direction::down
 };
 
 template<int N, int D>
 class Geometry {
  public:
-  Geometry() 
+  Geometry()
       : _accumulation_points(pow(N, D)), _lines_through_position(pow(N, D)) {
     construct_unique_terrains();
     construct_winning_lines();
@@ -127,12 +127,12 @@ class Geometry {
     }
   }
 
-  void construct_unique_terrains() {    
+  void construct_unique_terrains() {
     vector<Direction> terrain(D);
     fill_terrain(terrain, 0);
   }
 
-  void generate_lines(const vector<Direction>& terrain, 
+  void generate_lines(const vector<Direction>& terrain,
       vector<vector<int>> current_line, int pos) {
     if (pos == D) {
       vector<Code> line(N);
@@ -144,13 +144,13 @@ class Geometry {
       return;
     }
     switch (terrain[pos]) {
-      case Direction::up: 
+      case Direction::up:
         for (int i = 0; i < N; i++) {
           current_line[i][pos] = i;
         }
         generate_lines(terrain, current_line, pos + 1);
         break;
-      case Direction::down: 
+      case Direction::down:
         for (int i = 0; i < N; i++) {
           current_line[i][pos] = N - i - 1;
         }
@@ -194,7 +194,7 @@ class Geometry {
   }
 
   char encode_points(int points) const {
-    return points < 10 ? '0' + points : 
+    return points < 10 ? '0' + points :
         points < 10 + 26 ? 'A' + points - 10 : '-';
   }
 
@@ -368,15 +368,15 @@ class State {
 
   bool play(Code pos, Mark mark) {
     board[pos] = mark;
-    for (auto line : geom.lines_through_position()[pos]) {      
+    for (auto line : geom.lines_through_position()[pos]) {
       vector<int>& current = get_current(mark);
       current[line]++;
       xor_table[line] ^= pos;
       if (current[line] == N) {
         return true;
       }
-      if (x_marks_on_line[line] > 0 && 
-          o_marks_on_line[line] > 0 && 
+      if (x_marks_on_line[line] > 0 &&
+          o_marks_on_line[line] > 0 &&
           active_line[line]) {
         active_line[line] = false;
         for (int j = 0; j < N; j++) {
@@ -452,10 +452,10 @@ class State {
       return geom.encode_points(current_accumulation[k]);
     });
   }
-  
+
   char encode_position(Mark pos) {
     return pos == Mark::X ? 'X'
-         : pos == Mark::O ? 'O' 
+         : pos == Mark::O ? 'O'
          : '.';
   }
 
