@@ -8,7 +8,7 @@
 
 using namespace std;
 
-using Code = int;
+using Position = int;
 
 enum class Direction {
   equal,
@@ -38,7 +38,7 @@ class Geometry {
     return _lines_through_position;
   }
 
-  const vector<vector<Code>>& winning_lines() const {
+  const vector<vector<Position>>& winning_lines() const {
     return _winning_lines;
   }
 
@@ -50,7 +50,7 @@ class Geometry {
     return _xor_table;
   }
 
-  vector<int> decode(Code code) const {
+  vector<int> decode(Position code) const {
     vector<int> ans;
     for (int i = 0; i < D; i++) {
       ans.push_back(code % N);
@@ -59,14 +59,14 @@ class Geometry {
     return ans;
   }
 
-  void apply_permutation(const vector<Code>& source, vector<Code>& dest,
+  void apply_permutation(const vector<Position>& source, vector<Position>& dest,
       const vector<int>& permutation) const {
-    transform(begin(source), end(source), begin(dest), [&](Code code) {
+    transform(begin(source), end(source), begin(dest), [&](Position code) {
       return apply_permutation(permutation, code);
     });
   }
 
-  void print_line(const vector<Code>& line) {
+  void print_line(const vector<Position>& line) {
     print(N, [&](int k) {
       return decode(line[k]);
     }, [&](int k) {
@@ -104,7 +104,7 @@ class Geometry {
   }
 
  private:
-  Code apply_permutation(const vector<int>& permutation, Code code) const {
+  Position apply_permutation(const vector<int>& permutation, Position code) const {
     auto decoded = decode(code);
     transform(begin(decoded), end(decoded), begin(decoded), [&](int x) {
       return permutation[x];
@@ -135,7 +135,7 @@ class Geometry {
   void generate_lines(const vector<Direction>& terrain,
       vector<vector<int>> current_line, int pos) {
     if (pos == D) {
-      vector<Code> line(N);
+      vector<Position> line(N);
       for (int j = 0; j < N; j++) {
         line[j] = encode(current_line[j]);
       }
@@ -167,8 +167,8 @@ class Geometry {
     }
   }
 
-  Code encode(vector<int> dim_index) const {
-    Code ans = 0;
+  Position encode(vector<int> dim_index) const {
+    Position ans = 0;
     int factor = 1;
     for (int i = 0; i < D; i++) {
       ans += dim_index[i] * factor;
@@ -217,7 +217,7 @@ class Geometry {
   }
 
   vector<vector<Direction>> unique_terrains;
-  vector<vector<Code>> _winning_lines;
+  vector<vector<Position>> _winning_lines;
   vector<int> _accumulation_points;
   vector<vector<int>> _lines_through_position;
   vector<int> _xor_table;
@@ -238,16 +238,16 @@ class Symmetry {
     multiply_groups();
   }
 
-  const vector<vector<Code>>& symmetries() const {
+  const vector<vector<Position>>& symmetries() const {
     return _symmetries;
   }
 
  private:
   void multiply_groups() {
-    set<vector<Code>> unique;
+    set<vector<Position>> unique;
     for (const auto& rotation : rotations) {
       for (const auto& evisceration : eviscerations) {
-        vector<Code> symmetry(pow(N, D));
+        vector<Position> symmetry(pow(N, D));
         for (int i = 0; i < pow(N, D); i++) {
           symmetry[rotation[evisceration[i]]] = i;
         }
@@ -268,7 +268,7 @@ class Symmetry {
   }
 
   void generate_evisceration(const vector<int>& index) {
-    vector<Code> symmetry(pow(N, D));
+    vector<Position> symmetry(pow(N, D));
     iota(begin(symmetry), end(symmetry), 0);
     geom.apply_permutation(symmetry, symmetry, index);
     eviscerations.push_back(symmetry);
@@ -276,7 +276,7 @@ class Symmetry {
 
   bool validate_evisceration(const vector<int>& index) {
     for (const auto& line : geom.winning_lines()) {
-      vector<Code> transformed(N);
+      vector<Position> transformed(N);
       geom.apply_permutation(line, transformed, index);
       sort(begin(transformed), end(transformed));
       if (!search_line(transformed)) {
@@ -286,7 +286,7 @@ class Symmetry {
     return true;
   }
 
-  bool search_line(const vector<Code>& transformed) {
+  bool search_line(const vector<Position>& transformed) {
     return binary_search(
         begin(geom.winning_lines()), end(geom.winning_lines()), transformed);
   }
@@ -301,11 +301,11 @@ class Symmetry {
     } while (next_permutation(begin(index), end(index)));
   }
 
-  vector<Code> generate_rotation(const vector<int>& index, int bits) {
-    vector<Code> symmetry;
-    for (Code i = 0; i < pow(N, D); i++) {
+  vector<Position> generate_rotation(const vector<int>& index, int bits) {
+    vector<Position> symmetry;
+    for (Position i = 0; i < pow(N, D); i++) {
       auto decoded = geom.decode(i);
-      Code ans = 0;
+      Position ans = 0;
       int current_bits = bits;
       for (int j = 0; j < D; j++) {
         int column = decoded[index[j]];
@@ -317,7 +317,7 @@ class Symmetry {
     return symmetry;
   }
 
-  void print_symmetry(const vector<Code>& symmetry) {
+  void print_symmetry(const vector<Position>& symmetry) {
     geom.print(pow(N, D), [&](int k) {
       return geom.decode(k);
     }, [&](int k) {
@@ -333,9 +333,9 @@ class Symmetry {
   }
 
   const Geometry<N, D>& geom;
-  vector<vector<Code>> _symmetries;
-  vector<vector<Code>> rotations;
-  vector<vector<Code>> eviscerations;
+  vector<vector<Position>> _symmetries;
+  vector<vector<Position>> rotations;
+  vector<vector<Position>> eviscerations;
 };
 
 
@@ -362,11 +362,11 @@ class State {
   vector<int> xor_table;
   vector<bool> active_line;
   vector<int> current_accumulation;
-  vector<Code> open_positions;
+  vector<Position> open_positions;
   vector<vector<Mark>> accepted;
   bool has_symmetry;
 
-  bool play(Code pos, Mark mark) {
+  bool play(Position pos, Mark mark) {
     board[pos] = mark;
     for (auto line : geom.lines_through_position()[pos]) {
       vector<int>& current = get_current(mark);
@@ -387,7 +387,7 @@ class State {
     return false;
   }
 
-  const vector<Code>& get_open_positions(Mark mark) {
+  const vector<Position>& get_open_positions(Mark mark) {
     open_positions.erase(begin(open_positions), end(open_positions));
     if (has_symmetry) {
       accepted.erase(begin(accepted), end(accepted));
@@ -475,22 +475,22 @@ class GameEngine {
       search_tree(search_tree) {
   }
 
-  bool play(Code pos, Mark mark) {
+  bool play(Position pos, Mark mark) {
     return state.play(pos, mark);
   }
 
-  Code random_open_position(const vector<Code>& open_positions) {
+  Position random_open_position(const vector<Position>& open_positions) {
     uniform_int_distribution<int> random_position(
         0, open_positions.size() - 1);
     return open_positions[random_position(generator)];
   }
 
-  optional<Code> find_forcing_move(
+  optional<Position> find_forcing_move(
       const vector<int>& current, const vector<int>& opponent,
-      const vector<Code>& open_positions) {
+      const vector<Position>& open_positions) {
     for (int i = 0; i < static_cast<int>(geom.winning_lines().size()); i++) {
       if (current[i] == N - 1 && opponent[i] == 0) {
-        Code trial = state.xor_table[i];
+        Position trial = state.xor_table[i];
         auto found = find(begin(open_positions), end(open_positions), trial);
         if (found != end(open_positions)) {
           return state.xor_table[i];
@@ -500,14 +500,14 @@ class GameEngine {
     return {};
   }
 
-  Code choose_position(Mark mark, const vector<Code>& open_positions) {
+  Position choose_position(Mark mark, const vector<Position>& open_positions) {
     const vector<int>& current = state.get_current(mark);
     const vector<int>& opponent = state.get_opponent(mark);
-    optional<Code> attack = find_forcing_move(current, opponent, open_positions);
+    optional<Position> attack = find_forcing_move(current, opponent, open_positions);
     if (attack.has_value()) {
       return *attack;
     }
-    optional<Code> defend = find_forcing_move(opponent, current, open_positions);
+    optional<Position> defend = find_forcing_move(opponent, current, open_positions);
     if (defend.has_value()) {
       return *defend;
     }
