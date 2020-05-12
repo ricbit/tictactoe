@@ -25,7 +25,7 @@ constexpr initializer_list<Direction> all_directions {
 template<int N, int D>
 class Geometry {
  public:
-  Geometry() : accumulation_points(pow(N, D)), _winning_positions(pow(N, D)) {
+  Geometry() : _accumulation_points(pow(N, D)), _winning_positions(pow(N, D)) {
     construct_unique_terrains();
     construct_winning_lines();
     construct_accumulation_points();
@@ -39,6 +39,14 @@ class Geometry {
 
   const vector<vector<int>>& winning_lines() const {
     return _winning_lines;
+  }
+
+  const vector<int>& accumulation_points() const {
+    return _accumulation_points;
+  }
+
+  const vector<int>& xor_table() const {
+    return _xor_table;
   }
 
   vector<int> decode(Code code) const {
@@ -142,7 +150,7 @@ class Geometry {
   void construct_accumulation_points() {
     for (const auto& line : _winning_lines) {
       for (const auto code : line) {
-        accumulation_points[code]++;
+        _accumulation_points[code]++;
       }
     }
   }
@@ -179,7 +187,7 @@ class Geometry {
     print(pow(N, D), [&](int k) {
       return decode(k);
     }, [&](int k) {
-      int points = accumulation_points[k];
+      int points = _accumulation_points[k];
       return encode_points(points);
     });
   }
@@ -203,16 +211,15 @@ class Geometry {
       int ans = accumulate(begin(line), end(line), 0, [](auto x, auto y) {
         return x ^ y;
       });
-      xor_table.push_back(ans);
+      _xor_table.push_back(ans);
     }
   }
 
   vector<vector<Direction>> unique_terrains;
   vector<vector<Code>> _winning_lines;
- public:
-  vector<int> accumulation_points;
+  vector<int> _accumulation_points;
   vector<vector<int>> _winning_positions;
-  vector<int> xor_table;
+  vector<int> _xor_table;
 };
 
 enum class Mark {
@@ -335,9 +342,9 @@ class State {
       board(pow(N, D), Mark::empty),
       x_marks_on_line(geom.winning_lines().size()),
       o_marks_on_line(geom.winning_lines().size()),
-      xor_table(geom.xor_table),
+      xor_table(geom.xor_table()),
       active_line(geom.winning_lines().size(), true),
-      current_accumulation(geom.accumulation_points),
+      current_accumulation(geom.accumulation_points()),
       has_symmetry(true) {
     open_positions.reserve(pow(N, D));
     accepted.reserve(sym.symmetries.size());
