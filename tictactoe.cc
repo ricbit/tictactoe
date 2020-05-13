@@ -5,6 +5,7 @@
 #include <random>
 #include <chrono>
 #include <set>
+#include <queue>
 
 using namespace std;
 
@@ -230,6 +231,7 @@ enum class Mark {
   empty
 };
 
+
 template<int N, int D>
 class Symmetry {
  public:
@@ -256,6 +258,7 @@ class Symmetry {
       }
     }
     copy(begin(unique), end(unique), back_inserter(_symmetries));
+    sort(begin(_symmetries), end(_symmetries));
   }
 
   void generate_all_eviscerations() {
@@ -337,6 +340,69 @@ class Symmetry {
   vector<vector<Position>> _symmetries;
   vector<vector<Position>> rotations;
   vector<vector<Position>> eviscerations;
+};
+
+class SymmeTrie {
+ public:
+  struct Node {
+    vector<int> similar;
+    vector<int> next;
+  };
+  vector<Node> nodes;
+
+  SymmeTrie(const vector<vector<int>>& symmetries) {
+    construct_trie(symmetries);
+  }
+
+  void print() {
+    for (const auto& node : nodes) {
+      cout << " --- \n";
+      for (int i = 0; i < static_cast<int>(node.similar.size()); i++) {
+        cout << node.similar[i] << " ";
+      }
+      cout << "\n";
+      for (int j = 0; j < static_cast<int>(node.next.size()); j++) {
+        cout << j << " -> ";
+        Node& n = nodes[node.next[j]];
+        for (int i = 0; i < static_cast<int>(n.similar.size()); i++) {
+          cout << n.similar[i] << " ";
+        }
+        cout << "\n";
+      }
+    }
+  }
+
+  void construct_trie(const vector<vector<Position>>& symmetries) {
+    vector<int> root(symmetries.size());
+    iota(begin(root), end(root), 0);
+    queue<int> pool;
+    int pos_size = symmetries[0].size();
+    nodes.push_back(Node{root, vector<int>(pos_size)});
+    pool.push(0);
+    while (!pool.empty()) {
+      int current_node = pool.front();
+      vector<int> current = nodes[current_node].similar;
+      pool.pop();
+      for (Position i = 0; i < pos_size; i++) {
+        vector<int> next_similar;
+        for (int j = 0; j < static_cast<int>(current.size()); j++) {
+          if (i == symmetries[current[j]][i]) {
+            next_similar.push_back(j);
+          }
+        }
+        auto it = find_if(begin(nodes), end(nodes), [&](const auto& x) {
+          return x.similar == next_similar;
+        });
+        if (it == end(nodes)) {
+          nodes.push_back(Node{next_similar, vector<int>(pos_size)});
+          pool.push(nodes.size() - 1);
+          nodes[current_node].next[i] = nodes.size() - 1;
+        } else {
+          nodes[current_node].next[i] = distance(begin(nodes), it);
+        }
+      }
+    }
+  }
 };
 
 
@@ -459,7 +525,6 @@ class State {
          : pos == Mark::O ? 'O'
          : '.';
   }
-
 };
 
 template<int N, int D>
@@ -550,6 +615,8 @@ class GameEngine {
 int main() {
   Geometry<4, 3> geom;
   Symmetry sym(geom);
+  SymmeTrie trie(sym.symmetries());
+  trie.print();
   //sym.print();
   cout << "num symmetries " << sym.symmetries().size() << "\n";
   vector<int> search_tree(geom.lines_through_position().size());
