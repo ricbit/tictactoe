@@ -33,28 +33,16 @@ class Index {
   int index;
 };
 
-class Position : public Index<Position> {
- public:
-  constexpr explicit Position(int index) : Index(index) {
-  }
-  constexpr Position() : Index(0) {
-  }
-};
-
-constexpr Position operator"" _pos(unsigned long long int pos) {
-  return Position{static_cast<int>(pos)};
-}
-
-class Side : public Index<Side> {
- public:
-  constexpr explicit Side(int index) : Index(index) {
-  }
-  constexpr Side() : Index(0) {
-  }
-};
-
-constexpr Side operator"" _side(unsigned long long int index) {
-  return Side{static_cast<int>(index)};
+#define SEMANTIC_INDEX(name, prefix) \
+class name : public Index<name> { \
+ public: \
+  constexpr explicit name(int index) : Index(index) { \
+  } \
+  constexpr name() : Index(0) { \
+  } \
+}; \
+constexpr name operator"" _##prefix(unsigned long long int index) { \
+  return name{static_cast<int>(index)}; \
 }
 
 #endif

@@ -10,7 +10,9 @@
 
 using namespace std;
 
-using Line = int;
+SEMANTIC_INDEX(Position, pos)
+SEMANTIC_INDEX(Side, side)
+SEMANTIC_INDEX(Line, line)
 
 enum class Direction {
   equal,
@@ -28,13 +30,15 @@ template<int N, int D>
 class Geometry {
  public:
   Geometry()
-      : _accumulation_points(pow(N, D)), _lines_through_position(pow(N, D)) {
+      : _accumulation_points(board_size), _lines_through_position(board_size) {
     construct_unique_terrains();
     construct_winning_lines();
     construct_accumulation_points();
     construct_lines_through_position();
     construct_xor_table();
   }
+
+  constexpr static Position board_size = static_cast<Position>(pow(N, D));
 
   const vector<vector<Line>>& lines_through_position() const {
     return _lines_through_position;
@@ -202,7 +206,7 @@ class Geometry {
 
   void construct_lines_through_position() {
     Line size = static_cast<Line>(_winning_lines.size());
-    for (Line i = 0; i < size; i++) {
+    for (Line i = 0_line; i < size; i++) {
       for (auto code : _winning_lines[i]) {
         _lines_through_position[code].push_back(i);
       }
