@@ -6,10 +6,10 @@
 #include <chrono>
 #include <set>
 #include <queue>
+#include "semantic.hh"
 
 using namespace std;
 
-using Position = int;
 using Line = int;
 
 enum class Direction {
@@ -52,17 +52,17 @@ class Geometry {
     return _xor_table;
   }
 
-  vector<int> decode(Position code) const {
-    vector<int> ans;
+  vector<Side> decode(Position code) const {
+    vector<Side> ans;
     for (int i = 0; i < D; i++) {
-      ans.push_back(code % N);
+      ans.push_back(Side{code % N});
       code /= N;
     }
     return ans;
   }
 
   void apply_permutation(const vector<Position>& source, vector<Position>& dest,
-      const vector<int>& permutation) const {
+      const vector<Side>& permutation) const {
     transform(begin(source), end(source), begin(dest), [&](Position code) {
       return apply_permutation(permutation, code);
     });
@@ -106,9 +106,9 @@ class Geometry {
   }
 
  private:
-  Position apply_permutation(const vector<Position>& permutation, Position code) const {
+  Position apply_permutation(const vector<Side>& permutation, Position code) const {
     auto decoded = decode(code);
-    transform(begin(decoded), end(decoded), begin(decoded), [&](Position x) {
+    transform(begin(decoded), end(decoded), begin(decoded), [&](Side x) {
       return permutation[x];
     });
     return encode(decoded);
@@ -135,7 +135,7 @@ class Geometry {
   }
 
   void generate_lines(const vector<Direction>& terrain,
-      vector<vector<int>> current_line, int pos) {
+      vector<vector<Side>> current_line, int pos) {
     if (pos == D) {
       vector<Position> line(N);
       for (int j = 0; j < N; j++) {
@@ -148,20 +148,20 @@ class Geometry {
     switch (terrain[pos]) {
       case Direction::up:
         for (int i = 0; i < N; i++) {
-          current_line[i][pos] = i;
+          current_line[i][pos] = Side{i};
         }
         generate_lines(terrain, current_line, pos + 1);
         break;
       case Direction::down:
         for (int i = 0; i < N; i++) {
-          current_line[i][pos] = N - i - 1;
+          current_line[i][pos] = Side{N - i - 1};
         }
         generate_lines(terrain, current_line, pos + 1);
         break;
       case Direction::equal:
         for (int j = 0; j < N; j++) {
           for (int i = 0; i < N; i++) {
-            current_line[i][pos] = j;
+            current_line[i][pos] = Side{j};
           }
           generate_lines(terrain, current_line, pos + 1);
         }
@@ -169,8 +169,8 @@ class Geometry {
     }
   }
 
-  Position encode(vector<int> dim_index) const {
-    Position ans = 0;
+  Position encode(const vector<Side>& dim_index) const {
+    Position ans = 0_pos;
     int factor = 1;
     for (int i = 0; i < D; i++) {
       ans += dim_index[i] * factor;
@@ -180,7 +180,7 @@ class Geometry {
   }
 
   void construct_winning_lines() {
-    vector<vector<int>> current_line(N, vector<int>(D));
+    vector<vector<Side>> current_line(N, vector<Side>(D, Side{0}));
     for (auto terrain : unique_terrains) {
       generate_lines(terrain, current_line, 0);
     }
@@ -239,7 +239,7 @@ class SymmeTrie {
   };
   vector<Node> nodes;
 
-  SymmeTrie(const vector<vector<int>>& symmetries) {
+  SymmeTrie(const vector<vector<Position>>& symmetries) {
     construct_trie(symmetries);
   }
 
@@ -272,7 +272,7 @@ class SymmeTrie {
       int current_node = pool.front();
       vector<int> current = nodes[current_node].similar;
       pool.pop();
-      for (Position i = 0; i < pos_size; i++) {
+      for (Position i = 0_pos; i < pos_size; i++) {
         vector<int> next_similar;
         for (int j = 0; j < static_cast<int>(current.size()); j++) {
           if (i == symmetries[current[j]][i]) {
@@ -313,7 +313,7 @@ class Symmetry {
     for (const auto& rotation : rotations) {
       for (const auto& evisceration : eviscerations) {
         vector<Position> symmetry(pow(N, D));
-        for (Position i = 0; i < pow(N, D); i++) {
+        for (Position i = 0_pos; i < pow(N, D); i++) {
           symmetry[rotation[evisceration[i]]] = i;
         }
         unique.insert(symmetry);
@@ -324,8 +324,8 @@ class Symmetry {
   }
 
   void generate_all_eviscerations() {
-    vector<int> index(N);
-    iota(begin(index), end(index), 0);
+    vector<Side> index(N);
+    iota(begin(index), end(index), 0_side);
     do {
       if (validate_evisceration(index)) {
         generate_evisceration(index);
@@ -333,14 +333,14 @@ class Symmetry {
     } while (next_permutation(begin(index), end(index)));
   }
 
-  void generate_evisceration(const vector<int>& index) {
+  void generate_evisceration(const vector<Side>& index) {
     vector<Position> symmetry(pow(N, D));
-    iota(begin(symmetry), end(symmetry), 0);
+    iota(begin(symmetry), end(symmetry), 0_pos);
     geom.apply_permutation(symmetry, symmetry, index);
     eviscerations.push_back(symmetry);
   }
 
-  bool validate_evisceration(const vector<int>& index) {
+  bool validate_evisceration(const vector<Side>& index) {
     for (const auto& line : geom.winning_lines()) {
       vector<Position> transformed(N);
       geom.apply_permutation(line, transformed, index);
@@ -369,13 +369,13 @@ class Symmetry {
 
   vector<Position> generate_rotation(const vector<int>& index, int bits) {
     vector<Position> symmetry;
-    for (Position i = 0; i < pow(N, D); i++) {
+    for (Position i = 0_pos; i < pow(N, D); i++) {
       auto decoded = geom.decode(i);
-      Position ans = 0;
+      Position ans = 0_pos;
       int current_bits = bits;
       for (int j = 0; j < D; j++) {
         int column = decoded[index[j]];
-        ans = ans * N + ((current_bits & 1) == 0 ? column : N - column - 1);
+        ans = Position{ans * N + ((current_bits & 1) == 0 ? column : N - column - 1)};
         current_bits >>= 1;
       }
       symmetry.push_back(ans);
@@ -461,7 +461,7 @@ class State {
       vector<Mark> current(board);
       vector<Mark> rotated(current.size());
       has_symmetry = false;
-      for (Position i = 0; i < pow(N, D); i++) {
+      for (Position i = 0_pos; i < pow(N, D); i++) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           current[i] = mark;
           if (find_symmetry(current, rotated, accepted)) {
@@ -474,7 +474,7 @@ class State {
         }
       }
     } else {
-      for (Position i = 0; i < pow(N, D); i++) {
+      for (Position i = 0_pos; i < pow(N, D); i++) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           open_positions.push_back(i);
         }
@@ -486,7 +486,7 @@ class State {
   bool find_symmetry(const vector<Mark>& current, vector<Mark>& rotated,
       const vector<vector<Mark>>& accepted) {
     for (const auto& symmetry : sym.symmetries()) {
-      for (Position i = 0; i < pow(N, D); i++) {
+      for (Position i = 0_pos; i < pow(N, D); i++) {
         rotated[i] = current[symmetry[i]];
       }
       if (find(begin(accepted), end(accepted), rotated) != end(accepted)) {
@@ -556,10 +556,10 @@ class GameEngine {
       const vector<Position>& open_positions) {
     for (int i = 0; i < static_cast<int>(geom.winning_lines().size()); i++) {
       if (current[i] == N - 1 && opponent[i] == 0) {
-        Position trial = state.xor_table[i];
+        Position trial = Position{state.xor_table[i]};
         auto found = find(begin(open_positions), end(open_positions), trial);
         if (found != end(open_positions)) {
-          return state.xor_table[i];
+          return trial;
         }
       }
     }
