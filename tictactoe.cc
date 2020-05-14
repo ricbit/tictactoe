@@ -6,6 +6,7 @@
 #include <chrono>
 #include <set>
 #include <queue>
+#include <cassert>
 #include "semantic.hh"
 
 using namespace std;
@@ -38,7 +39,10 @@ class Geometry {
     construct_xor_table();
   }
 
-  constexpr static Position board_size = static_cast<Position>(pow(N, D));
+  constexpr static Position board_size =
+      static_cast<Position>(pow(N, D));
+  constexpr static Line line_size =
+      static_cast<Line>((pow(N + 2, D) - pow(N, D)) / 2);
 
   const vector<vector<Line>>& lines_through_position() const {
     return _lines_through_position;
@@ -189,6 +193,7 @@ class Geometry {
       generate_lines(terrain, current_line, 0);
     }
     sort(begin(_winning_lines), end(_winning_lines));
+    assert(static_cast<int>(_winning_lines.size()) == line_size);
   }
 
   void construct_accumulation_points() {
@@ -205,8 +210,7 @@ class Geometry {
   }
 
   void construct_lines_through_position() {
-    Line size = static_cast<Line>(_winning_lines.size());
-    for (Line i = 0_line; i < size; i++) {
+    for (Line i = 0_line; i < line_size; i++) {
       for (auto code : _winning_lines[i]) {
         _lines_through_position[code].push_back(i);
       }
@@ -416,10 +420,10 @@ class State {
       sym(sym),
       trie(sym.symmetries()),
       board(geom.board_size, Mark::empty),
-      x_marks_on_line(geom.winning_lines().size()),
-      o_marks_on_line(geom.winning_lines().size()),
+      x_marks_on_line(geom.line_size),
+      o_marks_on_line(geom.line_size),
       xor_table(geom.xor_table()),
-      active_line(geom.winning_lines().size(), true),
+      active_line(geom.line_size, true),
       current_accumulation(geom.accumulation_points()),
       has_symmetry(true) {
     open_positions.reserve(geom.board_size);
@@ -558,7 +562,7 @@ class GameEngine {
   optional<Position> find_forcing_move(
       const vector<int>& current, const vector<int>& opponent,
       const vector<Position>& open_positions) {
-    for (int i = 0; i < static_cast<int>(geom.winning_lines().size()); i++) {
+    for (int i = 0; i < static_cast<int>(geom.line_size); i++) {
       if (current[i] == N - 1 && opponent[i] == 0) {
         Position trial = Position{state.xor_table[i]};
         auto found = find(begin(open_positions), end(open_positions), trial);
@@ -629,7 +633,7 @@ int main() {
   int max_plays = 100;
   vector<int> win_counts(3);
   //geom.print_points();
-  cout << "winning lines " << geom.winning_lines().size() << "\n";
+  cout << "winning lines " << geom.line_size << "\n";
   for (int i = 0; i < max_plays; i++) {
     GameEngine b(geom, sym, generator, search_tree);
     win_counts[static_cast<int>(b.play())]++;
