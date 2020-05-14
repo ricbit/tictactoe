@@ -101,7 +101,7 @@ class Geometry {
   }
 
   void print_points() {
-    print(pow(N, D), [&](int k) {
+    print(board_size, [&](int k) {
       return decode(k);
     }, [&](int k) {
       int points = _accumulation_points[k];
@@ -316,8 +316,8 @@ class Symmetry {
     set<vector<Position>> unique;
     for (const auto& rotation : rotations) {
       for (const auto& evisceration : eviscerations) {
-        vector<Position> symmetry(pow(N, D));
-        for (Position i = 0_pos; i < pow(N, D); i++) {
+        vector<Position> symmetry(geom.board_size);
+        for (Position i = 0_pos; i < geom.board_size; i++) {
           symmetry[rotation[evisceration[i]]] = i;
         }
         unique.insert(symmetry);
@@ -338,7 +338,7 @@ class Symmetry {
   }
 
   void generate_evisceration(const vector<Side>& index) {
-    vector<Position> symmetry(pow(N, D));
+    vector<Position> symmetry(geom.board_size);
     iota(begin(symmetry), end(symmetry), 0_pos);
     geom.apply_permutation(symmetry, symmetry, index);
     eviscerations.push_back(symmetry);
@@ -373,7 +373,7 @@ class Symmetry {
 
   vector<Position> generate_rotation(const vector<int>& index, int bits) {
     vector<Position> symmetry;
-    for (Position i = 0_pos; i < pow(N, D); i++) {
+    for (Position i = 0_pos; i < geom.board_size; i++) {
       auto decoded = geom.decode(i);
       Position ans = 0_pos;
       int current_bits = bits;
@@ -388,7 +388,7 @@ class Symmetry {
   }
 
   void print_symmetry(const vector<Position>& symmetry) {
-    geom.print(pow(N, D), [&](int k) {
+    geom.print(geom.board_size, [&](int k) {
       return geom.decode(k);
     }, [&](int k) {
       return geom.encode_points(symmetry[k]);
@@ -415,14 +415,14 @@ class State {
       geom(geom),
       sym(sym),
       trie(sym.symmetries()),
-      board(pow(N, D), Mark::empty),
+      board(geom.board_size, Mark::empty),
       x_marks_on_line(geom.winning_lines().size()),
       o_marks_on_line(geom.winning_lines().size()),
       xor_table(geom.xor_table()),
       active_line(geom.winning_lines().size(), true),
       current_accumulation(geom.accumulation_points()),
       has_symmetry(true) {
-    open_positions.reserve(pow(N, D));
+    open_positions.reserve(geom.board_size);
     accepted.reserve(sym.symmetries().size());
   }
   const Geometry<N, D>& geom;
@@ -465,7 +465,7 @@ class State {
       vector<Mark> current(board);
       vector<Mark> rotated(current.size());
       has_symmetry = false;
-      for (Position i = 0_pos; i < pow(N, D); i++) {
+      for (Position i = 0_pos; i < geom.board_size; i++) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           current[i] = mark;
           if (find_symmetry(current, rotated, accepted)) {
@@ -478,7 +478,7 @@ class State {
         }
       }
     } else {
-      for (Position i = 0_pos; i < pow(N, D); i++) {
+      for (Position i = 0_pos; i < geom.board_size; i++) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           open_positions.push_back(i);
         }
@@ -490,7 +490,7 @@ class State {
   bool find_symmetry(const vector<Mark>& current, vector<Mark>& rotated,
       const vector<vector<Mark>>& accepted) {
     for (const auto& symmetry : sym.symmetries()) {
-      for (Position i = 0_pos; i < pow(N, D); i++) {
+      for (Position i = 0_pos; i < geom.board_size; i++) {
         rotated[i] = current[symmetry[i]];
       }
       if (find(begin(accepted), end(accepted), rotated) != end(accepted)) {
@@ -509,7 +509,7 @@ class State {
   }
 
   void print() {
-    geom.print(pow(N, D), [&](int k) {
+    geom.print(geom.board_size, [&](int k) {
       return geom.decode(k);
     }, [&](int k) {
       return encode_position(board[k]);
@@ -517,7 +517,7 @@ class State {
   }
 
   void print_accumulation() {
-    geom.print(pow(N, D), [&](int k) {
+    geom.print(geom.board_size, [&](int k) {
       return geom.decode(k);
     }, [&](int k) {
       return geom.encode_points(current_accumulation[k]);
