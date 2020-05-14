@@ -14,6 +14,7 @@ using namespace std;
 SEMANTIC_INDEX(Position, pos)
 SEMANTIC_INDEX(Side, side)
 SEMANTIC_INDEX(Line, line)
+SEMANTIC_INDEX(Dim, dim)
 
 enum class Direction {
   equal,
@@ -41,6 +42,7 @@ class Geometry {
 
   constexpr static Position board_size =
       static_cast<Position>(pow(N, D));
+
   constexpr static Line line_size =
       static_cast<Line>((pow(N + 2, D) - pow(N, D)) / 2);
 
@@ -62,7 +64,7 @@ class Geometry {
 
   vector<Side> decode(Position code) const {
     vector<Side> ans;
-    for (int i = 0; i < D; ++i) {
+    for (Dim i = 0_dim; i < D; ++i) {
       ans.push_back(Side{code % N});
       code /= N;
     }
@@ -146,7 +148,7 @@ class Geometry {
       vector<vector<Side>> current_line, int pos) {
     if (pos == D) {
       vector<Position> line(N);
-      for (int j = 0; j < N; j++) {
+      for (Side j = 0_side; j < N; j++) {
         line[j] = encode(current_line[j]);
       }
       sort(begin(line), end(line));
@@ -155,20 +157,20 @@ class Geometry {
     }
     switch (terrain[pos]) {
       case Direction::up:
-        for (int i = 0; i < N; ++i) {
+        for (Side i = 0_side; i < N; ++i) {
           current_line[i][pos] = Side{i};
         }
         generate_lines(terrain, current_line, pos + 1);
         break;
       case Direction::down:
-        for (int i = 0; i < N; ++i) {
+        for (Side i = 0_side; i < N; ++i) {
           current_line[i][pos] = Side{N - i - 1};
         }
         generate_lines(terrain, current_line, pos + 1);
         break;
       case Direction::equal:
-        for (int j = 0; j < N; j++) {
-          for (int i = 0; i < N; ++i) {
+        for (Side j = 0_side; j < N; j++) {
+          for (Side i = 0_side; i < N; ++i) {
             current_line[i][pos] = Side{j};
           }
           generate_lines(terrain, current_line, pos + 1);
@@ -180,7 +182,7 @@ class Geometry {
   Position encode(const vector<Side>& dim_index) const {
     Position ans = 0_pos;
     int factor = 1;
-    for (int i = 0; i < D; ++i) {
+    for (Dim i = 0_dim; i < D; ++i) {
       ans += dim_index[i] * factor;
       factor *= N;
     }
@@ -454,7 +456,7 @@ class State {
           o_marks_on_line[line] > 0 &&
           active_line[line]) {
         active_line[line] = false;
-        for (int j = 0; j < N; j++) {
+        for (Side j = 0_side; j < N; j++) {
           current_accumulation[geom.winning_lines()[line][j]]--;
         }
       }
@@ -562,7 +564,7 @@ class GameEngine {
   optional<Position> find_forcing_move(
       const vector<int>& current, const vector<int>& opponent,
       const vector<Position>& open_positions) {
-    for (int i = 0; i < static_cast<int>(geom.line_size); ++i) {
+    for (Line i = 0_line; i < geom.line_size; ++i) {
       if (current[i] == N - 1 && opponent[i] == 0) {
         Position trial = Position{state.xor_table[i]};
         auto found = find(begin(open_positions), end(open_positions), trial);
