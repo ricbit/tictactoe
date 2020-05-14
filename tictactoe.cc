@@ -62,7 +62,7 @@ class Geometry {
 
   vector<Side> decode(Position code) const {
     vector<Side> ans;
-    for (int i = 0; i < D; i++) {
+    for (int i = 0; i < D; ++i) {
       ans.push_back(Side{code % N});
       code /= N;
     }
@@ -95,7 +95,7 @@ class Geometry {
     }
     for (int k = 0; k < N; k++) {
       for (int j = 0; j < N; j++) {
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < N; ++i) {
           cout << board[k][j][i];
         }
         cout << "\n";
@@ -155,20 +155,20 @@ class Geometry {
     }
     switch (terrain[pos]) {
       case Direction::up:
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < N; ++i) {
           current_line[i][pos] = Side{i};
         }
         generate_lines(terrain, current_line, pos + 1);
         break;
       case Direction::down:
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < N; ++i) {
           current_line[i][pos] = Side{N - i - 1};
         }
         generate_lines(terrain, current_line, pos + 1);
         break;
       case Direction::equal:
         for (int j = 0; j < N; j++) {
-          for (int i = 0; i < N; i++) {
+          for (int i = 0; i < N; ++i) {
             current_line[i][pos] = Side{j};
           }
           generate_lines(terrain, current_line, pos + 1);
@@ -180,7 +180,7 @@ class Geometry {
   Position encode(const vector<Side>& dim_index) const {
     Position ans = 0_pos;
     int factor = 1;
-    for (int i = 0; i < D; i++) {
+    for (int i = 0; i < D; ++i) {
       ans += dim_index[i] * factor;
       factor *= N;
     }
@@ -210,7 +210,7 @@ class Geometry {
   }
 
   void construct_lines_through_position() {
-    for (Line i = 0_line; i < line_size; i++) {
+    for (Line i = 0_line; i < line_size; ++i) {
       for (auto code : _winning_lines[i]) {
         _lines_through_position[code].push_back(i);
       }
@@ -247,12 +247,12 @@ class SymmeTrie {
   };
   vector<Node> nodes;
 
-  SymmeTrie(const vector<vector<Position>>& symmetries) {
+  explicit SymmeTrie(const vector<vector<Position>>& symmetries) {
     construct_trie(symmetries);
   }
 
   void print_node(const Node& node) {
-    for (int i = 0; i < static_cast<int>(node.similar.size()); i++) {
+    for (int i = 0; i < static_cast<int>(node.similar.size()); ++i) {
       cout << node.similar[i] << " ";
     }
     cout << "\n";
@@ -280,7 +280,7 @@ class SymmeTrie {
       int current_node = pool.front();
       vector<int> current = nodes[current_node].similar;
       pool.pop();
-      for (Position i = 0_pos; i < pos_size; i++) {
+      for (Position i = 0_pos; i < pos_size; ++i) {
         vector<int> next_similar;
         for (int j = 0; j < static_cast<int>(current.size()); j++) {
           if (i == symmetries[current[j]][i]) {
@@ -321,7 +321,7 @@ class Symmetry {
     for (const auto& rotation : rotations) {
       for (const auto& evisceration : eviscerations) {
         vector<Position> symmetry(geom.board_size);
-        for (Position i = 0_pos; i < geom.board_size; i++) {
+        for (Position i = 0_pos; i < geom.board_size; ++i) {
           symmetry[rotation[evisceration[i]]] = i;
         }
         unique.insert(symmetry);
@@ -369,7 +369,7 @@ class Symmetry {
     vector<int> index(D);
     iota(begin(index), end(index), 0);
     do {
-      for (int i = 0; i < (1 << D); i++) {
+      for (int i = 0; i < (1 << D); ++i) {
         rotations.push_back(generate_rotation(index, i));
       }
     } while (next_permutation(begin(index), end(index)));
@@ -377,7 +377,7 @@ class Symmetry {
 
   vector<Position> generate_rotation(const vector<int>& index, int bits) {
     vector<Position> symmetry;
-    for (Position i = 0_pos; i < geom.board_size; i++) {
+    for (Position i = 0_pos; i < geom.board_size; ++i) {
       auto decoded = geom.decode(i);
       Position ans = 0_pos;
       int current_bits = bits;
@@ -469,7 +469,7 @@ class State {
       vector<Mark> current(board);
       vector<Mark> rotated(current.size());
       has_symmetry = false;
-      for (Position i = 0_pos; i < geom.board_size; i++) {
+      for (Position i = 0_pos; i < geom.board_size; ++i) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           current[i] = mark;
           if (find_symmetry(current, rotated, accepted)) {
@@ -482,7 +482,7 @@ class State {
         }
       }
     } else {
-      for (Position i = 0_pos; i < geom.board_size; i++) {
+      for (Position i = 0_pos; i < geom.board_size; ++i) {
         if (board[i] == Mark::empty && current_accumulation[i] > 0) {
           open_positions.push_back(i);
         }
@@ -494,7 +494,7 @@ class State {
   bool find_symmetry(const vector<Mark>& current, vector<Mark>& rotated,
       const vector<vector<Mark>>& accepted) {
     for (const auto& symmetry : sym.symmetries()) {
-      for (Position i = 0_pos; i < geom.board_size; i++) {
+      for (Position i = 0_pos; i < geom.board_size; ++i) {
         rotated[i] = current[symmetry[i]];
       }
       if (find(begin(accepted), end(accepted), rotated) != end(accepted)) {
@@ -562,7 +562,7 @@ class GameEngine {
   optional<Position> find_forcing_move(
       const vector<int>& current, const vector<int>& opponent,
       const vector<Position>& open_positions) {
-    for (int i = 0; i < static_cast<int>(geom.line_size); i++) {
+    for (int i = 0; i < static_cast<int>(geom.line_size); ++i) {
       if (current[i] == N - 1 && opponent[i] == 0) {
         Position trial = Position{state.xor_table[i]};
         auto found = find(begin(open_positions), end(open_positions), trial);
@@ -634,14 +634,14 @@ int main() {
   vector<int> win_counts(3);
   //geom.print_points();
   cout << "winning lines " << geom.line_size << "\n";
-  for (int i = 0; i < max_plays; i++) {
+  for (int i = 0; i < max_plays; ++i) {
     GameEngine b(geom, sym, generator, search_tree);
     win_counts[static_cast<int>(b.play())]++;
     //cout << "\n---\n";
     //b.print();
   }
   double total = 0.0;
-  for (int i = 0; i < static_cast<int>(search_tree.size()); i++) {
+  for (int i = 0; i < static_cast<int>(search_tree.size()); ++i) {
     double level = static_cast<double>(search_tree[i]) / max_plays;
     cout << "level " << i << " : " << level << "\n";
     if (level > 0.0) {
