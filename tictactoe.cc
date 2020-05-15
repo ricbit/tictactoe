@@ -7,6 +7,7 @@
 #include <set>
 #include <queue>
 #include <cassert>
+#include <bitset>
 #include "semantic.hh"
 
 using namespace std;
@@ -447,10 +448,10 @@ class State {
       xor_table(geom.xor_table()),
       active_line(geom.line_size, true),
       current_accumulation(geom.accumulation_points()),
-      open_positions(geom.board_size),
-      trie_node(0_node),
-      checked(geom.board_size) {
+      trie_node(0_node) {
   }
+  constexpr static int board_size = pow(N, D);
+  using Bitfield = bitset<board_size>;
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
   const SymmeTrie& trie;
@@ -459,9 +460,9 @@ class State {
   vector<Position> xor_table;
   vector<bool> active_line;
   vector<LineCount> current_accumulation;
-  vector<bool> open_positions;
+  Bitfield open_positions;
   NodeLine trie_node;
-  vector<bool> checked;
+  Bitfield checked;
 
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
@@ -485,9 +486,9 @@ class State {
     return false;
   }
 
-  const vector<bool>& get_open_positions(Mark mark) {
-    fill(begin(open_positions), end(open_positions), false);
-    fill(begin(checked), end(checked), false);
+  const Bitfield& get_open_positions(Mark mark) {
+    open_positions.reset();
+    checked.reset();
     for (Position i = 0_pos; i < geom.board_size; ++i) {
       if (board[i] == Mark::empty &&
           current_accumulation[i] > 0 && !checked[i]) {
@@ -547,12 +548,14 @@ class GameEngine {
       search_tree(search_tree) {
   }
 
+  using Bitfield = State<N, D>::Bitfield;
+
   bool play(Position pos, Mark mark) {
     return state.play(pos, mark);
   }
 
-  Position random_open_position(const vector<bool>& open_positions) {
-    int size = count(begin(open_positions), end(open_positions), true);
+  Position random_open_position(const Bitfield& open_positions) {
+    int size = open_positions.count();
     uniform_int_distribution<int> random_position(0, size - 1);
     int chosen = random_position(generator);
     int current = 0;
@@ -568,7 +571,7 @@ class GameEngine {
 
   optional<Position> find_forcing_move(
       const vector<MarkCount>& current, const vector<MarkCount>& opponent,
-      const vector<bool>& open_positions) {
+      const Bitfield& open_positions) {
     for (Line i = 0_line; i < geom.line_size; ++i) {
       if (current[i] == N - 1 && opponent[i] == 0) {
         Position trial = state.xor_table[i];
@@ -580,7 +583,7 @@ class GameEngine {
     return {};
   }
 
-  Position choose_position(Mark mark, const vector<bool>& open_positions) {
+  Position choose_position(Mark mark, const Bitfield& open_positions) {
     const auto& current = state.get_current(mark);
     const auto& opponent = state.get_opponent(mark);
     optional<Position> attack =
@@ -601,7 +604,7 @@ class GameEngine {
     int level = 0;
     while (true) {
       const auto& open_positions = state.get_open_positions(current_mark);
-      int size = count(begin(open_positions), end(open_positions), true);
+      int size = open_positions.count();
       if (size == 0) {
         return Mark::empty;
       }
