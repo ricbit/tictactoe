@@ -83,7 +83,7 @@ class Geometry {
   }
 
   void print_line(const vector<Position>& line) {
-    print(N, [&](int k) {
+    print(N, [&](Line k) {
       return decode(line[k]);
     }, [&](int k) {
       return 'X';
@@ -128,8 +128,8 @@ class Geometry {
     return encode(decoded);
   }
 
-  void fill_terrain(vector<Direction>& terrain, int pos) {
-    if (pos == D) {
+  void fill_terrain(vector<Direction>& terrain, Dim dim) {
+    if (dim == D) {
       auto it = find_if(begin(terrain), end(terrain),
           [](const auto& elem) { return elem != Direction::equal; });
       if (it != end(terrain) && *it == Direction::up) {
@@ -138,46 +138,47 @@ class Geometry {
       return;
     }
     for (auto dir : all_directions) {
-      terrain[pos] = dir;
-      fill_terrain(terrain, pos + 1);
+      terrain[dim] = dir;
+      fill_terrain(terrain, Dim{dim + 1});
     }
   }
 
   void construct_unique_terrains() {
     vector<Direction> terrain(D);
-    fill_terrain(terrain, 0);
+    fill_terrain(terrain, 0_dim);
   }
 
   void generate_lines(const vector<Direction>& terrain,
-      vector<vector<Side>> current_line, int pos) {
-    if (pos == D) {
+      vector<vector<Side>> current_line, Dim dim) {
+    if (dim == D) {
       vector<Position> line(N);
-      for (Side j = 0_side; j < N; ++j) {
-        line[j] = encode(current_line[j]);
-      }
+      transform(begin(current_line), end(current_line), begin(line),
+          [&](const auto& line) {
+        return encode(line);
+      });
       sort(begin(line), end(line));
       _winning_lines.push_back(line);
       return;
     }
-    switch (terrain[pos]) {
+    switch (terrain[dim]) {
       case Direction::up:
         for (Side i = 0_side; i < N; ++i) {
-          current_line[i][pos] = Side{i};
+          current_line[i][dim] = Side{i};
         }
-        generate_lines(terrain, current_line, pos + 1);
+        generate_lines(terrain, current_line, Dim{dim + 1});
         break;
       case Direction::down:
         for (Side i = 0_side; i < N; ++i) {
-          current_line[i][pos] = Side{N - i - 1};
+          current_line[i][dim] = Side{N - i - 1};
         }
-        generate_lines(terrain, current_line, pos + 1);
+        generate_lines(terrain, current_line, Dim{dim + 1});
         break;
       case Direction::equal:
         for (Side j = 0_side; j < N; ++j) {
           for (Side i = 0_side; i < N; ++i) {
-            current_line[i][pos] = Side{j};
+            current_line[i][dim] = Side{j};
           }
-          generate_lines(terrain, current_line, pos + 1);
+          generate_lines(terrain, current_line, Dim{dim + 1});
         }
         break;
     }
@@ -186,17 +187,17 @@ class Geometry {
   Position encode(const vector<Side>& dim_index) const {
     Position ans = 0_pos;
     int factor = 1;
-    for (Dim i = 0_dim; i < D; ++i) {
-      ans += dim_index[i] * factor;
+    for (auto index : dim_index) {
+      ans += index * factor;
       factor *= N;
     }
     return ans;
   }
 
   void construct_winning_lines() {
-    vector<vector<Side>> current_line(N, vector<Side>(D, Side{0}));
-    for (auto terrain : unique_terrains) {
-      generate_lines(terrain, current_line, 0);
+    vector<vector<Side>> current_line(N, vector<Side>(D, 0_side));
+    for (const auto& terrain : unique_terrains) {
+      generate_lines(terrain, current_line, 0_dim);
     }
     sort(begin(_winning_lines), end(_winning_lines));
     assert(static_cast<int>(_winning_lines.size()) == line_size);
