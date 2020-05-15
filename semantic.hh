@@ -6,25 +6,25 @@ class Index {
  public:
   constexpr explicit Index(int index) : index(index) {
   }
-  operator int() {
+  constexpr operator int() {
     return index;
   }
-  operator int() const {
+  constexpr operator int() const {
     return index;
   }
-  Index& operator/=(int i) {
+  constexpr Index& operator/=(int i) {
     index /= i;
     return *this;
   }
-  Index& operator+=(int i) {
+  constexpr Index& operator+=(int i) {
     index += i;
     return *this;
   }
-  Index& operator++() {
+  constexpr Index& operator++() {
     index++;
     return *this;
   }
-  Index operator++(int) {
+  constexpr Index operator++(int) {
     Index tmp(*this);
     operator++();
     return tmp;
