@@ -399,7 +399,7 @@ class SymmeTrie {
 
  private:
   struct Node {
-    Node(vector<SymLine> similar)
+    explicit Node(const vector<SymLine>& similar)
         : similar(similar), next(board_size), mask(board_size) {
     }
     vector<SymLine> similar;
@@ -693,3 +693,4 @@ int main() {
   cout << "draws  : " << win_counts[static_cast<int>(Mark::empty)] << "\n";
   return 0;
 }
+
