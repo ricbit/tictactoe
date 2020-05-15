@@ -442,7 +442,8 @@ class State {
       xor_table(geom.xor_table()),
       active_line(geom.line_size, true),
       current_accumulation(geom.accumulation_points()),
-      trie_node(0_node) {
+      trie_node(0_node),
+      checked(geom.board_size) {
     open_positions.reserve(geom.board_size);
     accepted.reserve(sym.symmetries().size());
   }
@@ -457,6 +458,7 @@ class State {
   vector<Position> open_positions;
   vector<vector<Mark>> accepted;
   NodeLine trie_node;
+  vector<bool> checked;
 
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
@@ -482,30 +484,17 @@ class State {
 
   const vector<Position>& get_open_positions(Mark mark) {
     open_positions.erase(begin(open_positions), end(open_positions));
-    vector<bool> checked(geom.board_size, false);
+    fill(begin(checked), end(checked), false);
     for (Position i = 0_pos; i < geom.board_size; ++i) {
       if (board[i] == Mark::empty &&
           current_accumulation[i] > 0 && !checked[i]) {
         open_positions.push_back(i);
         for (SymLine line : trie.similar(trie_node)) {
-            checked[sym.symmetries()[line][i]] = true;
+          checked[sym.symmetries()[line][i]] = true;
         }
       }
     }
     return open_positions;
-  }
-
-  bool find_symmetry(const vector<Mark>& current, vector<Mark>& rotated,
-      const vector<vector<Mark>>& accepted) {
-    for (const auto& symmetry : sym.symmetries()) {
-      for (Position i = 0_pos; i < geom.board_size; ++i) {
-        rotated[i] = current[symmetry[i]];
-      }
-      if (find(begin(accepted), end(accepted), rotated) != end(accepted)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   vector<int>& get_current(Mark mark) {
