@@ -249,7 +249,7 @@ enum class Mark {
 
 class SymmeTrie {
  public:
-  explicit SymmeTrie(const vector<vector<Position>>& symmetries) 
+  explicit SymmeTrie(const vector<vector<Position>>& symmetries)
       : board_size(symmetries[0].size()) {
     construct_trie(symmetries);
   }
@@ -282,8 +282,8 @@ class SymmeTrie {
   int board_size;
 
   void print_node(const Node& node) {
-    for (auto similar : node.similar) {
-      cout << similar << " ";
+    for (auto index : node.similar) {
+      cout << index << " ";
     }
     cout << "\n";
   }
@@ -401,9 +401,10 @@ class Symmetry {
       auto decoded = geom.decode(i);
       Position ans = 0_pos;
       int current_bits = bits;
-      for (Dim j = 0_dim; j < D; ++j) {
-        auto column = decoded[index[j]];
-        ans = Position{ans * N + ((current_bits & 1) == 0 ? column : N - column - 1)};
+      for (auto side : index) {
+        auto column = decoded[side];
+        ans = Position{ans * N +
+            ((current_bits & 1) == 0 ? column : N - column - 1)};
         current_bits >>= 1;
       }
       symmetry.push_back(ans);
@@ -420,7 +421,7 @@ class Symmetry {
   }
 
   void print() {
-    for (auto& symmetry : symmetries) {
+    for (const auto& symmetry : symmetries) {
       print_symmetry(symmetry);
       cout << "\n---\n\n";
     }
@@ -467,7 +468,7 @@ class State {
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
     trie_node = trie.next(trie_node, pos);
-    for (auto line : geom.lines_through_position()[pos]) {
+    for (Line line : geom.lines_through_position()[pos]) {
       auto& current = get_current(mark);
       current[line]++;
       xor_table[line] ^= pos;
