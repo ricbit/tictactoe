@@ -492,7 +492,7 @@ class State {
     for (Position i = 0_pos; i < geom.board_size; ++i) {
       if (board[i] == Mark::empty &&
           current_accumulation[i] > 0 && !checked[i]) {
-        open_positions[i] = true;;
+        open_positions[i] = true;
         for (SymLine line : trie.similar(trie_node)) {
           checked[sym.symmetries()[line][i]] = true;
         }
@@ -576,7 +576,7 @@ class GameEngine {
       if (current[i] == N - 1 && opponent[i] == 0) {
         Position trial = state.xor_table[i];
         if (open_positions[trial]) {
-          return optional<Position>{trial};
+          return trial;
         }
       }
     }
