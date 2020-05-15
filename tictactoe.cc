@@ -250,7 +250,7 @@ class SymmeTrie {
     construct_trie(symmetries);
   }
 
-  const vector<SymLine>& similar(SymLine line) const {
+  const vector<SymLine>& similar(NodeLine line) const {
     return nodes[line].similar;
   }
 
@@ -431,24 +431,24 @@ class Symmetry {
 template<int N, int D>
 class State {
  public:
-  State(const Geometry<N, D>& geom, const Symmetry<N, D>& sym) :
+  State(const Geometry<N, D>& geom, const Symmetry<N, D>& sym,
+    const SymmeTrie& trie) :
       geom(geom),
       sym(sym),
-      trie(sym.symmetries()),
+      trie(trie),
       board(geom.board_size, Mark::empty),
       x_marks_on_line(geom.line_size),
       o_marks_on_line(geom.line_size),
       xor_table(geom.xor_table()),
       active_line(geom.line_size, true),
       current_accumulation(geom.accumulation_points()),
-      has_symmetry(true),
-      trie_node(0_sym) {
+      trie_node(0_node) {
     open_positions.reserve(geom.board_size);
     accepted.reserve(sym.symmetries().size());
   }
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
-  const SymmeTrie trie;
+  const SymmeTrie& trie;
   vector<Mark> board;
   vector<int> x_marks_on_line, o_marks_on_line;
   vector<int> xor_table;
@@ -456,11 +456,11 @@ class State {
   vector<int> current_accumulation;
   vector<Position> open_positions;
   vector<vector<Mark>> accepted;
-  bool has_symmetry;
-  SymLine trie_node;
+  NodeLine trie_node;
 
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
+    trie_node = trie.next(trie_node, pos);
     for (auto line : geom.lines_through_position()[pos]) {
       vector<int>& current = get_current(mark);
       current[line]++;
@@ -487,6 +487,9 @@ class State {
       if (board[i] == Mark::empty &&
           current_accumulation[i] > 0 && !checked[i]) {
         open_positions.push_back(i);
+        for (SymLine line : trie.similar(trie_node)) {
+            checked[sym.symmetries()[line][i]] = true;
+        }
       }
     }
     return open_positions;
@@ -541,12 +544,14 @@ class GameEngine {
  public:
   GameEngine(const Geometry<N, D>& geom,
     const Symmetry<N, D>& sym,
+    const SymmeTrie& trie,
     default_random_engine& generator,
     vector<int>& search_tree) :
       geom(geom),
       sym(sym),
+      trie(trie),
       generator(generator),
-      state(geom, sym),
+      state(geom, sym, trie),
       search_tree(search_tree) {
   }
 
@@ -616,6 +621,7 @@ class GameEngine {
 
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
+  const SymmeTrie& trie;
   default_random_engine& generator;
   State<N, D> state;
   vector<int>& search_tree;
@@ -624,6 +630,7 @@ class GameEngine {
 int main() {
   Geometry<5, 3> geom;
   Symmetry sym(geom);
+  SymmeTrie trie(sym.symmetries());
   //SymmeTrie trie(sym.symmetries());
   //trie.print();
   //sym.print();
@@ -631,12 +638,12 @@ int main() {
   vector<int> search_tree(geom.lines_through_position().size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  int max_plays = 100;
+  int max_plays = 10000;
   vector<int> win_counts(3);
   //geom.print_points();
   cout << "winning lines " << geom.line_size << "\n";
   for (int i = 0; i < max_plays; ++i) {
-    GameEngine b(geom, sym, generator, search_tree);
+    GameEngine b(geom, sym, trie, generator, search_tree);
     win_counts[static_cast<int>(b.play())]++;
     //cout << "\n---\n";
     //b.print();
