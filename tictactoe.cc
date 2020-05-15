@@ -367,8 +367,12 @@ template<int N, int D>
 class SymmeTrie {
  public:
   explicit SymmeTrie(const Symmetry<N, D>& sym) : sym(sym) {
-    construct_trie(sym.symmetries());
+    construct_trie();
+    construct_mask();
   }
+
+  constexpr static int board_size = Symmetry<N, D>::board_size;
+  using Bitfield = bitset<board_size>;
 
   const vector<SymLine>& similar(NodeLine line) const {
     return nodes[line].similar;
@@ -382,7 +386,7 @@ class SymmeTrie {
     for (const auto& node : nodes) {
       cout << " --- \n";
       print_node(node);
-      for (Position j = 0_pos; j < sym.board_size; ++j) {
+      for (Position j = 0_pos; j < board_size; ++j) {
         cout << j << " -> ";
         print_node(nodes[node.next[j]]);
       }
@@ -391,18 +395,27 @@ class SymmeTrie {
 
  private:
   struct Node {
+    Node(vector<SymLine> similar)
+        : similar(similar), next(board_size), mask(board_size) {
+    }
     vector<SymLine> similar;
     vector<NodeLine> next;
-    vector<bitset<1>> mask;
+    vector<Bitfield> mask;
   };
 
   const Symmetry<N, D>& sym;
   vector<Node> nodes;
 
-
-      /*  for (SymLine line : trie.similar(trie_node)) {
-          checked[sym.symmetries()[line][i]] = true;
-        }*/
+  void construct_mask() {
+    for (auto& node : nodes) {
+      for (Position pos = 0_pos; pos < board_size; ++pos) {
+        node.mask[pos].reset();
+        for (SymLine line : node.similar) {
+          node.mask[sym.symmetries()[line][pos]] = true;
+        }
+      }
+    }
+  }
 
   void print_node(const Node& node) {
     for (auto index : node.similar) {
@@ -411,20 +424,20 @@ class SymmeTrie {
     cout << "\n";
   }
 
-  void construct_trie(const vector<vector<Position>>& symmetries) {
-    vector<SymLine> root(symmetries.size());
+  void construct_trie() {
+    vector<SymLine> root(sym.symmetries().size());
     iota(begin(root), end(root), 0_sym);
     queue<NodeLine> pool;
-    nodes.push_back(Node{root, vector<NodeLine>(sym.board_size)});
+    nodes.push_back(Node(root));
     pool.push(0_node);
     while (!pool.empty()) {
       auto current_node = pool.front();
       vector<SymLine> current = nodes[current_node].similar;
       pool.pop();
-      for (Position i = 0_pos; i < sym.board_size; ++i) {
+      for (Position i = 0_pos; i < board_size; ++i) {
         vector<SymLine> next_similar;
         for (int j = 0; j < static_cast<int>(current.size()); ++j) {
-          if (i == symmetries[current[j]][i]) {
+          if (i == sym.symmetries()[current[j]][i]) {
             next_similar.push_back(SymLine{j});
           }
         }
@@ -432,7 +445,7 @@ class SymmeTrie {
           return x.similar == next_similar;
         });
         if (it == end(nodes)) {
-          nodes.push_back(Node{next_similar, vector<NodeLine>(sym.board_size)});
+          nodes.push_back(Node(next_similar));
           NodeLine last_node = static_cast<NodeLine>(nodes.size() - 1);
           pool.push(last_node);
           nodes[current_node].next[i] = last_node;
@@ -462,7 +475,7 @@ class State {
       trie_node(0_node) {
   }
   constexpr static int board_size = pow(N, D);
-  using Bitfield = bitset<board_size>;
+  using Bitfield = SymmeTrie<N, D>::Bitfield;
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
   const SymmeTrie<N, D>& trie;
