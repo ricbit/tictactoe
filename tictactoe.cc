@@ -16,6 +16,7 @@ SEMANTIC_INDEX(Side, side)
 SEMANTIC_INDEX(Line, line)
 SEMANTIC_INDEX(Dim, dim)
 SEMANTIC_INDEX(SymLine, sym)
+SEMANTIC_INDEX(NodeLine, node)
 
 enum class Direction {
   equal,
@@ -249,11 +250,11 @@ class SymmeTrie {
     construct_trie(symmetries);
   }
 
-  const vector<int>& similar(SymLine line) const {
+  const vector<SymLine>& similar(SymLine line) const {
     return nodes[line].similar;
   }
 
-  SymLine next(SymLine line, Position pos) const {
+  NodeLine next(NodeLine line, Position pos) const {
     return nodes[line].next[pos];
   }
 
@@ -270,8 +271,8 @@ class SymmeTrie {
 
  private:
   struct Node {
-    vector<int> similar;
-    vector<SymLine> next;
+    vector<SymLine> similar;
+    vector<NodeLine> next;
   };
   vector<Node> nodes;
   int board_size;
@@ -284,33 +285,33 @@ class SymmeTrie {
   }
 
   void construct_trie(const vector<vector<Position>>& symmetries) {
-    vector<int> root(symmetries.size());
-    iota(begin(root), end(root), 0);
-    queue<SymLine> pool;
-    nodes.push_back(Node{root, vector<SymLine>(board_size)});
-    pool.push(0_sym);
+    vector<SymLine> root(symmetries.size());
+    iota(begin(root), end(root), 0_sym);
+    queue<NodeLine> pool;
+    nodes.push_back(Node{root, vector<NodeLine>(board_size)});
+    pool.push(0_node);
     while (!pool.empty()) {
-      SymLine current_node = pool.front();
-      vector<int> current = nodes[current_node].similar;
+      auto current_node = pool.front();
+      vector<SymLine> current = nodes[current_node].similar;
       pool.pop();
       for (Position i = 0_pos; i < board_size; ++i) {
-        vector<int> next_similar;
+        vector<SymLine> next_similar;
         for (int j = 0; j < static_cast<int>(current.size()); ++j) {
           if (i == symmetries[current[j]][i]) {
-            next_similar.push_back(j);
+            next_similar.push_back(SymLine{j});
           }
         }
         auto it = find_if(begin(nodes), end(nodes), [&](const auto& x) {
           return x.similar == next_similar;
         });
         if (it == end(nodes)) {
-          nodes.push_back(Node{next_similar, vector<SymLine>(board_size)});
-          SymLine last_node = static_cast<SymLine>(nodes.size() - 1);
+          nodes.push_back(Node{next_similar, vector<NodeLine>(board_size)});
+          NodeLine last_node = static_cast<NodeLine>(nodes.size() - 1);
           pool.push(last_node);
           nodes[current_node].next[i] = last_node;
         } else {
           nodes[current_node].next[i] =
-              SymLine{static_cast<SymLine>(distance(begin(nodes), it))};
+              static_cast<NodeLine>(distance(begin(nodes), it));
         }
       }
     }
@@ -396,7 +397,7 @@ class Symmetry {
       auto decoded = geom.decode(i);
       Position ans = 0_pos;
       int current_bits = bits;
-      for (int j = 0; j < D; ++j) {
+      for (Dim j = 0_dim; j < D; ++j) {
         int column = decoded[index[j]];
         ans = Position{ans * N + ((current_bits & 1) == 0 ? column : N - column - 1)};
         current_bits >>= 1;
@@ -485,7 +486,6 @@ class State {
     for (Position i = 0_pos; i < geom.board_size; ++i) {
       if (board[i] == Mark::empty &&
           current_accumulation[i] > 0 && !checked[i]) {
-        checked[i] = true;
         open_positions.push_back(i);
       }
     }
