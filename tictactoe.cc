@@ -382,6 +382,10 @@ class SymmeTrie {
     return nodes[line].next[pos];
   }
 
+  const Bitfield& mask(NodeLine line, Position pos) const {
+    return nodes[line].mask[pos];
+  }
+
   void print() {
     for (const auto& node : nodes) {
       cout << " --- \n";
@@ -411,7 +415,7 @@ class SymmeTrie {
       for (Position pos = 0_pos; pos < board_size; ++pos) {
         node.mask[pos].reset();
         for (SymLine line : node.similar) {
-          node.mask[sym.symmetries()[line][pos]] = true;
+          node.mask[pos].set(sym.symmetries()[line][pos]);
         }
       }
     }
@@ -517,9 +521,7 @@ class State {
       if (board[i] == Mark::empty &&
           current_accumulation[i] > 0 && !checked[i]) {
         open_positions[i] = true;
-        for (SymLine line : trie.similar(trie_node)) {
-          checked[sym.symmetries()[line][i]] = true;
-        }
+        checked |= trie.mask(trie_node, i);
       }
     }
     return open_positions;
