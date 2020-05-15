@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <ctgmath>
 #include <random>
+#include <ctgmath>
 #include <chrono>
 #include <set>
 #include <queue>
@@ -99,9 +99,9 @@ class Geometry {
       vector<int> decoded = decoder(k);
       board[decoded[0]][decoded[1]][decoded[2]] = func(k);
     }
-    for (Side k = 0; k < N; ++k) {
-      for (Side j = 0; j < N; ++j) {
-        for (Side i = 0; i < N; ++i) {
+    for (Side k = 0_side; k < N; ++k) {
+      for (Side j = 0_side; j < N; ++j) {
+        for (Side i = 0_side; i < N; ++i) {
           cout << board[k][j][i];
         }
         cout << "\n";
@@ -421,7 +421,7 @@ class Symmetry {
   }
 
   void print() {
-    for (const auto& symmetry : symmetries) {
+    for (const auto& symmetry : _symmetries) {
       print_symmetry(symmetry);
       cout << "\n---\n\n";
     }
@@ -447,10 +447,9 @@ class State {
       xor_table(geom.xor_table()),
       active_line(geom.line_size, true),
       current_accumulation(geom.accumulation_points()),
+      open_positions(geom.board_size),
       trie_node(0_node),
       checked(geom.board_size) {
-    open_positions.reserve(geom.board_size);
-    accepted.reserve(sym.symmetries().size());
   }
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
@@ -460,8 +459,7 @@ class State {
   vector<Position> xor_table;
   vector<bool> active_line;
   vector<LineCount> current_accumulation;
-  vector<Position> open_positions;
-  vector<vector<Mark>> accepted;
+  vector<bool> open_positions;
   NodeLine trie_node;
   vector<bool> checked;
 
@@ -487,13 +485,13 @@ class State {
     return false;
   }
 
-  const vector<Position>& get_open_positions(Mark mark) {
-    open_positions.erase(begin(open_positions), end(open_positions));
+  const vector<bool>& get_open_positions(Mark mark) {
+    fill(begin(open_positions), end(open_positions), false);
     fill(begin(checked), end(checked), false);
     for (Position i = 0_pos; i < geom.board_size; ++i) {
       if (board[i] == Mark::empty &&
           current_accumulation[i] > 0 && !checked[i]) {
-        open_positions.push_back(i);
+        open_positions[i] = true;;
         for (SymLine line : trie.similar(trie_node)) {
           checked[sym.symmetries()[line][i]] = true;
         }
@@ -553,35 +551,45 @@ class GameEngine {
     return state.play(pos, mark);
   }
 
-  Position random_open_position(const vector<Position>& open_positions) {
-    uniform_int_distribution<int> random_position(
-        0, open_positions.size() - 1);
-    return open_positions[random_position(generator)];
+  Position random_open_position(const vector<bool>& open_positions) {
+    int size = count(begin(open_positions), end(open_positions), true);
+    uniform_int_distribution<int> random_position(0, size - 1);
+    int chosen = random_position(generator);
+    int current = 0;
+    for (Position pos = 0_pos;; ++pos) {
+      if (open_positions[pos]) {
+        if (chosen == current) {
+          return pos;
+        }
+        current++;
+      }
+    }
   }
 
   optional<Position> find_forcing_move(
       const vector<MarkCount>& current, const vector<MarkCount>& opponent,
-      const vector<Position>& open_positions) {
+      const vector<bool>& open_positions) {
     for (Line i = 0_line; i < geom.line_size; ++i) {
       if (current[i] == N - 1 && opponent[i] == 0) {
         Position trial = state.xor_table[i];
-        auto found = find(begin(open_positions), end(open_positions), trial);
-        if (found != end(open_positions)) {
-          return trial;
+        if (open_positions[trial]) {
+          return optional<Position>{trial};
         }
       }
     }
     return {};
   }
 
-  Position choose_position(Mark mark, const vector<Position>& open_positions) {
+  Position choose_position(Mark mark, const vector<bool>& open_positions) {
     const auto& current = state.get_current(mark);
     const auto& opponent = state.get_opponent(mark);
-    optional<Position> attack = find_forcing_move(current, opponent, open_positions);
+    optional<Position> attack =
+        find_forcing_move(current, opponent, open_positions);
     if (attack.has_value()) {
       return *attack;
     }
-    optional<Position> defend = find_forcing_move(opponent, current, open_positions);
+    optional<Position> defend =
+        find_forcing_move(opponent, current, open_positions);
     if (defend.has_value()) {
       return *defend;
     }
@@ -592,11 +600,12 @@ class GameEngine {
     Mark current_mark = Mark::X;
     int level = 0;
     while (true) {
-      auto open_positions = state.get_open_positions(current_mark);
-      if (open_positions.empty()) {
+      const auto& open_positions = state.get_open_positions(current_mark);
+      int size = count(begin(open_positions), end(open_positions), true);
+      if (size == 0) {
         return Mark::empty;
       }
-      search_tree[level++] += open_positions.size();
+      search_tree[level++] += size;
       Position pos = choose_position(current_mark, open_positions);
       auto result = play(pos, current_mark);
       /*state.print();
