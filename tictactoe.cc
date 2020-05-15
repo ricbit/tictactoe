@@ -454,7 +454,7 @@ class State {
   const Symmetry<N, D>& sym;
   const SymmeTrie& trie;
   vector<Mark> board;
-  vector<int> x_marks_on_line, o_marks_on_line;
+  vector<MarkCount> x_marks_on_line, o_marks_on_line;
   vector<Position> xor_table;
   vector<bool> active_line;
   vector<LineCount> current_accumulation;
@@ -467,7 +467,7 @@ class State {
     board[pos] = mark;
     trie_node = trie.next(trie_node, pos);
     for (auto line : geom.lines_through_position()[pos]) {
-      vector<int>& current = get_current(mark);
+      auto& current = get_current(mark);
       current[line]++;
       xor_table[line] ^= pos;
       if (current[line] == N) {
@@ -500,11 +500,11 @@ class State {
     return open_positions;
   }
 
-  vector<int>& get_current(Mark mark) {
+  vector<MarkCount>& get_current(Mark mark) {
     return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
   }
 
-  vector<int>& get_opponent(Mark mark) {
+  vector<MarkCount>& get_opponent(Mark mark) {
     return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
   }
 
@@ -558,7 +558,7 @@ class GameEngine {
   }
 
   optional<Position> find_forcing_move(
-      const vector<int>& current, const vector<int>& opponent,
+      const vector<MarkCount>& current, const vector<MarkCount>& opponent,
       const vector<Position>& open_positions) {
     for (Line i = 0_line; i < geom.line_size; ++i) {
       if (current[i] == N - 1 && opponent[i] == 0) {
@@ -573,8 +573,8 @@ class GameEngine {
   }
 
   Position choose_position(Mark mark, const vector<Position>& open_positions) {
-    const vector<int>& current = state.get_current(mark);
-    const vector<int>& opponent = state.get_opponent(mark);
+    const auto& current = state.get_current(mark);
+    const auto& opponent = state.get_opponent(mark);
     optional<Position> attack = find_forcing_move(current, opponent, open_positions);
     if (attack.has_value()) {
       return *attack;
