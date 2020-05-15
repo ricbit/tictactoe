@@ -62,19 +62,19 @@ class Geometry {
     return _xor_table;
   }
 
-  vector<Side> decode(Position code) const {
+  vector<Side> decode(Position pos) const {
     vector<Side> ans;
     for (Dim i = 0_dim; i < D; ++i) {
-      ans.push_back(Side{code % N});
-      code /= N;
+      ans.push_back(Side{pos % N});
+      pos /= N;
     }
     return ans;
   }
 
   void apply_permutation(const vector<Position>& source, vector<Position>& dest,
       const vector<Side>& permutation) const {
-    transform(begin(source), end(source), begin(dest), [&](Position code) {
-      return apply_permutation(permutation, code);
+    transform(begin(source), end(source), begin(dest), [&](Position pos) {
+      return apply_permutation(permutation, pos);
     });
   }
 
@@ -116,8 +116,8 @@ class Geometry {
   }
 
  private:
-  Position apply_permutation(const vector<Side>& permutation, Position code) const {
-    auto decoded = decode(code);
+  Position apply_permutation(const vector<Side>& permutation, Position pos) const {
+    auto decoded = decode(pos);
     transform(begin(decoded), end(decoded), begin(decoded), [&](Side x) {
       return permutation[x];
     });
@@ -200,8 +200,8 @@ class Geometry {
 
   void construct_accumulation_points() {
     for (const auto& line : _winning_lines) {
-      for (const auto code : line) {
-        _accumulation_points[code]++;
+      for (const auto pos : line) {
+        _accumulation_points[pos]++;
       }
     }
   }
@@ -213,8 +213,8 @@ class Geometry {
 
   void construct_lines_through_position() {
     for (Line i = 0_line; i < line_size; ++i) {
-      for (auto code : _winning_lines[i]) {
-        _lines_through_position[code].push_back(i);
+      for (auto pos : _winning_lines[i]) {
+        _lines_through_position[pos].push_back(i);
       }
     }
   }
