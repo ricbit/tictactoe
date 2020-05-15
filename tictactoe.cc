@@ -15,6 +15,7 @@ SEMANTIC_INDEX(Position, pos)
 SEMANTIC_INDEX(Side, side)
 SEMANTIC_INDEX(Line, line)
 SEMANTIC_INDEX(Dim, dim)
+SEMANTIC_INDEX(SymLine, sym)
 
 enum class Direction {
   equal,
@@ -248,8 +249,10 @@ class SymmeTrie {
     vector<int> next;
   };
   vector<Node> nodes;
+  int board_size;
 
-  explicit SymmeTrie(const vector<vector<Position>>& symmetries) {
+  explicit SymmeTrie(const vector<vector<Position>>& symmetries) 
+      : board_size(symmetries[0].size()) {
     construct_trie(symmetries);
   }
 
@@ -264,7 +267,7 @@ class SymmeTrie {
     for (const auto& node : nodes) {
       cout << " --- \n";
       print_node(node);
-      for (int j = 0; j < static_cast<int>(node.next.size()); ++j) {
+      for (Position j = 0_pos; j < board_size; ++j) {
         cout << j << " -> ";
         print_node(nodes[node.next[j]]);
       }
@@ -274,15 +277,14 @@ class SymmeTrie {
   void construct_trie(const vector<vector<Position>>& symmetries) {
     vector<int> root(symmetries.size());
     iota(begin(root), end(root), 0);
-    queue<int> pool;
-    int pos_size = symmetries[0].size();
-    nodes.push_back(Node{root, vector<int>(pos_size)});
-    pool.push(0);
+    queue<SymLine> pool;
+    nodes.push_back(Node{root, vector<int>(board_size)});
+    pool.push(0_sym);
     while (!pool.empty()) {
-      int current_node = pool.front();
+      SymLine current_node = pool.front();
       vector<int> current = nodes[current_node].similar;
       pool.pop();
-      for (Position i = 0_pos; i < pos_size; ++i) {
+      for (Position i = 0_pos; i < board_size; ++i) {
         vector<int> next_similar;
         for (int j = 0; j < static_cast<int>(current.size()); ++j) {
           if (i == symmetries[current[j]][i]) {
@@ -293,8 +295,9 @@ class SymmeTrie {
           return x.similar == next_similar;
         });
         if (it == end(nodes)) {
-          nodes.push_back(Node{next_similar, vector<int>(pos_size)});
-          pool.push(nodes.size() - 1);
+          nodes.push_back(Node{next_similar, vector<int>(board_size)});
+          int last_node = nodes.size() - 1;
+          pool.push(SymLine{last_node});
           nodes[current_node].next[i] = nodes.size() - 1;
         } else {
           nodes[current_node].next[i] = distance(begin(nodes), it);
@@ -427,7 +430,8 @@ class State {
       xor_table(geom.xor_table()),
       active_line(geom.line_size, true),
       current_accumulation(geom.accumulation_points()),
-      has_symmetry(true) {
+      has_symmetry(true),
+      trie_node(0_sym) {
     open_positions.reserve(geom.board_size);
     accepted.reserve(sym.symmetries().size());
   }
@@ -442,6 +446,7 @@ class State {
   vector<Position> open_positions;
   vector<vector<Mark>> accepted;
   bool has_symmetry;
+  SymLine trie_node;
 
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
