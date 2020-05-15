@@ -12,6 +12,10 @@ class Index {
   constexpr operator int() const {
     return index;
   }
+  constexpr Index& operator^=(int i) {
+    index ^= i;
+    return *this;
+  }
   constexpr Index& operator/=(int i) {
     index /= i;
     return *this;
@@ -19,6 +23,15 @@ class Index {
   constexpr Index& operator+=(int i) {
     index += i;
     return *this;
+  }
+  constexpr Index& operator--() {
+    index--;
+    return *this;
+  }
+  constexpr Index operator--(int) {
+    Index tmp(*this);
+    operator--();
+    return tmp;
   }
   constexpr Index& operator++() {
     index++;

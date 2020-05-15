@@ -17,6 +17,8 @@ SEMANTIC_INDEX(Line, line)
 SEMANTIC_INDEX(Dim, dim)
 SEMANTIC_INDEX(SymLine, sym)
 SEMANTIC_INDEX(NodeLine, node)
+SEMANTIC_INDEX(LineCount, lcount)
+SEMANTIC_INDEX(MarkCount, mcount)
 
 enum class Direction {
   equal,
@@ -56,11 +58,11 @@ class Geometry {
     return _winning_lines;
   }
 
-  const vector<int>& accumulation_points() const {
+  const vector<LineCount>& accumulation_points() const {
     return _accumulation_points;
   }
 
-  const vector<int>& xor_table() const {
+  const vector<Position>& xor_table() const {
     return _xor_table;
   }
 
@@ -97,9 +99,9 @@ class Geometry {
       vector<int> decoded = decoder(k);
       board[decoded[0]][decoded[1]][decoded[2]] = func(k);
     }
-    for (int k = 0; k < N; k++) {
-      for (int j = 0; j < N; ++j) {
-        for (int i = 0; i < N; ++i) {
+    for (Side k = 0; k < N; ++k) {
+      for (Side j = 0; j < N; ++j) {
+        for (Side i = 0; i < N; ++i) {
           cout << board[k][j][i];
         }
         cout << "\n";
@@ -111,7 +113,7 @@ class Geometry {
   void print_points() {
     print(board_size, [&](Position k) {
       return decode(k);
-    }, [&](int k) {
+    }, [&](Position k) {
       int points = _accumulation_points[k];
       return encode_points(points);
     });
@@ -222,9 +224,10 @@ class Geometry {
   }
 
   void construct_xor_table() {
-    for (auto& line : _winning_lines) {
-      int ans = accumulate(begin(line), end(line), 0, [](auto x, auto y) {
-        return x ^ y;
+    for (const auto& line : _winning_lines) {
+      Position ans = accumulate(begin(line), end(line), 0_pos,
+          [](auto x, auto y) {
+        return Position{x ^ y};
       });
       _xor_table.push_back(ans);
     }
@@ -232,9 +235,9 @@ class Geometry {
 
   vector<vector<Direction>> unique_terrains;
   vector<vector<Position>> _winning_lines;
-  vector<int> _accumulation_points;
+  vector<LineCount> _accumulation_points;
   vector<vector<Line>> _lines_through_position;
-  vector<int> _xor_table;
+  vector<Position> _xor_table;
 };
 
 enum class Mark {
@@ -278,8 +281,8 @@ class SymmeTrie {
   int board_size;
 
   void print_node(const Node& node) {
-    for (int i = 0; i < static_cast<int>(node.similar.size()); ++i) {
-      cout << node.similar[i] << " ";
+    for (auto similar : node.similar) {
+      cout << similar << " ";
     }
     cout << "\n";
   }
@@ -382,8 +385,8 @@ class Symmetry {
   }
 
   void generate_all_rotations() {
-    vector<int> index(D);
-    iota(begin(index), end(index), 0);
+    vector<Side> index(D);
+    iota(begin(index), end(index), 0_side);
     do {
       for (int i = 0; i < (1 << D); ++i) {
         rotations.push_back(generate_rotation(index, i));
@@ -391,14 +394,14 @@ class Symmetry {
     } while (next_permutation(begin(index), end(index)));
   }
 
-  vector<Position> generate_rotation(const vector<int>& index, int bits) {
+  vector<Position> generate_rotation(const vector<Side>& index, int bits) {
     vector<Position> symmetry;
     for (Position i = 0_pos; i < geom.board_size; ++i) {
       auto decoded = geom.decode(i);
       Position ans = 0_pos;
       int current_bits = bits;
       for (Dim j = 0_dim; j < D; ++j) {
-        int column = decoded[index[j]];
+        auto column = decoded[index[j]];
         ans = Position{ans * N + ((current_bits & 1) == 0 ? column : N - column - 1)};
         current_bits >>= 1;
       }
@@ -408,9 +411,9 @@ class Symmetry {
   }
 
   void print_symmetry(const vector<Position>& symmetry) {
-    geom.print(geom.board_size, [&](int k) {
+    geom.print(geom.board_size, [&](Position k) {
       return geom.decode(k);
-    }, [&](int k) {
+    }, [&](SymLine k) {
       return geom.encode_points(symmetry[k]);
     });
   }
@@ -452,9 +455,9 @@ class State {
   const SymmeTrie& trie;
   vector<Mark> board;
   vector<int> x_marks_on_line, o_marks_on_line;
-  vector<int> xor_table;
+  vector<Position> xor_table;
   vector<bool> active_line;
-  vector<int> current_accumulation;
+  vector<LineCount> current_accumulation;
   vector<Position> open_positions;
   vector<vector<Mark>> accepted;
   NodeLine trie_node;
@@ -506,17 +509,17 @@ class State {
   }
 
   void print() {
-    geom.print(geom.board_size, [&](int k) {
+    geom.print(geom.board_size, [&](Position k) {
       return geom.decode(k);
-    }, [&](int k) {
+    }, [&](Position k) {
       return encode_position(board[k]);
     });
   }
 
   void print_accumulation() {
-    geom.print(geom.board_size, [&](int k) {
+    geom.print(geom.board_size, [&](Position k) {
       return geom.decode(k);
-    }, [&](int k) {
+    }, [&](Position k) {
       return geom.encode_points(current_accumulation[k]);
     });
   }
@@ -559,7 +562,7 @@ class GameEngine {
       const vector<Position>& open_positions) {
     for (Line i = 0_line; i < geom.line_size; ++i) {
       if (current[i] == N - 1 && opponent[i] == 0) {
-        Position trial = Position{state.xor_table[i]};
+        Position trial = state.xor_table[i];
         auto found = find(begin(open_positions), end(open_positions), trial);
         if (found != end(open_positions)) {
           return trial;
@@ -592,8 +595,8 @@ class GameEngine {
         return Mark::empty;
       }
       search_tree[level++] += open_positions.size();
-      Position i = choose_position(current_mark, open_positions);
-      auto result = play(i, current_mark);
+      Position pos = choose_position(current_mark, open_positions);
+      auto result = play(pos, current_mark);
       /*state.print();
       state.print_accumulation();
       cout << "\n------\n\n";*/
@@ -620,9 +623,6 @@ int main() {
   Geometry<5, 3> geom;
   Symmetry sym(geom);
   SymmeTrie trie(sym.symmetries());
-  //SymmeTrie trie(sym.symmetries());
-  //trie.print();
-  //sym.print();
   cout << "num symmetries " << sym.symmetries().size() << "\n";
   vector<int> search_tree(geom.lines_through_position().size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
