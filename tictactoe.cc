@@ -96,7 +96,7 @@ class Geometry {
       board[decoded[0]][decoded[1]][decoded[2]] = func(k);
     }
     for (int k = 0; k < N; k++) {
-      for (int j = 0; j < N; j++) {
+      for (int j = 0; j < N; ++j) {
         for (int i = 0; i < N; ++i) {
           cout << board[k][j][i];
         }
@@ -148,7 +148,7 @@ class Geometry {
       vector<vector<Side>> current_line, int pos) {
     if (pos == D) {
       vector<Position> line(N);
-      for (Side j = 0_side; j < N; j++) {
+      for (Side j = 0_side; j < N; ++j) {
         line[j] = encode(current_line[j]);
       }
       sort(begin(line), end(line));
@@ -169,7 +169,7 @@ class Geometry {
         generate_lines(terrain, current_line, pos + 1);
         break;
       case Direction::equal:
-        for (Side j = 0_side; j < N; j++) {
+        for (Side j = 0_side; j < N; ++j) {
           for (Side i = 0_side; i < N; ++i) {
             current_line[i][pos] = Side{j};
           }
@@ -264,7 +264,7 @@ class SymmeTrie {
     for (const auto& node : nodes) {
       cout << " --- \n";
       print_node(node);
-      for (int j = 0; j < static_cast<int>(node.next.size()); j++) {
+      for (int j = 0; j < static_cast<int>(node.next.size()); ++j) {
         cout << j << " -> ";
         print_node(nodes[node.next[j]]);
       }
@@ -284,7 +284,7 @@ class SymmeTrie {
       pool.pop();
       for (Position i = 0_pos; i < pos_size; ++i) {
         vector<int> next_similar;
-        for (int j = 0; j < static_cast<int>(current.size()); j++) {
+        for (int j = 0; j < static_cast<int>(current.size()); ++j) {
           if (i == symmetries[current[j]][i]) {
             next_similar.push_back(j);
           }
@@ -383,7 +383,7 @@ class Symmetry {
       auto decoded = geom.decode(i);
       Position ans = 0_pos;
       int current_bits = bits;
-      for (int j = 0; j < D; j++) {
+      for (int j = 0; j < D; ++j) {
         int column = decoded[index[j]];
         ans = Position{ans * N + ((current_bits & 1) == 0 ? column : N - column - 1)};
         current_bits >>= 1;
@@ -456,7 +456,7 @@ class State {
           o_marks_on_line[line] > 0 &&
           active_line[line]) {
         active_line[line] = false;
-        for (Side j = 0_side; j < N; j++) {
+        for (Side j = 0_side; j < N; ++j) {
           current_accumulation[geom.winning_lines()[line][j]]--;
         }
       }
