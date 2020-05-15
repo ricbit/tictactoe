@@ -8,6 +8,7 @@
 #include <queue>
 #include <cassert>
 #include <bitset>
+#include <execution>
 #include "semantic.hh"
 
 using namespace std;
@@ -76,8 +77,8 @@ class Geometry {
     return ans;
   }
 
-  void apply_permutation(const vector<Position>& source, vector<Position>& dest,
-      const vector<Side>& permutation) const {
+  void apply_permutation(const vector<Position>& source,
+      vector<Position>& dest, const vector<Side>& permutation) const {
     transform(begin(source), end(source), begin(dest), [&](Position pos) {
       return apply_permutation(permutation, pos);
     });
@@ -248,89 +249,17 @@ enum class Mark {
   empty
 };
 
-class SymmeTrie {
- public:
-  explicit SymmeTrie(const vector<vector<Position>>& symmetries)
-      : board_size(symmetries[0].size()) {
-    construct_trie(symmetries);
-  }
-
-  const vector<SymLine>& similar(NodeLine line) const {
-    return nodes[line].similar;
-  }
-
-  NodeLine next(NodeLine line, Position pos) const {
-    return nodes[line].next[pos];
-  }
-
-  void print() {
-    for (const auto& node : nodes) {
-      cout << " --- \n";
-      print_node(node);
-      for (Position j = 0_pos; j < board_size; ++j) {
-        cout << j << " -> ";
-        print_node(nodes[node.next[j]]);
-      }
-    }
-  }
-
- private:
-  struct Node {
-    vector<SymLine> similar;
-    vector<NodeLine> next;
-  };
-  vector<Node> nodes;
-  int board_size;
-
-  void print_node(const Node& node) {
-    for (auto index : node.similar) {
-      cout << index << " ";
-    }
-    cout << "\n";
-  }
-
-  void construct_trie(const vector<vector<Position>>& symmetries) {
-    vector<SymLine> root(symmetries.size());
-    iota(begin(root), end(root), 0_sym);
-    queue<NodeLine> pool;
-    nodes.push_back(Node{root, vector<NodeLine>(board_size)});
-    pool.push(0_node);
-    while (!pool.empty()) {
-      auto current_node = pool.front();
-      vector<SymLine> current = nodes[current_node].similar;
-      pool.pop();
-      for (Position i = 0_pos; i < board_size; ++i) {
-        vector<SymLine> next_similar;
-        for (int j = 0; j < static_cast<int>(current.size()); ++j) {
-          if (i == symmetries[current[j]][i]) {
-            next_similar.push_back(SymLine{j});
-          }
-        }
-        auto it = find_if(begin(nodes), end(nodes), [&](const auto& x) {
-          return x.similar == next_similar;
-        });
-        if (it == end(nodes)) {
-          nodes.push_back(Node{next_similar, vector<NodeLine>(board_size)});
-          NodeLine last_node = static_cast<NodeLine>(nodes.size() - 1);
-          pool.push(last_node);
-          nodes[current_node].next[i] = last_node;
-        } else {
-          nodes[current_node].next[i] =
-              static_cast<NodeLine>(distance(begin(nodes), it));
-        }
-      }
-    }
-  }
-};
-
 template<int N, int D>
 class Symmetry {
  public:
-  explicit Symmetry(const Geometry<N, D>& geom) : geom(geom) {
+  explicit Symmetry(const Geometry<N, D>& geom)
+      : geom(geom) {
     generate_all_rotations();
     generate_all_eviscerations();
     multiply_groups();
   }
+
+  constexpr static Position board_size = Geometry<N, D>::board_size;
 
   const vector<vector<Position>>& symmetries() const {
     return _symmetries;
@@ -435,10 +364,92 @@ class Symmetry {
 };
 
 template<int N, int D>
+class SymmeTrie {
+ public:
+  explicit SymmeTrie(const Symmetry<N, D>& sym) : sym(sym) {
+    construct_trie(sym.symmetries());
+  }
+
+  const vector<SymLine>& similar(NodeLine line) const {
+    return nodes[line].similar;
+  }
+
+  NodeLine next(NodeLine line, Position pos) const {
+    return nodes[line].next[pos];
+  }
+
+  void print() {
+    for (const auto& node : nodes) {
+      cout << " --- \n";
+      print_node(node);
+      for (Position j = 0_pos; j < sym.board_size; ++j) {
+        cout << j << " -> ";
+        print_node(nodes[node.next[j]]);
+      }
+    }
+  }
+
+ private:
+  struct Node {
+    vector<SymLine> similar;
+    vector<NodeLine> next;
+    vector<bitset<1>> mask;
+  };
+
+  const Symmetry<N, D>& sym;
+  vector<Node> nodes;
+
+
+      /*  for (SymLine line : trie.similar(trie_node)) {
+          checked[sym.symmetries()[line][i]] = true;
+        }*/
+
+  void print_node(const Node& node) {
+    for (auto index : node.similar) {
+      cout << index << " ";
+    }
+    cout << "\n";
+  }
+
+  void construct_trie(const vector<vector<Position>>& symmetries) {
+    vector<SymLine> root(symmetries.size());
+    iota(begin(root), end(root), 0_sym);
+    queue<NodeLine> pool;
+    nodes.push_back(Node{root, vector<NodeLine>(sym.board_size)});
+    pool.push(0_node);
+    while (!pool.empty()) {
+      auto current_node = pool.front();
+      vector<SymLine> current = nodes[current_node].similar;
+      pool.pop();
+      for (Position i = 0_pos; i < sym.board_size; ++i) {
+        vector<SymLine> next_similar;
+        for (int j = 0; j < static_cast<int>(current.size()); ++j) {
+          if (i == symmetries[current[j]][i]) {
+            next_similar.push_back(SymLine{j});
+          }
+        }
+        auto it = find_if(begin(nodes), end(nodes), [&](const auto& x) {
+          return x.similar == next_similar;
+        });
+        if (it == end(nodes)) {
+          nodes.push_back(Node{next_similar, vector<NodeLine>(sym.board_size)});
+          NodeLine last_node = static_cast<NodeLine>(nodes.size() - 1);
+          pool.push(last_node);
+          nodes[current_node].next[i] = last_node;
+        } else {
+          nodes[current_node].next[i] =
+              static_cast<NodeLine>(distance(begin(nodes), it));
+        }
+      }
+    }
+  }
+};
+
+template<int N, int D>
 class State {
  public:
   State(const Geometry<N, D>& geom, const Symmetry<N, D>& sym,
-    const SymmeTrie& trie) :
+    const SymmeTrie<N, D>& trie) :
       geom(geom),
       sym(sym),
       trie(trie),
@@ -454,7 +465,7 @@ class State {
   using Bitfield = bitset<board_size>;
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
-  const SymmeTrie& trie;
+  const SymmeTrie<N, D>& trie;
   vector<Mark> board;
   vector<MarkCount> x_marks_on_line, o_marks_on_line;
   vector<Position> xor_table;
@@ -537,7 +548,7 @@ class GameEngine {
  public:
   GameEngine(const Geometry<N, D>& geom,
     const Symmetry<N, D>& sym,
-    const SymmeTrie& trie,
+    const SymmeTrie<N, D>& trie,
     default_random_engine& generator,
     vector<int>& search_tree) :
       geom(geom),
@@ -627,7 +638,7 @@ class GameEngine {
 
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
-  const SymmeTrie& trie;
+  const SymmeTrie<N, D>& trie;
   default_random_engine& generator;
   State<N, D> state;
   vector<int>& search_tree;
@@ -636,7 +647,7 @@ class GameEngine {
 int main() {
   Geometry<5, 3> geom;
   Symmetry sym(geom);
-  SymmeTrie trie(sym.symmetries());
+  SymmeTrie trie(sym);
   cout << "num symmetries " << sym.symmetries().size() << "\n";
   vector<int> search_tree(geom.lines_through_position().size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
