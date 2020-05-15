@@ -107,7 +107,7 @@ class Geometry {
   }
 
   void print_points() {
-    print(board_size, [&](int k) {
+    print(board_size, [&](Position k) {
       return decode(k);
     }, [&](int k) {
       int points = _accumulation_points[k];
