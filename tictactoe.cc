@@ -9,6 +9,7 @@
 #include <cassert>
 #include <bitset>
 #include <execution>
+#include <list>
 #include "semantic.hh"
 
 using namespace std;
@@ -476,7 +477,12 @@ class State {
       xor_table(geom.xor_table()),
       active_line(geom.line_size, true),
       current_accumulation(geom.accumulation_points()),
-      trie_node(0_node) {
+      trie_node(0_node),
+      empty_cells(board_size) {
+    iota(begin(empty_cells), end(empty_cells), 0_pos);
+    for (auto it = begin(empty_cells); it != end(empty_cells); ++it) {
+      empty_it.push_back(it);
+    }
   }
   constexpr static int board_size = pow(N, D);
   using Bitfield = SymmeTrie<N, D>::Bitfield;
@@ -491,9 +497,14 @@ class State {
   Bitfield open_positions;
   NodeLine trie_node;
   Bitfield checked;
+  using EmptyList = list<Position>;
+  EmptyList empty_cells;
+  vector<EmptyList::iterator> empty_it;
 
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
+    empty_cells.erase(empty_it[pos]);
+    empty_it[pos] = end(empty_cells);
     trie_node = trie.next(trie_node, pos);
     for (Line line : geom.lines_through_position()[pos]) {
       auto& current = get_current(mark);
@@ -507,7 +518,13 @@ class State {
           active_line[line]) {
         active_line[line] = false;
         for (Side j = 0_side; j < N; ++j) {
-          current_accumulation[geom.winning_lines()[line][j]]--;
+          Position neigh = geom.winning_lines()[line][j];
+          current_accumulation[neigh]--;
+          if (current_accumulation[neigh] == 0 &&
+              empty_it[neigh] != end(empty_cells)) {
+            empty_cells.erase(empty_it[neigh]);
+            empty_it[neigh] = end(empty_cells);
+          }
         }
       }
     }
@@ -517,9 +534,8 @@ class State {
   const Bitfield& get_open_positions(Mark mark) {
     open_positions.reset();
     checked.reset();
-    for (Position i = 0_pos; i < geom.board_size; ++i) {
-      if (board[i] == Mark::empty &&
-          current_accumulation[i] > 0 && !checked[i]) {
+    for (Position i : empty_cells) {
+      if (!checked[i]) {
         open_positions[i] = true;
         checked |= trie.mask(trie_node, i);
       }
