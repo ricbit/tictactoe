@@ -485,22 +485,36 @@ class State {
       empty_it.push_back(it);
     }
   }
-  constexpr static int board_size = Geometry<N, D>::board_size;
+
   using Bitfield = SymmeTrie<N, D>::Bitfield;
-  const Geometry<N, D>& geom;
-  const Symmetry<N, D>& sym;
-  const SymmeTrie<N, D>& trie;
-  sarray<Position, Mark, board_size> board;
-  svector<Line, MarkCount> x_marks_on_line, o_marks_on_line;
-  vector<Position> xor_table;
-  vector<bool> active_line;
-  vector<LineCount> current_accumulation;
-  Bitfield open_positions;
-  NodeLine trie_node;
-  Bitfield checked;
-  using EmptyList = list<Position>;
-  EmptyList empty_cells;
-  vector<EmptyList::iterator> empty_it;
+
+  const Bitfield& get_open_positions(Mark mark) {
+    open_positions.reset();
+    checked.reset();
+    for (Position i : empty_cells) {
+      if (!checked[i]) {
+        open_positions[i] = true;
+        checked |= trie.mask(trie_node, i);
+      }
+    }
+    return open_positions;
+  }
+
+  auto& get_current(Mark mark) {
+    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
+  }
+
+  auto& get_opponent(Mark mark) {
+    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
+  }
+
+  void print() {
+    geom.print(geom.board_size, [&](Position k) {
+      return geom.decode(k);
+    }, [&](Position k) {
+      return encode_position(board[k]);
+    });
+  }
 
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
@@ -532,33 +546,30 @@ class State {
     return false;
   }
 
-  const Bitfield& get_open_positions(Mark mark) {
-    open_positions.reset();
-    checked.reset();
-    for (Position i : empty_cells) {
-      if (!checked[i]) {
-        open_positions[i] = true;
-        checked |= trie.mask(trie_node, i);
-      }
-    }
-    return open_positions;
+  Position get_xor_table(Line line) {
+    return xor_table[line];
   }
 
-  auto& get_current(Mark mark) {
-    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
-  }
+  LineCount get_current_accumulation(Position pos) {
+    return current_accumulation[pos];
+  };
 
-  auto& get_opponent(Mark mark) {
-    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
-  }
-
-  void print() {
-    geom.print(geom.board_size, [&](Position k) {
-      return geom.decode(k);
-    }, [&](Position k) {
-      return encode_position(board[k]);
-    });
-  }
+ private:
+  constexpr static int board_size = Geometry<N, D>::board_size;
+  const Geometry<N, D>& geom;
+  const Symmetry<N, D>& sym;
+  const SymmeTrie<N, D>& trie;
+  sarray<Position, Mark, board_size> board;
+  svector<Line, MarkCount> x_marks_on_line, o_marks_on_line;
+  vector<Position> xor_table;
+  vector<bool> active_line;
+  vector<LineCount> current_accumulation;
+  Bitfield open_positions;
+  NodeLine trie_node;
+  Bitfield checked;
+  using EmptyList = list<Position>;
+  EmptyList empty_cells;
+  vector<EmptyList::iterator> empty_it;
 
   void print_accumulation() {
     geom.print(geom.board_size, [&](Position k) {
@@ -602,7 +613,7 @@ class GameEngine {
     int total = 0;
     for (Position pos = 0_pos; pos < board_size; ++pos) {
       if (open_positions[pos]) {
-        total += state.current_accumulation[pos];
+        total += state.get_current_accumulation(pos);
       }
     }
     uniform_int_distribution<int> random_position(0, total - 1);
@@ -610,7 +621,7 @@ class GameEngine {
     int previous = 0;
     for (Position pos = 0_pos; pos < board_size; ++pos) {
       if (open_positions[pos]) {
-        int current = previous + state.current_accumulation[pos];
+        int current = previous + state.get_current_accumulation(pos);
         if (chosen < current) {
           return pos;
         }
@@ -626,7 +637,7 @@ class GameEngine {
       const Bitfield& open_positions) {
     for (Line i = 0_line; i < geom.line_size; ++i) {
       if (current[i] == N - 1 && opponent[i] == 0) {
-        Position trial = state.xor_table[i];
+        Position trial = state.get_xor_table(i);
         if (open_positions[trial]) {
           return trial;
         }
@@ -692,7 +703,7 @@ class GameEngine {
   vector<int>& search_tree;
 };
 
-int main() {
+int new_main() {
   Geometry<5, 3> geom;
   Symmetry sym(geom);
   SymmeTrie trie(sym);
@@ -704,7 +715,7 @@ int main() {
   return 0;
 }
 
-int old_main() {
+int main() {
   Geometry<5, 3> geom;
   Symmetry sym(geom);
   SymmeTrie trie(sym);
