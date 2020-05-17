@@ -65,7 +65,7 @@ class Geometry {
     return _accumulation_points;
   }
 
-  const vector<Position>& xor_table() const {
+  const svector<Line, Position>& xor_table() const {
     return _xor_table;
   }
 
@@ -241,7 +241,7 @@ class Geometry {
   vector<vector<Position>> _winning_lines;
   vector<LineCount> _accumulation_points;
   vector<vector<Line>> _lines_through_position;
-  vector<Position> _xor_table;
+  svector<Line, Position> _xor_table;
 };
 
 enum class Mark {
@@ -561,7 +561,7 @@ class State {
   const SymmeTrie<N, D>& trie;
   sarray<Position, Mark, board_size> board;
   svector<Line, MarkCount> x_marks_on_line, o_marks_on_line;
-  vector<Position> xor_table;
+  svector<Line, Position> xor_table;
   vector<bool> active_line;
   vector<LineCount> current_accumulation;
   Bitfield open_positions;

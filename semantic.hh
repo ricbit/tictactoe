@@ -32,6 +32,7 @@ template<typename Source, typename Dest>
 class svector {
  public:
   using size_type = std::vector<Dest>::size_type;
+  using iterator = std::vector<Dest>::iterator;
   explicit svector(size_type size) : v(size) {
   }
   svector(size_type size, const Dest& value) : v(size, value) {
@@ -46,6 +47,21 @@ class svector {
   }
   size_type size() {
     return v.size();
+  }
+  void push_back(const Dest& value) {
+    v.push_back(value);
+  }
+  iterator begin() {
+    return begin(v);
+  }
+  iterator end() {
+    return end(v);
+  }
+  iterator begin() const {
+    return begin(v);
+  }
+  iterator end() const {
+    return end(v);
   }
  private:
   std::vector<Dest> v;
