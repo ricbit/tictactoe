@@ -471,7 +471,7 @@ class State {
       geom(geom),
       sym(sym),
       trie(trie),
-      board(geom.board_size, Mark::empty),
+      board(Mark::empty),
       x_marks_on_line(geom.line_size),
       o_marks_on_line(geom.line_size),
       xor_table(geom.xor_table()),
@@ -484,12 +484,12 @@ class State {
       empty_it.push_back(it);
     }
   }
-  constexpr static int board_size = pow(N, D);
+  constexpr static int board_size = Geometry<N, D>::board_size;
   using Bitfield = SymmeTrie<N, D>::Bitfield;
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
   const SymmeTrie<N, D>& trie;
-  vector<Mark> board;
+  sarray<Position, Mark, board_size> board;
   vector<MarkCount> x_marks_on_line, o_marks_on_line;
   vector<Position> xor_table;
   vector<bool> active_line;

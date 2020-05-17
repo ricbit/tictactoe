@@ -1,6 +1,56 @@
 #ifndef SEMANTIC_HH
 #define SEMANTIC_HH
 
+#include <vector>
+#include <array>
+
+template<typename Source, typename Dest, int array_size>
+class sarray {
+ public:
+  using array_type = std::array<Dest, array_size>;
+  using size_type = array_type::size_type;
+  sarray(const Dest& value) {
+    a.fill(value);
+  }
+  sarray() {
+    a.fill(Dest(0));
+  }
+  Dest& operator[](const Source& index) {
+    return a[index];
+  }
+  const Dest& operator[](const Source& index) const {
+    return a[index];
+  }
+  size_type size() {
+    return a.size();
+  }
+ private:
+  array_type a;
+};
+
+template<typename Source, typename Dest>
+class svector {
+ public:
+  using size_type = std::vector<Dest>::size_type;
+  svector(size_type size) : v(size) {
+  }
+  svector(size_type size, const Dest& value) : v(size, value) {
+  }
+  svector() {
+  }
+  Dest& operator[](const Source& index) {
+    return v[index];
+  }
+  const Dest& operator[](const Source& index) const {
+    return v[index];
+  }
+  size_type size() {
+    return v.size();
+  }
+ private:
+  std::vector<Dest> v;
+};
+
 template<typename T>
 class Index {
  public:
