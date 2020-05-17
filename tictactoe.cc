@@ -98,8 +98,8 @@ class Geometry {
     static_assert(D == 3);
     vector<vector<vector<char>>> board(N, vector<vector<char>>(
         N, vector<char>(N, '.')));
-    for (int k = 0; k < limit; k++) {
-      vector<int> decoded = decoder(k);
+    for (Position k = 0_pos; k < limit; k++) {
+      auto decoded = decoder(k);
       board[decoded[0]][decoded[1]][decoded[2]] = func(k);
     }
     for (Side k = 0_side; k < N; ++k) {
@@ -107,7 +107,7 @@ class Geometry {
         for (Side i = 0_side; i < N; ++i) {
           cout << board[k][j][i];
         }
-        cout << "\n";
+        cout << " ";
       }
       cout << "\n";
     }
@@ -678,9 +678,10 @@ class GameEngine {
   }
 
   void heat_map() {
-    auto open = state.get_open_positions();
+    Bitfield open = state.get_open_positions(Mark::X);
     const int trials = 100;
-    //for ( 
+    //for (Pos
+    state.print();
   }
 
   const Geometry<N, D>& geom;
@@ -691,16 +692,19 @@ class GameEngine {
   vector<int>& search_tree;
 };
 
-int new_main() {
-  /*Geometry<4, 4> geom;
+int main() {
+  Geometry<5, 3> geom;
   Symmetry sym(geom);
   SymmeTrie trie(sym);
+  vector<int> search_tree(geom.lines_through_position().size());
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  default_random_engine generator(seed);
   GameEngine b(geom, sym, trie, generator, search_tree);
-  b.heat_map();*/
+  b.heat_map();
   return 0;
 }
 
-int main() {
+int old_main() {
   Geometry<5, 3> geom;
   Symmetry sym(geom);
   SymmeTrie trie(sym);
