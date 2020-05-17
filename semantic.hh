@@ -9,7 +9,7 @@ class sarray {
  public:
   using array_type = std::array<Dest, array_size>;
   using size_type = array_type::size_type;
-  sarray(const Dest& value) {
+  explicit sarray(const Dest& value) {
     a.fill(value);
   }
   sarray() {
@@ -32,7 +32,7 @@ template<typename Source, typename Dest>
 class svector {
  public:
   using size_type = std::vector<Dest>::size_type;
-  svector(size_type size) : v(size) {
+  explicit svector(size_type size) : v(size) {
   }
   svector(size_type size, const Dest& value) : v(size, value) {
   }

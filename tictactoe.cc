@@ -438,12 +438,13 @@ class SymmeTrie {
     while (!pool.empty()) {
       auto current_node = pool.front();
       vector<SymLine> current = nodes[current_node].similar;
+      const SymLine current_size = static_cast<SymLine>(current.size());
       pool.pop();
       for (Position i = 0_pos; i < board_size; ++i) {
         vector<SymLine> next_similar;
-        for (int j = 0; j < static_cast<int>(current.size()); ++j) {
+        for (SymLine j = 0_sym; j < current_size; ++j) {
           if (i == sym.symmetries()[current[j]][i]) {
-            next_similar.push_back(SymLine{j});
+            next_similar.push_back(j);
           }
         }
         auto it = find_if(begin(nodes), end(nodes), [&](const auto& x) {
