@@ -592,24 +592,32 @@ class GameEngine {
   }
 
   using Bitfield = State<N, D>::Bitfield;
+  constexpr static Position board_size = Geometry<N, D>::board_size;
 
   bool play(Position pos, Mark mark) {
     return state.play(pos, mark);
   }
 
   Position random_open_position(const Bitfield& open_positions) {
-    int size = open_positions.count();
-    uniform_int_distribution<int> random_position(0, size - 1);
-    int chosen = random_position(generator);
-    int current = 0;
-    for (Position pos = 0_pos;; ++pos) {
+    int total = 0;
+    for (Position pos = 0_pos; pos < board_size; ++pos) {
       if (open_positions[pos]) {
-        if (chosen == current) {
-          return pos;
-        }
-        current++;
+        total += state.current_accumulation[pos];
       }
     }
+    uniform_int_distribution<int> random_position(0, total - 1);
+    int chosen = random_position(generator);
+    int previous = 0;
+    for (Position pos = 0_pos; pos < board_size; ++pos) {
+      if (open_positions[pos]) {
+        int current = previous + state.current_accumulation[pos];
+        if (chosen < current) {
+          return pos;
+        }
+        previous = current;
+      }
+    }
+    assert(false);
   }
 
   optional<Position> find_forcing_move(
@@ -669,6 +677,12 @@ class GameEngine {
     return mark == Mark::X ? Mark::O : Mark::X;
   }
 
+  void heat_map() {
+    auto open = state.get_open_positions();
+    const int trials = 100;
+    //for ( 
+  }
+
   const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
   const SymmeTrie<N, D>& trie;
@@ -676,6 +690,15 @@ class GameEngine {
   State<N, D> state;
   vector<int>& search_tree;
 };
+
+int new_main() {
+  /*Geometry<4, 4> geom;
+  Symmetry sym(geom);
+  SymmeTrie trie(sym);
+  GameEngine b(geom, sym, trie, generator, search_tree);
+  b.heat_map();*/
+  return 0;
+}
 
 int main() {
   Geometry<5, 3> geom;
