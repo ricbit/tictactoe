@@ -77,10 +77,10 @@ class Geometry {
     return _xor_table;
   }
 
-  vector<Side> decode(Position pos) const {
-    vector<Side> ans;
+  sarray<Dim, Side, D> decode(Position pos) const {
+    sarray<Dim, Side, D> ans;
     for (Dim i = 0_dim; i < D; ++i) {
-      ans.push_back(Side{pos % N});
+      ans[i] = Side{pos % N};
       pos /= N;
     }
     return ans;
@@ -108,7 +108,7 @@ class Geometry {
         N, vector<char>(N, '.')));
     for (Position k = 0_pos; k < limit; ++k) {
       auto decoded = decoder(k);
-      board[decoded[0]][decoded[1]][decoded[2]] = func(k);
+      board[decoded[0_dim]][decoded[1_dim]][decoded[2_dim]] = func(k);
     }
     for (Side k = 0_side; k < N; ++k) {
       for (Side j = 0_side; j < N; ++j) {
@@ -160,7 +160,7 @@ class Geometry {
   }
 
   void generate_lines(const vector<Direction>& terrain,
-      vector<vector<Side>> current_line, Dim dim) {
+      vector<sarray<Dim, Side, D>> current_line, Dim dim) {
     if (dim == D) {
       vector<Position> line(N);
       transform(begin(current_line), end(current_line), begin(line),
@@ -195,7 +195,7 @@ class Geometry {
     }
   }
 
-  Position encode(const vector<Side>& dim_index) const {
+  Position encode(const sarray<Dim, Side, D>& dim_index) const {
     Position ans = 0_pos;
     int factor = 1;
     for (auto index : dim_index) {
@@ -206,7 +206,7 @@ class Geometry {
   }
 
   void construct_winning_lines() {
-    vector<vector<Side>> current_line(N, vector<Side>(D, 0_side));
+    vector<sarray<Dim, Side, D>> current_line(N, sarray<Dim, Side, D>(0_side));
     for (const auto& terrain : unique_terrains) {
       generate_lines(terrain, current_line, 0_dim);
     }
@@ -325,8 +325,8 @@ class Symmetry {
   }
 
   void generate_all_rotations() {
-    vector<Side> index(D);
-    iota(begin(index), end(index), 0_side);
+    vector<Dim> index(D);
+    iota(begin(index), end(index), 0_dim);
     do {
       for (int i = 0; i < (1 << D); ++i) {
         rotations.push_back(generate_rotation(index, i));
@@ -334,7 +334,7 @@ class Symmetry {
     } while (next_permutation(begin(index), end(index)));
   }
 
-  vector<Position> generate_rotation(const vector<Side>& index, int bits) {
+  vector<Position> generate_rotation(const vector<Dim>& index, int bits) {
     vector<Position> symmetry;
     for (Position i = 0_pos; i < geom.board_size; ++i) {
       auto decoded = geom.decode(i);

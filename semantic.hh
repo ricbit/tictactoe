@@ -9,6 +9,8 @@ class sarray {
  public:
   using array_type = typename std::array<Dest, array_size>;
   using size_type = typename array_type::size_type;
+  using iterator = typename array_type::iterator;
+  using const_iterator = typename array_type::const_iterator;
   explicit sarray(const Dest& value) {
     a.fill(value);
   }
@@ -23,6 +25,18 @@ class sarray {
   }
   size_type size() {
     return a.size();
+  }
+  iterator begin() {
+    return a.begin();
+  }
+  iterator end() {
+    return a.end();
+  }
+  const_iterator begin() const {
+    return a.cbegin();
+  }
+  const_iterator end() const {
+    return a.cend();
   }
  private:
   array_type a;
