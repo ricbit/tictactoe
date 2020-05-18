@@ -98,7 +98,7 @@ class Geometry {
     static_assert(D == 3);
     vector<vector<vector<char>>> board(N, vector<vector<char>>(
         N, vector<char>(N, '.')));
-    for (Position k = 0_pos; k < limit; k++) {
+    for (Position k = 0_pos; k < limit; ++k) {
       auto decoded = decoder(k);
       board[decoded[0]][decoded[1]][decoded[2]] = func(k);
     }
