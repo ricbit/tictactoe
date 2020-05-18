@@ -603,6 +603,40 @@ class State {
 };
 
 template<int N, int D>
+class HeatMap { 
+ public:
+  HeatMap(
+    const State<N, D>& state, 
+    const Symmetry<N, D>& sym,
+    const SymmeTrie<N, D>& trie,
+    default_random_engine& generator)
+      : state(state), sym(sym), trie(trie), generator(generator) {
+  }
+  const State<N, D>& state;
+  const Symmetry<N, D>& sym;
+  const SymmeTrie<N, D>& trie;
+  default_random_engine& generator;
+  using Bitfield = typename State<N, D>::Bitfield;
+  constexpr static Line line_size = Geometry<N, D>::line_size;
+  constexpr static Position board_size = Geometry<N, D>::board_size;
+
+  optional<Position> operator()(Mark mark, const Bitfield& open_positions) {
+    vector<Position> open;
+    for (Position i = 0_pos; i < board_size; ++i) {
+      if (open_positions[i]) {
+        open.push_back(i);
+      }
+    }
+    for_each(begin(open), end(open), [&](Position pos) {
+      State<N, D> cloned(state);
+      cloned.play(pos, mark);
+      GameEngine engine(geom, sym, trie, generator, cloned);
+      //engine.play
+    });
+  }
+};
+
+template<int N, int D>
 class ForcingMove { 
  public:
   ForcingMove(const State<N, D>& state) : state(state) {
@@ -704,12 +738,13 @@ class GameEngine {
   GameEngine(const Geometry<N, D>& geom,
     const Symmetry<N, D>& sym,
     const SymmeTrie<N, D>& trie,
-    default_random_engine& generator) :
+    default_random_engine& generator,
+    State<N, D>& state) :
       geom(geom),
       sym(sym),
       trie(trie),
       generator(generator),
-      state(geom, sym, trie) {
+      state(state) {
   }
 
   using Bitfield = typename State<N, D>::Bitfield;
@@ -757,17 +792,7 @@ class GameEngine {
   const Symmetry<N, D>& sym;
   const SymmeTrie<N, D>& trie;
   default_random_engine& generator;
-  State<N, D> state;
+  State<N, D>& state;
 };
 
-int new_main() {
-  Geometry<5, 3> geom;
-  Symmetry sym(geom);
-  SymmeTrie trie(sym);
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-  default_random_engine generator(seed);
-  GameEngine b(geom, sym, trie, generator);
-  b.heat_map();
-  return 0;
-}
 

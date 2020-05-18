@@ -25,7 +25,8 @@ int main() {
   //geom.print_points();
   cout << "winning lines " << geom.line_size << "\n";
   for (int i = 0; i < max_plays; ++i) {
-    GameEngine b(geom, sym, trie, generator);
+    State state(geom, sym, trie);
+    GameEngine b(geom, sym, trie, generator, state);
     int level = 0;
     Mark winner = b.play([&](const auto& open_positions) {    
       search_tree[level++] += open_positions.count();
