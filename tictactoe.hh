@@ -603,16 +603,21 @@ class State {
 };
 
 template<int N, int D>
+class GameEngine;
+
+template<int N, int D>
 class HeatMap { 
  public:
   HeatMap(
     const State<N, D>& state, 
+    const Geometry<N, D>& geom,
     const Symmetry<N, D>& sym,
     const SymmeTrie<N, D>& trie,
     default_random_engine& generator)
-      : state(state), sym(sym), trie(trie), generator(generator) {
+      : state(state), geom(geom), sym(sym), trie(trie), generator(generator) {
   }
   const State<N, D>& state;
+  const Geometry<N, D>& geom;
   const Symmetry<N, D>& sym;
   const SymmeTrie<N, D>& trie;
   default_random_engine& generator;
@@ -735,7 +740,8 @@ class Combiner {
 template<int N, int D>
 class GameEngine {
  public:
-  GameEngine(const Geometry<N, D>& geom,
+  GameEngine(
+    const Geometry<N, D>& geom,
     const Symmetry<N, D>& sym,
     const SymmeTrie<N, D>& trie,
     default_random_engine& generator,
@@ -756,8 +762,8 @@ class GameEngine {
   }
 
   template<typename T>
-  Mark play(T observer) {
-    Mark current_mark = Mark::X;
+  Mark play(Mark start, T observer) {
+    Mark current_mark = start;
     while (true) {
       const auto& open_positions = state.get_open_positions(current_mark);
       if (open_positions.none()) {

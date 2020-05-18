@@ -28,7 +28,7 @@ int main() {
     State state(geom, sym, trie);
     GameEngine b(geom, sym, trie, generator, state);
     int level = 0;
-    Mark winner = b.play([&](const auto& open_positions) {    
+    Mark winner = b.play(Mark::X, [&](const auto& open_positions) {    
       search_tree[level++] += open_positions.count();
     });
     win_counts[static_cast<int>(winner)]++;
