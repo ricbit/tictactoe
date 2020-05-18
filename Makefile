@@ -2,7 +2,7 @@
 TEST_BASE=${GOOGLE_TEST}/googletest
 
 tictactoe : tictactoe.cc semantic.hh tictactoe.hh
-	g++ -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+	g++-10 -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
 clang : tictactoe.cc semantic.hh tictactoe.hh
 	clang++ -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb
