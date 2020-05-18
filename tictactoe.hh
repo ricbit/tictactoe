@@ -36,7 +36,7 @@ constexpr initializer_list<Direction> all_directions {
 
 template<typename T>
 constexpr T pow(T a, T b) {
-  int ans = 1;
+  T ans = T{1};
   for (int i = 0; i < b; i++) {
     ans *= a;
   }
@@ -508,11 +508,11 @@ class State {
     return open_positions;
   }
 
-  auto& get_current(Mark mark) {
+  const auto& get_current(Mark mark) const {
     return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
   }
 
-  auto& get_opponent(Mark mark) {
+  const auto& get_opponent(Mark mark) const {
     return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
   }
 
@@ -554,11 +554,11 @@ class State {
     return false;
   }
 
-  Position get_xor_table(Line line) {
+  const Position get_xor_table(Line line) const {
     return xor_table[line];
   }
 
-  LineCount get_current_accumulation(Position pos) {
+  const LineCount get_current_accumulation(Position pos) const {
     return current_accumulation[pos];
   };
 
@@ -579,6 +579,14 @@ class State {
   EmptyList empty_cells;
   vector<EmptyList::iterator> empty_it;
 
+  auto& get_current(Mark mark) {
+    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
+  }
+
+  auto& get_opponent(Mark mark) {
+    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
+  }
+
   void print_accumulation() {
     geom.print(geom.board_size, [&](Position k) {
       return geom.decode(k);
@@ -595,27 +603,58 @@ class State {
 };
 
 template<int N, int D>
-class GameEngine {
+class ForcingMove { 
  public:
-  GameEngine(const Geometry<N, D>& geom,
-    const Symmetry<N, D>& sym,
-    const SymmeTrie<N, D>& trie,
-    default_random_engine& generator) :
-      geom(geom),
-      sym(sym),
-      trie(trie),
-      generator(generator),
-      state(geom, sym, trie) {
+  ForcingMove(const State<N, D>& state) : state(state) {
+  }
+  const State<N, D>& state;
+  using Bitfield = typename State<N, D>::Bitfield;
+  constexpr static Line line_size = Geometry<N, D>::line_size;
+
+  optional<Position> find_forcing_move(
+      const svector<Line, MarkCount>& current,
+      const svector<Line, MarkCount>& opponent,
+      const Bitfield& open_positions) {
+    for (Line i = 0_line; i < line_size; ++i) {
+      if (current[i] == N - 1 && opponent[i] == 0) {
+        Position trial = state.get_xor_table(i);
+        if (open_positions[trial]) {
+          return trial;
+        }
+      }
+    }
+    return {};
   }
 
+  optional<Position> operator()(Mark mark, const Bitfield& open_positions) {
+    const auto& current = state.get_current(mark);
+    const auto& opponent = state.get_opponent(mark);
+    optional<Position> attack =
+        find_forcing_move(current, opponent, open_positions);
+    if (attack.has_value()) {
+      return *attack;
+    }
+    optional<Position> defend =
+        find_forcing_move(opponent, current, open_positions);
+    if (defend.has_value()) {
+      return *defend;
+    }
+    return {};
+  }
+};
+
+template<int N, int D>
+class BiasedRandom { 
+ public:
+  BiasedRandom(const State<N, D>& state, default_random_engine& generator)
+      : state(state), generator(generator) {
+  }
+  const State<N, D>& state;
+  default_random_engine& generator;
   using Bitfield = typename State<N, D>::Bitfield;
   constexpr static Position board_size = Geometry<N, D>::board_size;
 
-  bool play(Position pos, Mark mark) {
-    return state.play(pos, mark);
-  }
-
-  Position random_open_position(const Bitfield& open_positions) {
+  optional<Position> operator()(Mark mark, const Bitfield& open_positions) {
     int total = 0;
     for (Position pos = 0_pos; pos < board_size; ++pos) {
       if (open_positions[pos]) {
@@ -636,36 +675,49 @@ class GameEngine {
     }
     assert(false);
   }
+};
 
-  optional<Position> find_forcing_move(
-      const svector<Line, MarkCount>& current,
-      const svector<Line, MarkCount>& opponent,
-      const Bitfield& open_positions) {
-    for (Line i = 0_line; i < geom.line_size; ++i) {
-      if (current[i] == N - 1 && opponent[i] == 0) {
-        Position trial = state.get_xor_table(i);
-        if (open_positions[trial]) {
-          return trial;
-        }
-      }
+template<int N, int D, typename A, typename B>
+class Combiner {
+ public:
+  Combiner(A a, B b) : a(a), b(b) {
+  }
+  A a;
+  B b;
+  using Bitfield = typename State<N, D>::Bitfield;
+  optional<Position> operator()(Mark mark, const Bitfield& open_positions) {
+    auto ans = a(mark, open_positions);
+    if (ans.has_value()) {
+      return ans;
+    }
+    ans = b(mark, open_positions) ;
+    if (ans.has_value()) {
+      return ans;
     }
     return {};
   }
+};
 
-  Position choose_position(Mark mark, const Bitfield& open_positions) {
-    const auto& current = state.get_current(mark);
-    const auto& opponent = state.get_opponent(mark);
-    optional<Position> attack =
-        find_forcing_move(current, opponent, open_positions);
-    if (attack.has_value()) {
-      return *attack;
-    }
-    optional<Position> defend =
-        find_forcing_move(opponent, current, open_positions);
-    if (defend.has_value()) {
-      return *defend;
-    }
-    return random_open_position(open_positions);
+template<int N, int D>
+class GameEngine {
+ public:
+  GameEngine(const Geometry<N, D>& geom,
+    const Symmetry<N, D>& sym,
+    const SymmeTrie<N, D>& trie,
+    default_random_engine& generator) :
+      geom(geom),
+      sym(sym),
+      trie(trie),
+      generator(generator),
+      state(geom, sym, trie) {
+  }
+
+  using Bitfield = typename State<N, D>::Bitfield;
+  constexpr static Position board_size = Geometry<N, D>::board_size;
+
+  template<typename A, typename B>
+  Combiner<N, D, A, B> make_combiner(A a, B b) {
+    return Combiner<N, D, A, B>(a, b);
   }
 
   template<typename T>
@@ -677,8 +729,9 @@ class GameEngine {
         return Mark::empty;
       }
       observer(open_positions);
-      Position pos = choose_position(current_mark, open_positions);
-      auto result = play(pos, current_mark);
+      auto comb = make_combiner(ForcingMove(state), BiasedRandom(state, generator));
+      optional<Position> pos = comb(current_mark, open_positions);
+      auto result = state.play(*pos, current_mark);
       /*state.print();
       state.print_accumulation();
       cout << "\n------\n\n";*/
