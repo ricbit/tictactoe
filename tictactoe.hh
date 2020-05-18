@@ -2,7 +2,6 @@
 #include <vector>
 #include <algorithm>
 #include <random>
-#include <ctgmath>
 #include <chrono>
 #include <set>
 #include <queue>
@@ -34,6 +33,15 @@ constexpr initializer_list<Direction> all_directions {
   Direction::up,
   Direction::down
 };
+
+template<typename T>
+constexpr T pow(T a, T b) {
+  int ans = 1;
+  for (int i = 0; i < b; i++) {
+    ans *= a;
+  }
+  return ans;
+}
 
 template<int N, int D>
 class Geometry {
@@ -486,7 +494,7 @@ class State {
     }
   }
 
-  using Bitfield = SymmeTrie<N, D>::Bitfield;
+  using Bitfield = typename SymmeTrie<N, D>::Bitfield;
 
   const Bitfield& get_open_positions(Mark mark) {
     open_positions.reset();
@@ -600,7 +608,7 @@ class GameEngine {
       state(geom, sym, trie) {
   }
 
-  using Bitfield = State<N, D>::Bitfield;
+  using Bitfield = typename State<N, D>::Bitfield;
   constexpr static Position board_size = Geometry<N, D>::board_size;
 
   bool play(Position pos, Mark mark) {

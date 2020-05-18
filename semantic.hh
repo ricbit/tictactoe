@@ -7,8 +7,8 @@
 template<typename Source, typename Dest, int array_size>
 class sarray {
  public:
-  using array_type = std::array<Dest, array_size>;
-  using size_type = array_type::size_type;
+  using array_type = typename std::array<Dest, array_size>;
+  using size_type = typename array_type::size_type;
   explicit sarray(const Dest& value) {
     a.fill(value);
   }
@@ -31,8 +31,8 @@ class sarray {
 template<typename Source, typename Dest>
 class svector {
  public:
-  using size_type = std::vector<Dest>::size_type;
-  using iterator = std::vector<Dest>::iterator;
+  using size_type = typename std::vector<Dest>::size_type;
+  using iterator = typename std::vector<Dest>::iterator;
   explicit svector(size_type size) : v(size) {
   }
   svector(size_type size, const Dest& value) : v(size, value) {
