@@ -592,14 +592,12 @@ class GameEngine {
   GameEngine(const Geometry<N, D>& geom,
     const Symmetry<N, D>& sym,
     const SymmeTrie<N, D>& trie,
-    default_random_engine& generator,
-    vector<int>& search_tree) :
+    default_random_engine& generator) :
       geom(geom),
       sym(sym),
       trie(trie),
       generator(generator),
-      state(geom, sym, trie),
-      search_tree(search_tree) {
+      state(geom, sym, trie) {
   }
 
   using Bitfield = State<N, D>::Bitfield;
@@ -662,16 +660,15 @@ class GameEngine {
     return random_open_position(open_positions);
   }
 
-  Mark play() {
+  template<typename T>
+  Mark play(T observer) {
     Mark current_mark = Mark::X;
-    int level = 0;
     while (true) {
       const auto& open_positions = state.get_open_positions(current_mark);
-      int size = open_positions.count();
-      if (size == 0) {
+      if (open_positions.none()) {
         return Mark::empty;
       }
-      search_tree[level++] += size;
+      observer(open_positions);
       Position pos = choose_position(current_mark, open_positions);
       auto result = play(pos, current_mark);
       /*state.print();
@@ -700,17 +697,15 @@ class GameEngine {
   const SymmeTrie<N, D>& trie;
   default_random_engine& generator;
   State<N, D> state;
-  vector<int>& search_tree;
 };
 
 int new_main() {
   Geometry<5, 3> geom;
   Symmetry sym(geom);
   SymmeTrie trie(sym);
-  vector<int> search_tree(geom.lines_through_position().size());
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  GameEngine b(geom, sym, trie, generator, search_tree);
+  GameEngine b(geom, sym, trie, generator);
   b.heat_map();
   return 0;
 }
@@ -728,10 +723,12 @@ int main() {
   //geom.print_points();
   cout << "winning lines " << geom.line_size << "\n";
   for (int i = 0; i < max_plays; ++i) {
-    GameEngine b(geom, sym, trie, generator, search_tree);
-    win_counts[static_cast<int>(b.play())]++;
-    //cout << "\n---\n";
-    //b.print();
+    GameEngine b(geom, sym, trie, generator);
+    int level = 0;
+    Mark winner = b.play([&](const auto& open_positions) {    
+      search_tree[level++] += open_positions.count();
+    });
+    win_counts[static_cast<int>(winner)]++;
   }
   double total = 0.0;
   for (int i = 0; i < static_cast<int>(search_tree.size()); ++i) {
