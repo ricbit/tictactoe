@@ -605,6 +605,11 @@ class State {
 template<int N, int D, typename Strategy>
 class GameEngine;
 
+template<typename T>
+concept Strategy = requires (T x) {
+  { x(Mark::X, bitset<125>()) } -> same_as<optional<Position>>;
+};
+
 template<int N, int D>
 class HeatMap { 
  public:
@@ -717,7 +722,7 @@ class BiasedRandom {
   }
 };
 
-template<typename A, typename B>
+template<Strategy A, typename B>
 class Combiner {
  public:
   Combiner(A a, B b) : a(a), b(b) {
