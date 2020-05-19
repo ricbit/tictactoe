@@ -602,7 +602,7 @@ class State {
   }
 };
 
-template<int N, int D>
+template<int N, int D, typename Strategy>
 class GameEngine;
 
 template<int N, int D>
@@ -638,13 +638,14 @@ class HeatMap {
       GameEngine engine(geom, sym, trie, generator, cloned);
       //engine.play
     });
+    return {};
   }
 };
 
 template<int N, int D>
 class ForcingMove { 
  public:
-  ForcingMove(const State<N, D>& state) : state(state) {
+  explicit ForcingMove(const State<N, D>& state) : state(state) {
   }
   const State<N, D>& state;
   using Bitfield = typename State<N, D>::Bitfield;
@@ -716,15 +717,15 @@ class BiasedRandom {
   }
 };
 
-template<int N, int D, typename A, typename B>
+template<typename A, typename B>
 class Combiner {
  public:
   Combiner(A a, B b) : a(a), b(b) {
   }
   A a;
   B b;
-  using Bitfield = typename State<N, D>::Bitfield;
-  optional<Position> operator()(Mark mark, const Bitfield& open_positions) {
+  template<typename T>
+  optional<Position> operator()(Mark mark, const T& open_positions) {
     auto ans = a(mark, open_positions);
     if (ans.has_value()) {
       return ans;
@@ -737,7 +738,12 @@ class Combiner {
   }
 };
 
-template<int N, int D>
+template<typename A, typename B>
+constexpr auto make_combiner(A a, B b) {
+  return Combiner<A, B>(a, b);
+}
+
+template<int N, int D, typename Strategy>
 class GameEngine {
  public:
   GameEngine(
@@ -745,21 +751,18 @@ class GameEngine {
     const Symmetry<N, D>& sym,
     const SymmeTrie<N, D>& trie,
     default_random_engine& generator,
-    State<N, D>& state) :
+    State<N, D>& state,
+    Strategy strategy) :
       geom(geom),
       sym(sym),
       trie(trie),
       generator(generator),
-      state(state) {
+      state(state),
+      strategy(strategy) {
   }
 
   using Bitfield = typename State<N, D>::Bitfield;
   constexpr static Position board_size = Geometry<N, D>::board_size;
-
-  template<typename A, typename B>
-  Combiner<N, D, A, B> make_combiner(A a, B b) {
-    return Combiner<N, D, A, B>(a, b);
-  }
 
   template<typename T>
   Mark play(Mark start, T observer) {
@@ -770,14 +773,12 @@ class GameEngine {
         return Mark::empty;
       }
       observer(open_positions);
-      auto comb = make_combiner(ForcingMove(state), BiasedRandom(state, generator));
-      optional<Position> pos = comb(current_mark, open_positions);
-      auto result = state.play(*pos, current_mark);
-      /*state.print();
-      state.print_accumulation();
-      cout << "\n------\n\n";*/
-      if (result) {
-        return current_mark;
+      optional<Position> pos = strategy(current_mark, open_positions);
+      if (pos.has_value()) {
+        auto result = state.play(*pos, current_mark);
+        if (result) {
+          return current_mark;
+        }
       }
       current_mark = flip(current_mark);
     }
@@ -799,6 +800,7 @@ class GameEngine {
   const SymmeTrie<N, D>& trie;
   default_random_engine& generator;
   State<N, D>& state;
+  Strategy strategy;
 };
 
 
