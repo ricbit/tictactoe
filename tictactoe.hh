@@ -602,13 +602,21 @@ class State {
   }
 };
 
-template<int N, int D, typename Strategy>
-class GameEngine;
+template<typename T, typename F>
+optional<T> operator||(optional<T> first, F func) {
+  if (first.has_value()) {
+    return first;
+  }
+  return func();
+}
 
 template<typename T>
 concept Strategy = requires (T x) {
   { x(Mark::X, bitset<125>()) } -> same_as<optional<Position>>;
 };
+
+template<int N, int D, Strategy S>
+class GameEngine;
 
 template<int N, int D>
 class HeatMap { 
@@ -630,7 +638,8 @@ class HeatMap {
   constexpr static Line line_size = Geometry<N, D>::line_size;
   constexpr static Position board_size = Geometry<N, D>::board_size;
 
-  optional<Position> operator()(Mark mark, const Bitfield& open_positions) {
+  template<typename B>
+  optional<Position> operator()(Mark mark, const B& open_positions) {
     vector<Position> open;
     for (Position i = 0_pos; i < board_size; ++i) {
       if (open_positions[i]) {
@@ -671,20 +680,13 @@ class ForcingMove {
     return {};
   }
 
-  optional<Position> operator()(Mark mark, const Bitfield& open_positions) {
+  template<typename B>
+  optional<Position> operator()(Mark mark, const B& open_positions) {
     const auto& current = state.get_current(mark);
     const auto& opponent = state.get_opponent(mark);
-    optional<Position> attack =
-        find_forcing_move(current, opponent, open_positions);
-    if (attack.has_value()) {
-      return *attack;
-    }
-    optional<Position> defend =
-        find_forcing_move(opponent, current, open_positions);
-    if (defend.has_value()) {
-      return *defend;
-    }
-    return {};
+    return         
+        find_forcing_move(current, opponent, open_positions) ||
+        [&](){ return find_forcing_move(opponent, current, open_positions); };
   }
 };
 
@@ -699,7 +701,8 @@ class BiasedRandom {
   using Bitfield = typename State<N, D>::Bitfield;
   constexpr static Position board_size = Geometry<N, D>::board_size;
 
-  optional<Position> operator()(Mark mark, const Bitfield& open_positions) {
+  template<typename B>
+  optional<Position> operator()(Mark mark, const B& open_positions) {
     int total = 0;
     for (Position pos = 0_pos; pos < board_size; ++pos) {
       if (open_positions[pos]) {
@@ -722,7 +725,7 @@ class BiasedRandom {
   }
 };
 
-template<Strategy A, typename B>
+template<Strategy A, Strategy B>
 class Combiner {
  public:
   Combiner(A a, B b) : a(a), b(b) {
@@ -731,15 +734,8 @@ class Combiner {
   B b;
   template<typename T>
   optional<Position> operator()(Mark mark, const T& open_positions) {
-    auto ans = a(mark, open_positions);
-    if (ans.has_value()) {
-      return ans;
-    }
-    ans = b(mark, open_positions) ;
-    if (ans.has_value()) {
-      return ans;
-    }
-    return {};
+    return a(mark, open_positions) || 
+        [&](){ return b(mark, open_positions); };
   }
 };
 
@@ -748,7 +744,7 @@ constexpr auto make_combiner(A a, B b) {
   return Combiner<A, B>(a, b);
 }
 
-template<int N, int D, typename Strategy>
+template<int N, int D, Strategy S>
 class GameEngine {
  public:
   GameEngine(
@@ -757,7 +753,7 @@ class GameEngine {
     const SymmeTrie<N, D>& trie,
     default_random_engine& generator,
     State<N, D>& state,
-    Strategy strategy) :
+    S strategy) :
       geom(geom),
       sym(sym),
       trie(trie),
@@ -805,7 +801,7 @@ class GameEngine {
   const SymmeTrie<N, D>& trie;
   default_random_engine& generator;
   State<N, D>& state;
-  Strategy strategy;
+  S strategy;
 };
 
 
