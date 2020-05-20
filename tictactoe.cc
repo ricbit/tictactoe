@@ -26,7 +26,7 @@ int main() {
     State state(data);
     auto comb = make_combiner(
         ForcingMove(state), BiasedRandom(state, generator));
-    GameEngine b(data.geom, data.sym, data.trie, generator, state, comb);
+    GameEngine b(generator, state, comb);
     int level = 0;
     Mark winner = b.play(Mark::X, [&](const auto& open_positions) {    
       search_tree[level++] += open_positions.count();

@@ -286,15 +286,9 @@ template<int N, int D, Strategy S>
 class GameEngine {
  public:
   GameEngine(
-    const Geometry<N, D>& geom,
-    const Symmetry<N, D>& sym,
-    const SymmeTrie<N, D>& trie,
     default_random_engine& generator,
     State<N, D>& state,
     S strategy) :
-      geom(geom),
-      sym(sym),
-      trie(trie),
       generator(generator),
       state(state),
       strategy(strategy) {
@@ -334,9 +328,6 @@ class GameEngine {
     state.print();
   }
 
-  const Geometry<N, D>& geom;
-  const Symmetry<N, D>& sym;
-  const SymmeTrie<N, D>& trie;
   default_random_engine& generator;
   State<N, D>& state;
   S strategy;

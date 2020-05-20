@@ -525,6 +525,7 @@ class BoardData {
     return sym.symmetries().size();
   }
 
+ private:
   const Geometry<N, D> geom;
   const Symmetry<N, D> sym;
   const SymmeTrie<N, D> trie;
