@@ -18,7 +18,7 @@
 template<int N, int D>
 class State {
  public:
-  State(const BoardData<N, D>& data) :
+  explicit State(const BoardData<N, D>& data) :
       data(data),
       board(Mark::empty),
       x_marks_on_line(data.line_size),

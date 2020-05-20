@@ -20,7 +20,6 @@ int main() {
   default_random_engine generator(seed);
   int max_plays = 10000;
   vector<int> win_counts(3);
-  //geom.print_points();
   cout << "winning lines " << data.line_size << "\n";
   for (int i = 0; i < max_plays; ++i) {
     State state(data);
