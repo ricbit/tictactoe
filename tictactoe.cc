@@ -13,22 +13,20 @@
 #include "tictactoe.hh"
 
 int main() {
-  Geometry<5, 3> geom;
-  Symmetry sym(geom);
-  SymmeTrie trie(sym);
-  cout << "num symmetries " << sym.symmetries().size() << "\n";
-  vector<int> search_tree(geom.lines_through_position().size());
+  BoardData<5, 3> data;
+  cout << "num symmetries " << data.symmetries_size() << "\n";
+  vector<int> search_tree(data.board_size);
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   int max_plays = 10000;
   vector<int> win_counts(3);
   //geom.print_points();
-  cout << "winning lines " << geom.line_size << "\n";
+  cout << "winning lines " << data.line_size << "\n";
   for (int i = 0; i < max_plays; ++i) {
-    State state(geom, sym, trie);
+    State state(data);
     auto comb = make_combiner(
         ForcingMove(state), BiasedRandom(state, generator));
-    GameEngine b(geom, sym, trie, generator, state, comb);
+    GameEngine b(data.geom, data.sym, data.trie, generator, state, comb);
     int level = 0;
     Mark winner = b.play(Mark::X, [&](const auto& open_positions) {    
       search_tree[level++] += open_positions.count();
@@ -42,7 +40,6 @@ int main() {
     if (level > 0.0) {
       double log_level = log10(level < 1.0 ? 1.0 : level);
       total += log_level;
-      //cout << log_level << "\n";
     }
   }
   cout << "\ntotal : 10 ^ " << total << "\n";
