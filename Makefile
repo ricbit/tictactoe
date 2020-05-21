@@ -1,16 +1,17 @@
 # Set GOOGLE_TEST in your .bashrc as /home/ricbit/src/googletest or whatever.
 TEST_BASE=${GOOGLE_TEST}/googletest
+HEADERS = boarddata.hh semantic.hh tictactoe.hh state.hh
 
-tictactoe : tictactoe.cc semantic.hh tictactoe.hh
+tictactoe : tictactoe.cc ${HEADERS}
 	g++-10 -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
-heatmap : semantic.hh tictactoe.hh heatmap.cc
+heatmap : heatmap.cc ${HEADERS}
 	g++-10 -std=c++2a heatmap.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
-clang : tictactoe.cc semantic.hh tictactoe.hh
+clang : tictactoe.cc ${HEADERS}
 	clang++-10 -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb
 
-test : semantic.hh tictactoe.hh test.cc
+test : test.cc ${HEADERS}
 	g++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ -O3 -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
 	./test
 

@@ -109,8 +109,8 @@ class Geometry {
   template<typename X, typename T>
   void print(int limit, X decoder, T func) const {
     static_assert(D == 3);
-    vector<vector<vector<char>>> board(N, vector<vector<char>>(
-        N, vector<char>(N, '.')));
+    vector<vector<vector<string>>> board(N, vector<vector<string>>(
+        N, vector<string>(N, "."s)));
     for (Position k = 0_pos; k < limit; ++k) {
       auto decoded = decoder(k);
       board[decoded[0_dim]][decoded[1_dim]][decoded[2_dim]] = func(k);
