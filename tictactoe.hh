@@ -170,6 +170,12 @@ class HeatMap {
         return static_cast<int>((s - *vmin) / range * 9.99);
       }
     });
+    print(open, norm);
+    auto winner = max_element(begin(score), end(score));
+    return open[distance(begin(score), winner)];
+  }
+
+  void print(const vector<Position>& open, const vector<int>& norm) {
     data.print(board_size, [&](Position pos) {
       return data.decode(pos);
     }, [&](Position pos) {
@@ -183,11 +189,8 @@ class HeatMap {
           return color + static_cast<char>(norm[distance(begin(open), it)] + '0');
         }
       }
-      string color = "\x1b[30m"s;      
-      return color + "."s;
+      return "\x1b[30m."s;
     });
-    auto winner = max_element(begin(score), end(score));
-    return open[distance(begin(score), winner)];
   }
 };
 
