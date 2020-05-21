@@ -50,6 +50,7 @@ class State {
     }
   }
 
+  constexpr static Position board_size = BoardData<N, D>::board_size;
   using Bitfield = typename BoardData<N, D>::Bitfield;
 
   const Bitfield& get_open_positions(Mark mark) {
@@ -119,7 +120,6 @@ class State {
   };
 
  private:
-  constexpr static Position board_size = BoardData<N, D>::board_size;
   const BoardData<N, D>& data;
   sarray<Position, Mark, board_size> board;
   svector<Line, MarkCount> x_marks_on_line, o_marks_on_line;
