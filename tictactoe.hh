@@ -289,8 +289,8 @@ class Combiner {
   }
 };
 
-template<typename A, typename B>
-constexpr auto make_combiner(A a, B b) {
+template<Strategy A, Strategy B>
+constexpr auto operator>>(A a, B b) {
   return Combiner<A, B>(a, b);
 }
 

@@ -23,9 +23,8 @@ int main() {
   cout << "winning lines " << data.line_size << "\n";
   for (int i = 0; i < max_plays; ++i) {
     State state(data);
-    auto comb = make_combiner(
-        ForcingMove(state), BiasedRandom(state, generator));
-    GameEngine b(generator, state, comb);
+    GameEngine b(generator, state,
+        ForcingMove(state) >> BiasedRandom(state, generator));
     int level = 0;
     Mark winner = b.play(Mark::X, [&](const auto& open_positions) {    
       search_tree[level++] += open_positions.count();
