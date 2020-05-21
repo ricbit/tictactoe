@@ -34,6 +34,22 @@ class State {
     }
   }
 
+  explicit State(const State& state) :
+      data(state.data),
+      board(state.board),
+      x_marks_on_line(state.x_marks_on_line), 
+      o_marks_on_line(state.o_marks_on_line), 
+      xor_table(state.xor_table),
+      active_line(state.active_line),
+      current_accumulation(state.current_accumulation),
+      trie_node(state.trie_node),
+      empty_cells(state.empty_cells),
+      empty_it(state.empty_it.size(), empty_cells.end()) {
+    for (auto it = begin(empty_cells); it != end(empty_cells); ++it) {
+      empty_it[*it] = it;
+    }
+  }
+
   using Bitfield = typename BoardData<N, D>::Bitfield;
 
   const Bitfield& get_open_positions(Mark mark) {
