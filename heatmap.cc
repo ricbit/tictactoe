@@ -16,7 +16,7 @@ int main() {
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   State state(data);
-  auto s = HeatMap<5, 3>(state, data, generator);
+  auto s = ForcingMove<5,3>(state) >> HeatMap<5, 3>(state, data, generator);
   GameEngine b(generator, state, s);
   int current = 0;
   b.play(Mark::X, [&](auto obs) {
