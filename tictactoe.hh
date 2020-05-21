@@ -146,7 +146,8 @@ class HeatMap {
     }
     Mark flipped = flip(mark);
     vector<int> score(open.size());
-    transform(begin(open), end(open), begin(score), [&](Position pos) {
+    transform(execution::par_unseq, begin(open), end(open), begin(score),
+        [&](Position pos) {
       vector<int> win_counts(3);
       int trials = 100;
       for (int i = 0; i < trials; ++i) {
