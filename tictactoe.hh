@@ -144,7 +144,9 @@ class HeatMap {
         open.push_back(i);
       }
     }
-    for_each(begin(open), end(open), [&](Position pos) {
+    Mark flipped = flip(mark);
+    vector<int> score(open.size());
+    transform(begin(open), end(open), begin(score), [&](Position pos) {
       vector<int> win_counts(3);
       int trials = 100;
       for (int i = 0; i < trials; ++i) {
@@ -152,7 +154,6 @@ class HeatMap {
         cloned.play(pos, mark);
         auto s = ForcingMove<N, D>(cloned) >> BiasedRandom<N, D>(cloned, generator);
         GameEngine engine(generator, cloned, s);
-        Mark flipped = engine.flip(mark);
         Mark winner = engine.play(flipped, [](auto obs){});
         win_counts[static_cast<int>(winner)]++;
       }
@@ -160,8 +161,11 @@ class HeatMap {
       cout << "X wins : " << win_counts[static_cast<int>(Mark::X)] << "\n";
       cout << "O wins : " << win_counts[static_cast<int>(Mark::O)] << "\n";
       cout << "draws  : " << win_counts[static_cast<int>(Mark::empty)] << "\n";
+      return win_counts[static_cast<int>(mark)] -
+             win_counts[static_cast<int>(flipped)];
     });
-    return {};
+    auto winner = max_element(begin(score), end(score));
+    return open[distance(begin(score), winner)];
   }
 };
 
@@ -198,10 +202,6 @@ class GameEngine {
       }
       current_mark = flip(current_mark);
     }
-  }
-
-  Mark flip(Mark mark) {
-    return mark == Mark::X ? Mark::O : Mark::X;
   }
 
   default_random_engine& generator;

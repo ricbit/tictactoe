@@ -18,8 +18,9 @@ int main() {
   State state(data);
   auto s = HeatMap<5, 3>(state, data, generator);
   GameEngine b(generator, state, s);
-  b.play(Mark::X, [](auto obs){
-    cout << "\n---\n";
+  int current = 0;
+  b.play(Mark::X, [&](auto obs){
+    cout << "\nlevel " << current++ << "---\n";
   });
   return 0;
 }

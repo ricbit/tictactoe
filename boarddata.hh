@@ -263,6 +263,10 @@ enum class Mark {
   empty
 };
 
+Mark flip(Mark mark) {
+  return mark == Mark::X ? Mark::O : Mark::X;
+}
+
 template<int N, int D>
 class Symmetry {
  public:
