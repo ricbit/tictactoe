@@ -119,6 +119,10 @@ class State {
     return current_accumulation[pos];
   };
 
+  Mark get_board(Position pos) const {
+    return board[pos];
+  }
+
  private:
   const BoardData<N, D>& data;
   sarray<Position, Mark, board_size> board;

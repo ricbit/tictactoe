@@ -157,12 +157,27 @@ class HeatMap {
         Mark winner = engine.play(flipped, [](auto obs){});
         win_counts[static_cast<int>(winner)]++;
       }
-      cout << "position " << pos << "\n";
-      cout << "X wins : " << win_counts[static_cast<int>(Mark::X)] << "\n";
-      cout << "O wins : " << win_counts[static_cast<int>(Mark::O)] << "\n";
-      cout << "draws  : " << win_counts[static_cast<int>(Mark::empty)] << "\n";
       return win_counts[static_cast<int>(mark)] -
              win_counts[static_cast<int>(flipped)];
+    });
+    auto [vmin, vmax] = minmax_element(begin(score), end(score));
+    double range = *vmax - *vmin;
+    vector<int> norm(score.size());
+    transform(begin(score), end(score), begin(norm), [&](int s) {
+      return static_cast<int>((s - *vmin) / range * 9.99);
+    });
+    data.print(board_size, [&](Position pos) {
+      return data.decode(pos);
+    }, [&](Position pos) {
+      if (state.get_board(pos) != Mark::empty) {
+        return state.get_board(pos) == Mark::X ? 'X' : 'O';
+      } else {
+        auto it = find(begin(open), end(open), pos);
+        if (it != end(open)) {
+          return static_cast<char>(norm[distance(begin(open), it)] + '0');
+        }
+      }
+      return '.';
     });
     auto winner = max_element(begin(score), end(score));
     return open[distance(begin(score), winner)];
