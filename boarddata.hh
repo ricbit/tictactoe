@@ -524,6 +524,10 @@ class BoardData {
   const int symmetries_size() const {
     return sym.symmetries().size();
   }
+  
+  const sarray<Dim, Side, D> decode(Position pos) const {
+    return geom.decode(pos);
+  }
 
  private:
   const Geometry<N, D> geom;

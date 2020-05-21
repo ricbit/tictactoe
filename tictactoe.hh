@@ -14,147 +14,7 @@
 #include <list>
 #include "semantic.hh"
 #include "boarddata.hh"
-
-template<int N, int D>
-class State {
- public:
-  explicit State(const BoardData<N, D>& data) :
-      data(data),
-      board(Mark::empty),
-      x_marks_on_line(data.line_size),
-      o_marks_on_line(data.line_size),
-      xor_table(data.xor_table()),
-      active_line(data.line_size, true),
-      current_accumulation(data.accumulation_points()),
-      trie_node(0_node),
-      empty_cells(board_size) {
-    iota(begin(empty_cells), end(empty_cells), 0_pos);
-    for (auto it = begin(empty_cells); it != end(empty_cells); ++it) {
-      empty_it.push_back(it);
-    }
-  }
-
-  explicit State(const State& state) :
-      data(state.data),
-      board(state.board),
-      x_marks_on_line(state.x_marks_on_line), 
-      o_marks_on_line(state.o_marks_on_line), 
-      xor_table(state.xor_table),
-      active_line(state.active_line),
-      current_accumulation(state.current_accumulation),
-      trie_node(state.trie_node),
-      empty_cells(state.empty_cells),
-      empty_it(state.empty_it.size(), empty_cells.end()) {
-    for (auto it = begin(empty_cells); it != end(empty_cells); ++it) {
-      empty_it[*it] = it;
-    }
-  }
-
-  constexpr static Position board_size = BoardData<N, D>::board_size;
-  using Bitfield = typename BoardData<N, D>::Bitfield;
-
-  const Bitfield& get_open_positions(Mark mark) {
-    open_positions.reset();
-    checked.reset();
-    for (Position i : empty_cells) {
-      if (!checked[i]) {
-        open_positions[i] = true;
-        checked |= data.mask(trie_node, i);
-      }
-    }
-    return open_positions;
-  }
-
-  const auto& get_current(Mark mark) const {
-    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
-  }
-
-  const auto& get_opponent(Mark mark) const {
-    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
-  }
-
-  void print() {
-    data.print(data.board_size, [&](Position k) {
-      return data.decode(k);
-    }, [&](Position k) {
-      return encode_position(board[k]);
-    });
-  }
-
-  bool play(Position pos, Mark mark) {
-    board[pos] = mark;
-    empty_cells.erase(empty_it[pos]);
-    empty_it[pos] = end(empty_cells);
-    trie_node = data.next(trie_node, pos);
-    for (Line line : data.lines_through_position()[pos]) {
-      auto& current = get_current(mark);
-      current[line]++;
-      xor_table[line] ^= pos;
-      if (current[line] == N) {
-        return true;
-      }
-      if (x_marks_on_line[line] > 0 &&
-          o_marks_on_line[line] > 0 &&
-          active_line[line]) {
-        active_line[line] = false;
-        for (Side j = 0_side; j < N; ++j) {
-          Position neigh = data.winning_lines()[line][j];
-          current_accumulation[neigh]--;
-          if (current_accumulation[neigh] == 0 &&
-              empty_it[neigh] != end(empty_cells)) {
-            empty_cells.erase(empty_it[neigh]);
-            empty_it[neigh] = end(empty_cells);
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  const Position get_xor_table(Line line) const {
-    return xor_table[line];
-  }
-
-  const LineCount get_current_accumulation(Position pos) const {
-    return current_accumulation[pos];
-  };
-
- private:
-  const BoardData<N, D>& data;
-  sarray<Position, Mark, board_size> board;
-  svector<Line, MarkCount> x_marks_on_line, o_marks_on_line;
-  svector<Line, Position> xor_table;
-  vector<bool> active_line;
-  vector<LineCount> current_accumulation;
-  Bitfield open_positions;
-  NodeLine trie_node;
-  Bitfield checked;
-  using EmptyList = list<Position>;
-  EmptyList empty_cells;
-  vector<EmptyList::iterator> empty_it;
-
-  auto& get_current(Mark mark) {
-    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
-  }
-
-  auto& get_opponent(Mark mark) {
-    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
-  }
-
-  void print_accumulation() {
-    data.print(data.board_size, [&](Position k) {
-      return data.decode(k);
-    }, [&](Position k) {
-      return data.encode_points(current_accumulation[k]);
-    });
-  }
-
-  char encode_position(Mark pos) {
-    return pos == Mark::X ? 'X'
-         : pos == Mark::O ? 'O'
-         : '.';
-  }
-};
+#include "state.hh"
 
 template<typename T, typename F>
 optional<T> operator||(optional<T> first, F func) {
@@ -171,40 +31,6 @@ concept Strategy = requires (T x) {
 
 template<int N, int D, Strategy S>
 class GameEngine;
-
-template<int N, int D>
-class HeatMap { 
- public:
-  HeatMap(
-    const State<N, D>& state, 
-    const BoardData<N, D>& data,
-    default_random_engine& generator)
-      : state(state), data(data), generator(generator) {
-  }
-  const State<N, D>& state;
-  const BoardData<N, D>& data;
-  default_random_engine& generator;
-  using Bitfield = typename State<N, D>::Bitfield;
-  constexpr static Line line_size = Geometry<N, D>::line_size;
-  constexpr static Position board_size = Geometry<N, D>::board_size;
-
-  template<typename B>
-  optional<Position> operator()(Mark mark, const B& open_positions) {
-    vector<Position> open;
-    for (Position i = 0_pos; i < board_size; ++i) {
-      if (open_positions[i]) {
-        open.push_back(i);
-      }
-    }
-    for_each(begin(open), end(open), [&](Position pos) {
-      State<N, D> cloned(state);
-      cloned.play(pos, mark);
-      GameEngine engine(data, generator, cloned);
-      //engine.play
-    });
-    return {};
-  }
-};
 
 template<int N, int D>
 class ForcingMove { 
@@ -294,6 +120,51 @@ constexpr auto operator>>(A a, B b) {
   return Combiner<A, B>(a, b);
 }
 
+template<int N, int D>
+class HeatMap { 
+ public:
+  HeatMap(
+    const State<N, D>& state, 
+    const BoardData<N, D>& data,
+    default_random_engine& generator)
+      : state(state), data(data), generator(generator) {
+  }
+  const State<N, D>& state;
+  const BoardData<N, D>& data;
+  default_random_engine& generator;
+  using Bitfield = typename State<N, D>::Bitfield;
+  constexpr static Line line_size = Geometry<N, D>::line_size;
+  constexpr static Position board_size = Geometry<N, D>::board_size;
+
+  template<typename B>
+  optional<Position> operator()(Mark mark, const B& open_positions) {
+    vector<Position> open;
+    for (Position i = 0_pos; i < board_size; ++i) {
+      if (open_positions[i]) {
+        open.push_back(i);
+      }
+    }
+    for_each(begin(open), end(open), [&](Position pos) {
+      vector<int> win_counts(3);
+      int trials = 100;
+      for (int i = 0; i < trials; ++i) {
+        State<N, D> cloned(state);
+        cloned.play(pos, mark);
+        auto s = ForcingMove<N, D>(cloned) >> BiasedRandom<N, D>(cloned, generator);
+        GameEngine engine(generator, cloned, s);
+        Mark flipped = engine.flip(mark);
+        Mark winner = engine.play(flipped, [](auto obs){});
+        win_counts[static_cast<int>(winner)]++;
+      }
+      cout << "position " << pos << "\n";
+      cout << "X wins : " << win_counts[static_cast<int>(Mark::X)] << "\n";
+      cout << "O wins : " << win_counts[static_cast<int>(Mark::O)] << "\n";
+      cout << "draws  : " << win_counts[static_cast<int>(Mark::empty)] << "\n";
+    });
+    return {};
+  }
+};
+
 template<int N, int D, Strategy S>
 class GameEngine {
  public:
@@ -331,13 +202,6 @@ class GameEngine {
 
   Mark flip(Mark mark) {
     return mark == Mark::X ? Mark::O : Mark::X;
-  }
-
-  void heat_map() {
-    Bitfield open = state.get_open_positions(Mark::X);
-    const int trials = 100;
-    //for (Pos
-    state.print();
   }
 
   default_random_engine& generator;

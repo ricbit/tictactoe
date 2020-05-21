@@ -12,14 +12,14 @@
 #include "tictactoe.hh"
 
 int main() {
-  Geometry<5, 3> geom;
-  Symmetry sym(geom);
-  SymmeTrie trie(sym);
+  BoardData<5, 3> data;
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  State state(geom, sym, trie);
-  GameEngine b(geom, sym, trie, generator, state);
-  b.heat_map();
+  State state(data);
+  auto s = HeatMap<5, 3>(state, data, generator);
+  GameEngine b(generator, state, s);
+  b.play(Mark::X, [](auto obs){
+    cout << "\n---\n";
+  });
   return 0;
 }
-

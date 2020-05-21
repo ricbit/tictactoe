@@ -32,7 +32,7 @@ optional<Position> get_first_open_position(State& state) {
 TEST(StateTest, CopiedStateDoesntChangeTheOriginal) {
   BoardData<5, 3> data;
   State original(data);
-  State cloned(data);
+  State<5, 3> cloned(original);
   auto pos = get_first_open_position(cloned);
   EXPECT_TRUE(pos.has_value());
   cloned.play(*pos, Mark::X);
