@@ -161,16 +161,12 @@ class HeatMap {
  public:
   HeatMap(
     const State<N, D>& state, 
-    const Geometry<N, D>& geom,
-    const Symmetry<N, D>& sym,
-    const SymmeTrie<N, D>& trie,
+    const BoardData<N, D>& data,
     default_random_engine& generator)
-      : state(state), geom(geom), sym(sym), trie(trie), generator(generator) {
+      : state(state), data(data), generator(generator) {
   }
   const State<N, D>& state;
-  const Geometry<N, D>& geom;
-  const Symmetry<N, D>& sym;
-  const SymmeTrie<N, D>& trie;
+  const BoardData<N, D>& data;
   default_random_engine& generator;
   using Bitfield = typename State<N, D>::Bitfield;
   constexpr static Line line_size = Geometry<N, D>::line_size;
@@ -187,7 +183,7 @@ class HeatMap {
     for_each(begin(open), end(open), [&](Position pos) {
       State<N, D> cloned(state);
       cloned.play(pos, mark);
-      GameEngine engine(geom, sym, trie, generator, cloned);
+      GameEngine engine(data, generator, cloned);
       //engine.play
     });
     return {};
