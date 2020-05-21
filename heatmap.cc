@@ -12,11 +12,11 @@
 #include "tictactoe.hh"
 
 int main() {
-  BoardData<5, 3> data;
+  BoardData<3, 3> data;
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   State state(data);
-  auto s = ForcingMove<5,3>(state) >> HeatMap<5, 3>(state, data, generator);
+  auto s = ForcingMove(state) >> HeatMap(state, data, generator);
   GameEngine b(generator, state, s);
   int current = 0;
   b.play(Mark::X, [&](auto obs) {

@@ -164,7 +164,11 @@ class HeatMap {
     double range = *vmax - *vmin;
     vector<int> norm(score.size());
     transform(begin(score), end(score), begin(norm), [&](int s) {
-      return static_cast<int>((s - *vmin) / range * 9.99);
+      if (range == 0.0) {
+        return 9;
+      } else {
+        return static_cast<int>((s - *vmin) / range * 9.99);
+      }
     });
     data.print(board_size, [&](Position pos) {
       return data.decode(pos);
