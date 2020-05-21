@@ -170,14 +170,17 @@ class HeatMap {
       return data.decode(pos);
     }, [&](Position pos) {
       if (state.get_board(pos) != Mark::empty) {
-        return state.get_board(pos) == Mark::X ? 'X' : 'O';
+        string color = "\x1b[32m"s;
+        return color + (state.get_board(pos) == Mark::X ? 'X' : 'O');
       } else {
+        string color = "\x1b[37m"s;
         auto it = find(begin(open), end(open), pos);
         if (it != end(open)) {
-          return static_cast<char>(norm[distance(begin(open), it)] + '0');
+          return color + static_cast<char>(norm[distance(begin(open), it)] + '0');
         }
       }
-      return '.';
+      string color = "\x1b[30m"s;      
+      return color + "."s;
     });
     auto winner = max_element(begin(score), end(score));
     return open[distance(begin(score), winner)];
