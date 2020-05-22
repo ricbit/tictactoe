@@ -85,7 +85,29 @@ class State {
     data.print(data.board_size, [&](Position k) {
       return data.decode(k);
     }, [&](Position k) {
-      string color = pos == k ? "\x1b[31m"s : "\x1b[37m"s;
+      string color = pos == k ? "\x1b[33m"s : "\x1b[37m"s;
+      return color + encode_position(board[k]);
+    });
+  }
+
+  template<typename T>
+  bool all_line(const T& line, Mark mark) const {
+    return all_of(begin(line), end(line), [&](Position pos) {
+      return board[pos] == mark;
+    });
+  }
+
+  void print_winner() const {
+    set<Position> winners;
+    for (const auto& line : data.winning_lines()) {
+      if (all_line(line, Mark::X) || all_line(line, Mark::O)) {
+        copy(begin(line), end(line), inserter(winners, begin(winners)));
+      }
+    }
+    data.print(data.board_size, [&](Position k) {
+      return data.decode(k);
+    }, [&](Position k) {
+      string color = winners.find(k) != winners.end() ? "\x1b[31m"s : "\x1b[37m"s;
       return color + encode_position(board[k]);
     });
   }

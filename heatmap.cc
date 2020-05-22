@@ -26,6 +26,6 @@ int main() {
      state.print_last_position(*pos);
   });
   cout << "\nfinal\n";
-  state.print();
+  state.print_winner();
   return 0;
 }

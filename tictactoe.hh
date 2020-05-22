@@ -160,7 +160,7 @@ class HeatMap {
     auto [vmin, vmax] = minmax_element(begin(score), end(score));
     double range = *vmax - *vmin;
     vector<int> norm(score.size());
-    transform(begin(score), end(score), begin(norm), [&](int s) {
+    transform(begin(score), end(score), begin(norm), [&, vmin = vmin](int s) {
       if (range == 0.0) {
         return 9;
       } else {

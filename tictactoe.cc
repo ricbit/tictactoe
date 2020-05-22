@@ -18,7 +18,7 @@ int main() {
   vector<int> search_tree(data.board_size);
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  int max_plays = 10000;
+  int max_plays = 10;
   vector<int> win_counts(3);
   cout << "winning lines " << data.line_size << "\n";
   for (int i = 0; i < max_plays; ++i) {
@@ -28,7 +28,7 @@ int main() {
     int level = 0;
     Mark winner = b.play(Mark::X, [&](const auto& open_positions) {    
       search_tree[level++] += open_positions.count();
-    });
+    }, [](const auto& x, auto y){});
     win_counts[static_cast<int>(winner)]++;
   }
   double total = 0.0;

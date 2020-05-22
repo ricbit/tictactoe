@@ -2,11 +2,16 @@
 TEST_BASE=${GOOGLE_TEST}/googletest
 HEADERS = boarddata.hh semantic.hh tictactoe.hh state.hh
 
+all : tictactoe heatmap test
+
 tictactoe : tictactoe.cc ${HEADERS}
 	g++-10 -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
 heatmap : heatmap.cc ${HEADERS}
 	g++-10 -std=c++2a heatmap.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+
+heatmapc : heatmap.cc ${HEADERS}
+	clang++-10 -std=c++2a heatmap.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
 clang : tictactoe.cc ${HEADERS}
 	clang++-10 -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb
