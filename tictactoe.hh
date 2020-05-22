@@ -178,7 +178,7 @@ class HeatMap {
       cloned.play(pos, mark);
       auto s = ForcingMove<N, D>(cloned) >> BiasedRandom<N, D>(cloned, generator);
       GameEngine engine(generator, cloned, s);
-      Mark winner = engine.play(flipped, [](auto obs){});
+      Mark winner = engine.play(flipped);
       win_counts[static_cast<int>(winner)]++;
     }
     return win_counts[static_cast<int>(mark)] -
@@ -219,16 +219,17 @@ class GameEngine {
   using Bitfield = typename BoardData<N, D>::Bitfield;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
-  template<typename T>
-  Mark play(Mark start, T observer) {
+  template<typename T, typename U>
+  Mark play(Mark start, T pre_observer, U post_observer) {
     Mark current_mark = start;
     while (true) {
       const auto& open_positions = state.get_open_positions(current_mark);
       if (open_positions.none()) {
         return Mark::empty;
       }
-      observer(open_positions);
+      pre_observer(open_positions);
       optional<Position> pos = strategy(current_mark, open_positions);
+      post_observer(state, pos);
       if (pos.has_value()) {
         auto result = state.play(*pos, current_mark);
         if (result) {
@@ -237,6 +238,10 @@ class GameEngine {
       }
       current_mark = flip(current_mark);
     }
+  }
+
+  Mark play(Mark start) {
+    return play(start, [](auto x){}, [](const auto& x, auto y){});
   }
 
   default_random_engine& generator;

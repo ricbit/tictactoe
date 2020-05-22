@@ -21,7 +21,9 @@ int main() {
   GameEngine b(generator, state, s);
   int current = 0;
   b.play(Mark::X, [&](auto obs) {
-    cout << "\x1b[0m\n\nlevel " << current++ << "\n"; 
+    cout << "\x1b[0m\n\nlevel " << current++ << "\n";
+  }, [&](const auto& state, auto pos) {
+     state.print();
   });
   cout << "\nfinal\n";
   state.print();

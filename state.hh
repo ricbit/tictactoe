@@ -73,7 +73,7 @@ class State {
     return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
   }
 
-  void print() {
+  void print() const {
     data.print(data.board_size, [&](Position k) {
       return data.decode(k);
     }, [&](Position k) {
@@ -153,7 +153,7 @@ class State {
     });
   }
 
-  char encode_position(Mark pos) {
+  char encode_position(Mark pos) const {
     return pos == Mark::X ? 'X'
          : pos == Mark::O ? 'O'
          : '.';
