@@ -148,18 +148,7 @@ class HeatMap {
     vector<int> score(open.size());
     transform(execution::par_unseq, begin(open), end(open), begin(score),
         [&](Position pos) {
-      vector<int> win_counts(3);
-      int trials = 100;
-      for (int i = 0; i < trials; ++i) {
-        State<N, D> cloned(state);
-        cloned.play(pos, mark);
-        auto s = ForcingMove<N, D>(cloned) >> BiasedRandom<N, D>(cloned, generator);
-        GameEngine engine(generator, cloned, s);
-        Mark winner = engine.play(flipped, [](auto obs){});
-        win_counts[static_cast<int>(winner)]++;
-      }
-      return win_counts[static_cast<int>(mark)] -
-             win_counts[static_cast<int>(flipped)];
+      return monte_carlo(mark, flipped, pos);
     });
     auto [vmin, vmax] = minmax_element(begin(score), end(score));
     double range = *vmax - *vmin;
@@ -174,6 +163,21 @@ class HeatMap {
     print(open, norm);
     auto winner = max_element(begin(score), end(score));
     return open[distance(begin(score), winner)];
+  }
+
+  int monte_carlo(Mark mark, Mark flipped, Position pos) {
+    vector<int> win_counts(3);
+    int trials = 100;
+    for (int i = 0; i < trials; ++i) {
+      State<N, D> cloned(state);
+      cloned.play(pos, mark);
+      auto s = ForcingMove<N, D>(cloned) >> BiasedRandom<N, D>(cloned, generator);
+      GameEngine engine(generator, cloned, s);
+      Mark winner = engine.play(flipped, [](auto obs){});
+      win_counts[static_cast<int>(winner)]++;
+    }
+    return win_counts[static_cast<int>(mark)] -
+           win_counts[static_cast<int>(flipped)];
   }
 
   void print(const vector<Position>& open, const vector<int>& norm) {
