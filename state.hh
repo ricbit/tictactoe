@@ -81,6 +81,15 @@ class State {
     });
   }
 
+  void print_last_position(Position pos) const {
+    data.print(data.board_size, [&](Position k) {
+      return data.decode(k);
+    }, [&](Position k) {
+      string color = pos == k ? "\x1b[31m"s : "\x1b[37m"s;
+      return color + encode_position(board[k]);
+    });
+  }
+
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
     empty_cells.erase(empty_it[pos]);

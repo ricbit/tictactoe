@@ -23,7 +23,7 @@ int main() {
   b.play(Mark::X, [&](auto obs) {
     cout << "\x1b[0m\n\nlevel " << current++ << "\n";
   }, [&](const auto& state, auto pos) {
-     state.print();
+     state.print_last_position(*pos);
   });
   cout << "\nfinal\n";
   state.print();

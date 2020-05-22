@@ -201,7 +201,8 @@ class HeatMap {
       }
       return "\x1b[30m."s;
     });
-  }
+    cout << "\x1b[0m\n"s;
+  }  
 };
 
 template<int N, int D, Strategy S>
@@ -229,12 +230,14 @@ class GameEngine {
       }
       pre_observer(open_positions);
       optional<Position> pos = strategy(current_mark, open_positions);
-      post_observer(state, pos);
       if (pos.has_value()) {
         auto result = state.play(*pos, current_mark);
+        post_observer(state, pos);
         if (result) {
           return current_mark;
         }
+      } else {
+        post_observer(state, pos);
       }
       current_mark = flip(current_mark);
     }
