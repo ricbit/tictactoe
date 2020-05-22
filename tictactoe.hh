@@ -150,6 +150,13 @@ class HeatMap {
         [&](Position pos) {
       return monte_carlo(mark, flipped, pos);
     });
+    vector<int> norm = normalize_score(score);
+    print(open, norm);
+    auto winner = max_element(begin(score), end(score));
+    return open[distance(begin(score), winner)];
+  }
+
+  vector<int> normalize_score(const vector<int>& score) {
     auto [vmin, vmax] = minmax_element(begin(score), end(score));
     double range = *vmax - *vmin;
     vector<int> norm(score.size());
@@ -160,9 +167,7 @@ class HeatMap {
         return static_cast<int>((s - *vmin) / range * 9.99);
       }
     });
-    print(open, norm);
-    auto winner = max_element(begin(score), end(score));
-    return open[distance(begin(score), winner)];
+    return norm;
   }
 
   int monte_carlo(Mark mark, Mark flipped, Position pos) {
@@ -211,8 +216,8 @@ class GameEngine {
       strategy(strategy) {
   }
 
-  using Bitfield = typename State<N, D>::Bitfield;
-  constexpr static Position board_size = Geometry<N, D>::board_size;
+  using Bitfield = typename BoardData<N, D>::Bitfield;
+  constexpr static Position board_size = BoardData<N, D>::board_size;
 
   template<typename T>
   Mark play(Mark start, T observer) {
