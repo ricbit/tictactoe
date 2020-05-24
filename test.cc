@@ -41,4 +41,13 @@ TEST(StateTest, CopiedStateDoesntChangeTheOriginal) {
       original.get_open_positions(Mark::X).count());
 }
 
+TEST(TrackingListTest, ProperlyBuilt) {
+  TrackingList<5, 3> tracking;
+  int count = 0;
+  for (Position p : tracking) {
+    count++;
+  }
+  EXPECT_EQ(125, count);
+}
+
 }

@@ -16,6 +16,34 @@
 #include "boarddata.hh"
 
 template<int N, int D>
+class TrackingList {
+ public:
+  TrackingList() {
+    iota(begin(tracking_list), end(tracking_list), 1_pos);
+    root = 0_pos;
+  }
+  struct Iterator {
+    int pos;
+    bool operator!=(const Iterator& that) {
+      return pos != that.pos;
+    }
+  };
+  Iterator end() {
+    return Iterator{board_size};
+  }
+  Iterator begin() {
+    return Iterator{root};
+  }
+  Position operator*(const Iterator& it) {
+    return tracking_list[it.pos];
+  }
+ private:
+  constexpr static Position board_size = BoardData<N, D>::board_size;
+  sarray<Position, Position, board_size + 1> tracking_list;
+  Position& root = tracking_list[board_size];
+};
+
+template<int N, int D>
 class State {
  public:
   explicit State(const BoardData<N, D>& data) :
