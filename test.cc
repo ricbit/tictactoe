@@ -50,4 +50,9 @@ TEST(TrackingListTest, ProperlyBuilt) {
   EXPECT_EQ(125, count);
 }
 
+TEST(TrackingListTest, DeleteFirstElement) {
+  TrackingList<5, 1> tracking;
+  tracking
+}
+
 }

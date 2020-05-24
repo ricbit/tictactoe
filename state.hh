@@ -19,29 +19,44 @@ template<int N, int D>
 class TrackingList {
  public:
   TrackingList() {
-    iota(begin(tracking_list), end(tracking_list), 1_pos);
+    iota(tracking_list.begin(), tracking_list.end(), 1_pos);
     root = 0_pos;
   }
   struct Iterator {
-    int pos;
+    TrackingList& tlist;
+    Position pos;
     bool operator!=(const Iterator& that) {
       return pos != that.pos;
     }
+    Position operator*() {
+      return tlist.tracking_list[pos];
+    }
+    Iterator& operator++() {
+      pos = tlist.tracking_list[pos];
+      return *this;
+    }
   };
   Iterator end() {
-    return Iterator{board_size};
+    return Iterator{*this, board_size};
   }
   Iterator begin() {
-    return Iterator{root};
-  }
-  Position operator*(const Iterator& it) {
-    return tracking_list[it.pos];
+    return Iterator{*this, root};
   }
  private:
   constexpr static Position board_size = BoardData<N, D>::board_size;
   sarray<Position, Position, board_size + 1> tracking_list;
   Position& root = tracking_list[board_size];
 };
+
+/*template<int N, int D>
+auto begin(TrackingList<N, D>& tlist) {
+  return tlist.begin();
+}
+
+template<int N, int D>
+auto end(TrackingList<N, D>& tlist) {
+  return tlist.end();
+}*/
 
 template<int N, int D>
 class State {
