@@ -38,8 +38,8 @@ class ForcingMove {
   explicit ForcingMove(const State<N, D>& state) : state(state) {
   }
   const State<N, D>& state;
-  using Bitfield = typename State<N, D>::Bitfield;
-  constexpr static Line line_size = Geometry<N, D>::line_size;
+  using Bitfield = typename BoardData<N, D>::Bitfield;
+  constexpr static Line line_size = BoardData<N, D>::line_size;
 
   optional<Position> find_forcing_move(
       const svector<Line, MarkCount>& current,
@@ -74,8 +74,8 @@ class BiasedRandom {
   }
   const State<N, D>& state;
   default_random_engine& generator;
-  using Bitfield = typename State<N, D>::Bitfield;
-  constexpr static Position board_size = Geometry<N, D>::board_size;
+  using Bitfield = typename BoardData<N, D>::Bitfield;
+  constexpr static Position board_size = BoardData<N, D>::board_size;
 
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
@@ -132,9 +132,9 @@ class HeatMap {
   const State<N, D>& state;
   const BoardData<N, D>& data;
   default_random_engine& generator;
-  using Bitfield = typename State<N, D>::Bitfield;
-  constexpr static Line line_size = Geometry<N, D>::line_size;
-  constexpr static Position board_size = Geometry<N, D>::board_size;
+  using Bitfield = typename BoardData<N, D>::Bitfield;
+  constexpr static Line line_size = BoardData<N, D>::line_size;
+  constexpr static Position board_size = BoardData<N, D>::board_size;
 
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
