@@ -16,8 +16,10 @@ int main() {
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   State state(data);
-  auto s = ForcingMove(state) >> ForcingStrategy(state, data) >> BiasedRandom(state, generator);
-  //HeatMap(state, data, generator);
+  auto s = 
+      ForcingMove(state) >> 
+      ForcingStrategy(state, data) >> 
+      HeatMap(state, data, generator, 100);
   //auto s = HeatMap(state, data, generator);
   GameEngine b(generator, state, s);
   int current = 0;

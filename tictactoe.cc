@@ -18,7 +18,7 @@ int main() {
   vector<int> search_tree(data.board_size);
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  int max_plays = 10;
+  int max_plays = 1000;
   vector<int> win_counts(3);
   cout << "winning lines " << data.line_size << "\n";
   for (int i = 0; i < max_plays; ++i) {

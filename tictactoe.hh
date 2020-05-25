@@ -165,12 +165,14 @@ class HeatMap {
   HeatMap(
     const State<N, D>& state, 
     const BoardData<N, D>& data,
-    default_random_engine& generator)
-      : state(state), data(data), generator(generator) {
+    default_random_engine& generator,
+    int trials)
+      : state(state), data(data), generator(generator), trials(trials) {
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
   default_random_engine& generator;
+  int trials;
   using Bitfield = typename BoardData<N, D>::Bitfield;
   constexpr static Line line_size = BoardData<N, D>::line_size;
   constexpr static Position board_size = BoardData<N, D>::board_size;
@@ -211,11 +213,13 @@ class HeatMap {
 
   int monte_carlo(Mark mark, Mark flipped, Position pos) {
     vector<int> win_counts(3);
-    int trials = 10;
     for (int i = 0; i < trials; ++i) {
       State<N, D> cloned(state);
       cloned.play(pos, mark);
-      auto s = ForcingMove<N, D>(cloned) >> BiasedRandom<N, D>(cloned, generator);
+      auto s =
+          ForcingMove<N, D>(cloned) >> 
+          ForcingStrategy<N, D>(cloned, data) >>
+          BiasedRandom<N, D>(cloned, generator);
       GameEngine engine(generator, cloned, s);
       Mark winner = engine.play(flipped);
       win_counts[static_cast<int>(winner)]++;
