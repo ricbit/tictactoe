@@ -15,7 +15,6 @@ class sarray {
     a.fill(value);
   }
   sarray() {
-    a.fill(Dest(0));
   }
   Dest& operator[](const Source& index) {
     return a[index];

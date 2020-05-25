@@ -52,7 +52,8 @@ class Geometry {
  public:
   Geometry()
       : _accumulation_points(board_size),
-        _lines_through_position(board_size) {
+        _lines_through_position(board_size),
+        current_winning(0_line) {
     construct_unique_terrains();
     construct_winning_lines();
     construct_accumulation_points();
@@ -73,8 +74,9 @@ class Geometry {
   
   using Bitfield = bitset<board_size>;
   using CrossingArray = sarray<Position, vector<pair<Line, Line>>, board_size>;
+  using WinningArray = sarray<Line, vector<Position>, line_size>;
 
-  const vector<vector<Position>>& winning_lines() const {
+  const WinningArray& winning_lines() const {
     return _winning_lines;
   }
 
@@ -181,7 +183,8 @@ class Geometry {
         return encode(line);
       });
       sort(begin(line), end(line));
-      _winning_lines.push_back(line);
+      _winning_lines[current_winning] = line;
+      ++current_winning;
       return;
     }
     switch (terrain[dim]) {
@@ -272,11 +275,12 @@ class Geometry {
   }
 
   vector<vector<Direction>> unique_terrains;
-  vector<vector<Position>> _winning_lines;
+  WinningArray _winning_lines;
   vector<LineCount> _accumulation_points;
   vector<vector<Line>> _lines_through_position;
   svector<Line, Position> _xor_table;
   sarray<Position, vector<pair<Line, Line>>, board_size> _crossings;
+  Line current_winning;
 };
 
 enum class Mark {
@@ -514,6 +518,7 @@ class BoardData {
 
   using Bitfield = typename Geometry<N, D>::Bitfield;
   using CrossingArray = typename Geometry<N, D>::CrossingArray;
+  using WinningArray = typename Geometry<N, D>::WinningArray;
 
   template<typename X, typename T>
   void print(int limit, X decoder, T func) const {
@@ -544,7 +549,7 @@ class BoardData {
     return geom.lines_through_position();
   }
 
-  const vector<vector<Position>>& winning_lines() const {
+  const WinningArray& winning_lines() const {
     return geom.winning_lines();
   }
 

@@ -87,7 +87,6 @@ class ForcingStrategy {
         for (const auto& [line_a, line_b] : data.crossings()[pos]) {
           if (current[line_a] == N - 2 && opponent[line_a] == 0 &&
               current[line_b] == N - 2 && opponent[line_b] == 0) {
-            cout << "strategy found on " << pos << endl;
             return pos;
           }
         }
