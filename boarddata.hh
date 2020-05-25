@@ -24,6 +24,7 @@ SEMANTIC_INDEX(SymLine, sym)
 SEMANTIC_INDEX(NodeLine, node)
 SEMANTIC_INDEX(LineCount, lcount)
 SEMANTIC_INDEX(MarkCount, mcount)
+SEMANTIC_INDEX(Crossing, cross)
 
 enum class Direction {
   equal,
@@ -50,12 +51,14 @@ template<int N, int D>
 class Geometry {
  public:
   Geometry()
-      : _accumulation_points(board_size), _lines_through_position(board_size) {
+      : _accumulation_points(board_size),
+        _lines_through_position(board_size) {
     construct_unique_terrains();
     construct_winning_lines();
     construct_accumulation_points();
     construct_lines_through_position();
     construct_xor_table();
+    construct_crossings();
   }
 
   constexpr static Position board_size =
@@ -69,6 +72,7 @@ class Geometry {
   }
   
   using Bitfield = bitset<board_size>;
+  using CrossingArray = sarray<Position, vector<pair<Line, Line>>, board_size>;
 
   const vector<vector<Position>>& winning_lines() const {
     return _winning_lines;
@@ -80,6 +84,10 @@ class Geometry {
 
   const svector<Line, Position>& xor_table() const {
     return _xor_table;
+  }
+
+  const CrossingArray& crossings() const {
+    return _crossings;
   }
 
   sarray<Dim, Side, D> decode(Position pos) const {
@@ -250,11 +258,25 @@ class Geometry {
     }
   }
 
+  void construct_crossings() {
+    for (Position pos = 0_pos; pos < board_size; ++pos) {
+      for (Line a : _lines_through_position[pos]) {
+        for (Line b : _lines_through_position[pos]) {
+          if (a >= b) {
+            continue;
+          }
+          _crossings[pos].push_back(make_pair(a, b));
+        }
+      }
+    }
+  }
+
   vector<vector<Direction>> unique_terrains;
   vector<vector<Position>> _winning_lines;
   vector<LineCount> _accumulation_points;
   vector<vector<Line>> _lines_through_position;
   svector<Line, Position> _xor_table;
+  sarray<Position, vector<pair<Line, Line>>, board_size> _crossings;
 };
 
 enum class Mark {
@@ -491,6 +513,7 @@ class BoardData {
   constexpr static Line line_size = Geometry<N, D>::line_size;
 
   using Bitfield = typename Geometry<N, D>::Bitfield;
+  using CrossingArray = typename Geometry<N, D>::CrossingArray;
 
   template<typename X, typename T>
   void print(int limit, X decoder, T func) const {
@@ -529,6 +552,10 @@ class BoardData {
     return sym.symmetries().size();
   }
   
+  const CrossingArray& crossings() const {
+    return geom.crossings();
+  }
+
   const sarray<Dim, Side, D> decode(Position pos) const {
     return geom.decode(pos);
   }

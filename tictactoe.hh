@@ -67,6 +67,46 @@ class ForcingMove {
 };
 
 template<int N, int D>
+class ForcingStrategy { 
+ public:
+  explicit ForcingStrategy(
+    const State<N, D>& state, const BoardData<N, D>& data) :
+      state(state), data(data) {
+  }
+  const State<N, D>& state;
+  const BoardData<N, D>& data;
+  using Bitfield = typename BoardData<N, D>::Bitfield;
+  constexpr static Position board_size = BoardData<N, D>::board_size;
+
+  optional<Position> find_forcing_move(
+      const svector<Line, MarkCount>& current,
+      const svector<Line, MarkCount>& opponent,
+      const Bitfield& open_positions) {
+    for (Position pos = 0_pos; pos < board_size; ++pos) {
+      if (open_positions[pos]) {
+        for (const auto& [line_a, line_b] : data.crossings()[pos]) {
+          if (current[line_a] == N - 2 && opponent[line_a] == 0 &&
+              current[line_b] == N - 2 && opponent[line_b] == 0) {
+            cout << "strategy found on " << pos << endl;
+            return pos;
+          }
+        }
+      }
+    }
+    return {};
+  }
+
+  template<typename B>
+  optional<Position> operator()(Mark mark, const B& open_positions) {
+    const auto& current = state.get_current(mark);
+    const auto& opponent = state.get_opponent(mark);
+    return         
+        find_forcing_move(current, opponent, open_positions) ||
+        [&](){ return find_forcing_move(opponent, current, open_positions); };
+  }
+};
+
+template<int N, int D>
 class BiasedRandom { 
  public:
   BiasedRandom(const State<N, D>& state, default_random_engine& generator)
@@ -172,7 +212,7 @@ class HeatMap {
 
   int monte_carlo(Mark mark, Mark flipped, Position pos) {
     vector<int> win_counts(3);
-    int trials = 100;
+    int trials = 10;
     for (int i = 0; i < trials; ++i) {
       State<N, D> cloned(state);
       cloned.play(pos, mark);
