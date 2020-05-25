@@ -30,4 +30,4 @@ clean :
 	rm -f test asm tictactoe
 
 cppcheck :
-	cppcheck --enable=style tictactoe.cc
+	cppcheck --enable=style tictactoe.cc heatmap.cc
