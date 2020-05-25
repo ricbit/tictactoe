@@ -33,7 +33,7 @@ template<int N, int D, Strategy S>
 class GameEngine;
 
 template<int N, int D>
-class ForcingMove { 
+class ForcingMove {
  public:
   explicit ForcingMove(const State<N, D>& state) : state(state) {
   }
@@ -60,14 +60,14 @@ class ForcingMove {
   optional<Position> operator()(Mark mark, const B& open_positions) {
     const auto& current = state.get_current(mark);
     const auto& opponent = state.get_opponent(mark);
-    return         
+    return
         find_forcing_move(current, opponent, open_positions) ||
         [&](){ return find_forcing_move(opponent, current, open_positions); };
   }
 };
 
 template<int N, int D>
-class ForcingStrategy { 
+class ForcingStrategy {
  public:
   explicit ForcingStrategy(
     const State<N, D>& state, const BoardData<N, D>& data) :
@@ -99,14 +99,14 @@ class ForcingStrategy {
   optional<Position> operator()(Mark mark, const B& open_positions) {
     const auto& current = state.get_current(mark);
     const auto& opponent = state.get_opponent(mark);
-    return         
+    return
         find_forcing_move(current, opponent, open_positions) ||
         [&](){ return find_forcing_move(opponent, current, open_positions); };
   }
 };
 
 template<int N, int D>
-class BiasedRandom { 
+class BiasedRandom {
  public:
   BiasedRandom(const State<N, D>& state, default_random_engine& generator)
       : state(state), generator(generator) {
@@ -149,7 +149,7 @@ class Combiner {
   B b;
   template<typename T>
   optional<Position> operator()(Mark mark, const T& open_positions) {
-    return a(mark, open_positions) || 
+    return a(mark, open_positions) ||
         [&](){ return b(mark, open_positions); };
   }
 };
@@ -160,10 +160,10 @@ constexpr auto operator>>(A a, B b) {
 }
 
 template<int N, int D>
-class HeatMap { 
+class HeatMap {
  public:
   HeatMap(
-    const State<N, D>& state, 
+    const State<N, D>& state,
     const BoardData<N, D>& data,
     default_random_engine& generator,
     int trials)
@@ -217,7 +217,7 @@ class HeatMap {
       State<N, D> cloned(state);
       cloned.play(pos, mark);
       auto s =
-          ForcingMove<N, D>(cloned) >> 
+          ForcingMove<N, D>(cloned) >>
           ForcingStrategy<N, D>(cloned, data) >>
           BiasedRandom<N, D>(cloned, generator);
       GameEngine engine(generator, cloned, s);
@@ -245,7 +245,7 @@ class HeatMap {
       return "\x1b[30m."s;
     });
     cout << "\x1b[0m\n"s;
-  }  
+  }
 };
 
 template<int N, int D, Strategy S>

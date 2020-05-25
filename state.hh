@@ -37,8 +37,8 @@ class State {
   explicit State(const State<N, D>& state) :
       data(state.data),
       board(state.board),
-      x_marks_on_line(state.x_marks_on_line), 
-      o_marks_on_line(state.o_marks_on_line), 
+      x_marks_on_line(state.x_marks_on_line),
+      o_marks_on_line(state.o_marks_on_line),
       xor_table(state.xor_table),
       active_line(state.active_line),
       current_accumulation(state.current_accumulation),

@@ -16,9 +16,9 @@ int main() {
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   State state(data);
-  auto s = 
-      ForcingMove(state) >> 
-      ForcingStrategy(state, data) >> 
+  auto s =
+      ForcingMove(state) >>
+      ForcingStrategy(state, data) >>
       HeatMap(state, data, generator, 100);
   //auto s = HeatMap(state, data, generator);
   GameEngine b(generator, state, s);
@@ -26,7 +26,7 @@ int main() {
   b.play(Mark::X, [&](auto obs) {
     cout << "\x1b[0m\n\nlevel " << current++ << "\n";
   }, [&](const auto& state, auto pos) {
-     state.print_last_position(*pos);
+    state.print_last_position(*pos);
   });
   cout << "\nfinal\n";
   state.print_winner();

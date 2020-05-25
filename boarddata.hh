@@ -71,7 +71,7 @@ class Geometry {
   const vector<vector<Line>>& lines_through_position() const {
     return _lines_through_position;
   }
-  
+
   using Bitfield = bitset<board_size>;
   using CrossingArray = sarray<Position, vector<pair<Line, Line>>, board_size>;
   using WinningArray = sarray<Line, sarray<Side, Position, N>, line_size>;
@@ -557,7 +557,7 @@ class BoardData {
   const int symmetries_size() const {
     return sym.symmetries().size();
   }
-  
+
   const CrossingArray& crossings() const {
     return geom.crossings();
   }

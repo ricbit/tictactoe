@@ -24,13 +24,13 @@ int main() {
   for (int i = 0; i < max_plays; ++i) {
     State state(data);
     GameEngine b(generator, state,
-        ForcingMove(state) >> 
+        ForcingMove(state) >>
         ForcingStrategy(state, data) >>
         BiasedRandom(state, generator));
         //ForcingMove(state) >> BiasedRandom(state, generator));
         //ForcingMove(state) >> HeatMap(state, data, generator));
     int level = 0;
-    Mark winner = b.play(Mark::X, [&](const auto& open_positions) {    
+    Mark winner = b.play(Mark::X, [&](const auto& open_positions) {
       search_tree[level++] += open_positions.count();
     }, [](const auto& x, auto y){});
     win_counts[static_cast<int>(winner)]++;
