@@ -37,6 +37,9 @@ class sarray {
   const_iterator end() const {
     return a.cend();
   }
+  bool operator<(const sarray<Source, Dest, array_size>& that) const {
+    return a < that.a;
+  }
  private:
   array_type a;
 };

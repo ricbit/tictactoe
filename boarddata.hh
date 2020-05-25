@@ -74,7 +74,7 @@ class Geometry {
   
   using Bitfield = bitset<board_size>;
   using CrossingArray = sarray<Position, vector<pair<Line, Line>>, board_size>;
-  using WinningArray = sarray<Line, vector<Position>, line_size>;
+  using WinningArray = sarray<Line, sarray<Side, Position, N>, line_size>;
 
   const WinningArray& winning_lines() const {
     return _winning_lines;
@@ -101,8 +101,9 @@ class Geometry {
     return ans;
   }
 
-  void apply_permutation(const vector<Position>& source,
-      vector<Position>& dest, const vector<Side>& permutation) const {
+  template<typename T>
+  void apply_permutation(const T& source, T& dest,
+      const vector<Side>& permutation) const {
     transform(begin(source), end(source), begin(dest), [&](Position pos) {
       return apply_permutation(permutation, pos);
     });
@@ -177,7 +178,7 @@ class Geometry {
   void generate_lines(const vector<Direction>& terrain,
       vector<sarray<Dim, Side, D>> current_line, Dim dim) {
     if (dim == D) {
-      vector<Position> line(N);
+      sarray<Side, Position, N> line;
       transform(begin(current_line), end(current_line), begin(line),
           [&](const auto& line) {
         return encode(line);
@@ -344,7 +345,7 @@ class Symmetry {
 
   bool validate_evisceration(const vector<Side>& index) {
     for (const auto& line : geom.winning_lines()) {
-      vector<Position> transformed(N);
+      sarray<Side, Position, N> transformed;
       geom.apply_permutation(line, transformed, index);
       sort(begin(transformed), end(transformed));
       if (!search_line(transformed)) {
@@ -354,7 +355,7 @@ class Symmetry {
     return true;
   }
 
-  bool search_line(const vector<Position>& transformed) {
+  bool search_line(const sarray<Side, Position, N>& transformed) {
     return binary_search(
         begin(geom.winning_lines()), end(geom.winning_lines()), transformed);
   }
