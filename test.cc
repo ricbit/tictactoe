@@ -44,15 +44,42 @@ TEST(StateTest, CopiedStateDoesntChangeTheOriginal) {
 TEST(TrackingListTest, ProperlyBuilt) {
   TrackingList<5, 3> tracking;
   int count = 0;
-  for (Position p : tracking) {
+  for ([[maybe_unused]] auto p : tracking) {
     count++;
   }
   EXPECT_EQ(125, count);
 }
 
-TEST(TrackingListTest, DeleteFirstElement) {
+TEST(TrackingListTest, IterateElements) {
+  TrackingList<3, 1> tracking;
+  array expected{0_pos, 1_pos, 2_pos};
+  int i = 0;
+  for (auto it = begin(tracking); it != end(tracking); ++it) {
+    EXPECT_EQ(expected[i++], *it);
+  }
+}
+
+TEST(TrackingListTest, DeleteElements) {
   TrackingList<5, 1> tracking;
-  tracking
+  array expected{1_pos, 3_pos};
+  tracking.remove(0_pos);
+  tracking.remove(2_pos);
+  tracking.remove(4_pos);
+  int i = 0;
+  for (auto it = begin(tracking); it != end(tracking); ++it) {
+    EXPECT_EQ(expected[i++], *it);
+  }
+}
+
+TEST(TrackingListTest, CheckElements) {
+  TrackingList<5, 1> tracking;
+  array expected{false, true, false, true, false};
+  tracking.remove(0_pos);
+  tracking.remove(2_pos);
+  tracking.remove(4_pos);
+  for (Position pos = 0_pos; pos < 5_pos; ++pos) {
+    EXPECT_EQ(expected[pos], tracking.check(pos));
+  }
 }
 
 }
