@@ -22,7 +22,7 @@ class TrackingList {
     for (Position i = 0_pos; i <= board_size; i++) {
       tracking_list[i] = make_pair(Position{i + 1}, Position{i - 1});
     }
-    root.first = 0_pos;
+    tracking_list[board_size].first = 0_pos;
     tracking_list[0_pos].second = board_size;
   }
   struct Iterator {
@@ -43,7 +43,7 @@ class TrackingList {
     return Iterator{*this, board_size};
   }
   Iterator begin() {
-    return Iterator{*this, root.first};
+    return Iterator{*this, tracking_list[board_size].first};
   }
   void remove(Position pos) {
     tracking_list[tracking_list[pos].second].first = tracking_list[pos].first;
@@ -56,7 +56,6 @@ class TrackingList {
  private:
   constexpr static Position board_size = BoardData<N, D>::board_size;
   sarray<Position, pair<Position, Position>, board_size + 1> tracking_list;
-  pair<Position, Position>& root = tracking_list[board_size];
 };
 
 template<int N, int D>
@@ -70,28 +69,7 @@ class State {
       xor_table(data.xor_table()),
       active_line(data.line_size, true),
       current_accumulation(data.accumulation_points()),
-      trie_node(0_node),
-      empty_cells(board_size) {
-    iota(begin(empty_cells), end(empty_cells), 0_pos);
-    for (auto it = begin(empty_cells); it != end(empty_cells); ++it) {
-      empty_it.push_back(it);
-    }
-  }
-
-  explicit State(const State<N, D>& state) :
-      data(state.data),
-      board(state.board),
-      x_marks_on_line(state.x_marks_on_line),
-      o_marks_on_line(state.o_marks_on_line),
-      xor_table(state.xor_table),
-      active_line(state.active_line),
-      current_accumulation(state.current_accumulation),
-      trie_node(state.trie_node),
-      empty_cells(state.empty_cells),
-      empty_it(state.empty_it.size(), empty_cells.end()) {
-    for (auto it = begin(empty_cells); it != end(empty_cells); ++it) {
-      empty_it[*it] = it;
-    }
+      trie_node(0_node) {
   }
 
   constexpr static Position board_size = BoardData<N, D>::board_size;
@@ -158,8 +136,7 @@ class State {
 
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
-    empty_cells.erase(empty_it[pos]);
-    empty_it[pos] = end(empty_cells);
+    empty_cells.remove(pos);
     trie_node = data.next(trie_node, pos);
     for (Line line : data.lines_through_position()[pos]) {
       auto& current = get_current(mark);
@@ -176,9 +153,8 @@ class State {
           Position neigh = data.winning_lines()[line][j];
           current_accumulation[neigh]--;
           if (current_accumulation[neigh] == 0 &&
-              empty_it[neigh] != end(empty_cells)) {
-            empty_cells.erase(empty_it[neigh]);
-            empty_it[neigh] = end(empty_cells);
+              empty_cells.check(neigh)) {
+            empty_cells.remove(neigh);
           }
         }
       }
@@ -209,8 +185,7 @@ class State {
   NodeLine trie_node;
   Bitfield checked;
   using EmptyList = list<Position>;
-  EmptyList empty_cells;
-  vector<EmptyList::iterator> empty_it;
+  TrackingList<N, D> empty_cells;
 
   auto& get_current(Mark mark) {
     return mark == Mark::X ? x_marks_on_line : o_marks_on_line;

@@ -82,4 +82,33 @@ TEST(TrackingListTest, CheckElements) {
   }
 }
 
+TEST(TrackingListTest, IsCopyable) {
+  TrackingList<5, 1> tracking;
+  array original{false, true, false, true, false};
+  tracking.remove(0_pos);
+  tracking.remove(2_pos);
+  tracking.remove(4_pos);
+  TrackingList<5, 1> clone(tracking);
+  array copied{false, true, false, false, false};
+  clone.remove(3_pos);
+  for (Position pos = 0_pos; pos < 5_pos; ++pos) {
+    EXPECT_EQ(original[pos], tracking.check(pos));
+    EXPECT_EQ(copied[pos], clone.check(pos));
+  }
+}
+
+
+TEST(TrackingListTest, EmptyWorks) {
+  TrackingList<3, 1> tracking;
+  tracking.remove(0_pos);
+  tracking.remove(1_pos);
+  tracking.remove(2_pos);
+  int count = 0;
+  for ([[maybe_unused]] auto p : tracking) {
+    count++;
+  }
+  EXPECT_EQ(0, count);
+}
+
+
 }
