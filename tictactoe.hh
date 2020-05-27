@@ -124,14 +124,12 @@ class BiasedRandom {
     uniform_int_distribution<int> random_position(0, total - 1);
     int chosen = random_position(generator);
     int previous = 0;
-    for (Position pos = 0_pos; pos < board_size; ++pos) {
-      if (open_positions[pos]) {
-        int current = previous + state.get_current_accumulation(pos);
-        if (chosen < current) {
-          return pos;
-        }
-        previous = current;
+    for (Position pos : open_positions.all()) {
+      int current = previous + state.get_current_accumulation(pos);
+      if (chosen < current) {
+        return pos;
       }
+      previous = current;
     }
     assert(false);
   }
@@ -178,7 +176,7 @@ class HeatMap {
 
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
-    vector<Position> open = state.get_open_vector(open_positions);
+    vector<Position> open = open_positions.get_vector();
     vector<int> score = get_scores(mark, open);
     if (print_board) {
       vector<int> norm = normalize_score(score);

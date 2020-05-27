@@ -324,7 +324,11 @@ class Bitfield {
         views::iota(0, static_cast<int>(board_size)) | 
         views::filter([&](auto pos) { return bitfield[pos]; }) |
         views::transform([](auto pos) { return Position{pos}; });
-  } 
+  }
+  vector<Position> get_vector() const {
+    auto positions = all();
+    return vector<Position>(begin(positions), end(positions));
+  }
 
  private:
   constexpr static Position board_size = Geometry<N, D>::board_size;
