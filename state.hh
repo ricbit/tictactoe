@@ -44,17 +44,6 @@ class State {
     return open_positions;
   }
 
-  const vector<Position> get_open_vector(
-      const Bitfield<N, D>& open_positions) const {
-    vector<Position> open;
-    for (Position i = 0_pos; i < board_size; ++i) {
-      if (open_positions[i]) {
-        open.push_back(i);
-      }
-    }
-    return open;
-  }
-
   const auto& get_current(Mark mark) const {
     return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
   }
@@ -120,8 +109,7 @@ class State {
         for (Side j = 0_side; j < N; ++j) {
           Position neigh = data.winning_lines()[line][j];
           current_accumulation[neigh]--;
-          if (current_accumulation[neigh] == 0 &&
-              empty_cells.check(neigh)) {
+          if (current_accumulation[neigh] == 0 && empty_cells.check(neigh)) {
             empty_cells.remove(neigh);
           }
         }
