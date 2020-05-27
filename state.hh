@@ -33,9 +33,9 @@ class State {
   constexpr static Position board_size = BoardData<N, D>::board_size;
   using Bitfield = typename BoardData<N, D>::Bitfield;
 
-  const Bitfield& get_open_positions(Mark mark) {
-    open_positions.reset();
-    checked.reset();
+  Bitfield get_open_positions(Mark mark) const {
+    Bitfield open_positions;
+    Bitfield checked;
     for (Position i : empty_cells) {
       if (!checked[i]) {
         open_positions[i] = true;
@@ -139,9 +139,7 @@ class State {
   svector<Line, Position> xor_table;
   vector<bool> active_line;
   vector<LineCount> current_accumulation;
-  Bitfield open_positions;
   NodeLine trie_node;
-  Bitfield checked;
   using EmptyList = list<Position>;
   TrackingList<N, D> empty_cells;
 

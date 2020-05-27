@@ -14,7 +14,7 @@ class TrackingList {
     tracking_list[0_pos].second = board_size;
   }
   struct Iterator {
-    TrackingList& tlist;
+    const TrackingList& tlist;
     Position pos;
     bool operator!=(const Iterator& that) {
       return pos != that.pos;
@@ -31,6 +31,12 @@ class TrackingList {
     return Iterator{*this, board_size};
   }
   Iterator begin() {
+    return Iterator{*this, tracking_list[board_size].first};
+  }
+  Iterator end() const {
+    return Iterator{*this, board_size};
+  }
+  Iterator begin() const {
     return Iterator{*this, tracking_list[board_size].first};
   }
   void remove(Position pos) {
