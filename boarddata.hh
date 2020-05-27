@@ -72,7 +72,6 @@ class Geometry {
     return _lines_through_position;
   }
 
-  using Bitfield = bitset<board_size>;
   using CrossingArray = sarray<Position, vector<pair<Line, Line>>, board_size>;
   using WinningArray = sarray<Line, sarray<Side, Position, N>, line_size>;
 
@@ -295,6 +294,33 @@ Mark flip(Mark mark) {
 }
 
 template<int N, int D>
+class Bitfield {
+ public:
+  bool operator[](Position pos) {
+    return bitfield[pos];
+  }
+  bool operator[](Position pos) const {
+    return bitfield[pos];
+  }
+  auto count() {
+    return bitfield.count();
+  }
+  auto& operator|=(const Bitfield& that) {
+    bitfield |= that.bitfield;
+    return *this;
+  }
+  void set(Position pos) {
+    bitfield.set(pos);
+  }
+  void reset() {
+    bitfield.reset();
+  }
+ private:
+  constexpr static Position board_size = Geometry<N, D>::board_size;
+  bitset<board_size> bitfield;
+};
+
+template<int N, int D>
 class Symmetry {
  public:
   explicit Symmetry(const Geometry<N, D>& geom)
@@ -417,7 +443,6 @@ class SymmeTrie {
   }
 
   constexpr static int board_size = Symmetry<N, D>::board_size;
-  using Bitfield = bitset<board_size>;
 
   const vector<SymLine>& similar(NodeLine line) const {
     return nodes[line].similar;
@@ -427,7 +452,7 @@ class SymmeTrie {
     return nodes[line].next[pos];
   }
 
-  const Bitfield& mask(NodeLine line, Position pos) const {
+  const Bitfield<N, D>& mask(NodeLine line, Position pos) const {
     return nodes[line].mask[pos];
   }
 
@@ -449,7 +474,7 @@ class SymmeTrie {
     }
     vector<SymLine> similar;
     vector<NodeLine> next;
-    vector<Bitfield> mask;
+    vector<Bitfield<N, D>> mask;
   };
 
   const Symmetry<N, D>& sym;
@@ -517,7 +542,6 @@ class BoardData {
   constexpr static Position board_size = Geometry<N, D>::board_size;
   constexpr static Line line_size = Geometry<N, D>::line_size;
 
-  using Bitfield = typename Geometry<N, D>::Bitfield;
   using CrossingArray = typename Geometry<N, D>::CrossingArray;
   using WinningArray = typename Geometry<N, D>::WinningArray;
 
@@ -534,7 +558,7 @@ class BoardData {
     return trie.next(line, pos);
   }
 
-  const Bitfield& mask(NodeLine line, Position pos) const {
+  const Bitfield<N, D>& mask(NodeLine line, Position pos) const {
     return trie.mask(line, pos);
   }
 

@@ -31,21 +31,21 @@ class State {
   }
 
   constexpr static Position board_size = BoardData<N, D>::board_size;
-  using Bitfield = typename BoardData<N, D>::Bitfield;
 
-  Bitfield get_open_positions(Mark mark) const {
-    Bitfield open_positions;
-    Bitfield checked;
+  Bitfield<N, D> get_open_positions(Mark mark) const {
+    Bitfield<N, D> open_positions;
+    Bitfield<N, D> checked;
     for (Position i : empty_cells) {
       if (!checked[i]) {
-        open_positions[i] = true;
+        open_positions.set(i);
         checked |= data.mask(trie_node, i);
       }
     }
     return open_positions;
   }
 
-  const vector<Position> get_open_vector(const Bitfield& open_positions) const {
+  const vector<Position> get_open_vector(
+      const Bitfield<N, D>& open_positions) const {
     vector<Position> open;
     for (Position i = 0_pos; i < board_size; ++i) {
       if (open_positions[i]) {

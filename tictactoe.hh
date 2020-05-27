@@ -38,13 +38,12 @@ class ForcingMove {
   explicit ForcingMove(const State<N, D>& state) : state(state) {
   }
   const State<N, D>& state;
-  using Bitfield = typename BoardData<N, D>::Bitfield;
   constexpr static Line line_size = BoardData<N, D>::line_size;
 
   optional<Position> find_forcing_move(
       const svector<Line, MarkCount>& current,
       const svector<Line, MarkCount>& opponent,
-      const Bitfield& open_positions) {
+      const Bitfield<N, D>& open_positions) {
     for (Line i = 0_line; i < line_size; ++i) {
       if (current[i] == N - 1 && opponent[i] == 0) {
         Position trial = state.get_xor_table(i);
@@ -77,13 +76,12 @@ class ForcingStrategy {
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
-  using Bitfield = typename BoardData<N, D>::Bitfield;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
   optional<Position> find_forcing_move(
       const svector<Line, MarkCount>& current,
       const svector<Line, MarkCount>& opponent,
-      const Bitfield& open_positions) {
+      const Bitfield<N, D>& open_positions) {
     for (Position pos = 0_pos; pos < board_size; ++pos) {
       if (open_positions[pos]) {
         for (const auto& [line_a, line_b] : data.crossings()[pos]) {
@@ -117,7 +115,6 @@ class BiasedRandom {
   }
   const State<N, D>& state;
   default_random_engine& generator;
-  using Bitfield = typename BoardData<N, D>::Bitfield;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
   template<typename B>
@@ -180,7 +177,6 @@ class HeatMap {
   default_random_engine& generator;
   int trials;
   bool print_board;
-  using Bitfield = typename BoardData<N, D>::Bitfield;
   constexpr static Line line_size = BoardData<N, D>::line_size;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
@@ -269,7 +265,6 @@ class GameEngine {
       strategy(strategy) {
   }
 
-  using Bitfield = typename BoardData<N, D>::Bitfield;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
   template<typename T, typename U>
