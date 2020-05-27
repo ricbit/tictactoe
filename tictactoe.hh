@@ -82,13 +82,11 @@ class ForcingStrategy {
       const svector<Line, MarkCount>& current,
       const svector<Line, MarkCount>& opponent,
       const Bitfield<N, D>& open_positions) {
-    for (Position pos = 0_pos; pos < board_size; ++pos) {
-      if (open_positions[pos]) {
-        for (const auto& [line_a, line_b] : data.crossings()[pos]) {
-          if (current[line_a] == N - 2 && opponent[line_a] == 0 &&
-              current[line_b] == N - 2 && opponent[line_b] == 0) {
-            return pos;
-          }
+    for (Position pos : open_positions.all()) {
+      for (const auto& [line_a, line_b] : data.crossings()[pos]) {
+        if (current[line_a] == N - 2 && opponent[line_a] == 0 &&
+            current[line_b] == N - 2 && opponent[line_b] == 0) {
+          return pos;
         }
       }
     }
@@ -120,10 +118,8 @@ class BiasedRandom {
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
     int total = 0;
-    for (Position pos = 0_pos; pos < board_size; ++pos) {
-      if (open_positions[pos]) {
-        total += state.get_current_accumulation(pos);
-      }
+    for (Position pos : open_positions.all()) {
+      total += state.get_current_accumulation(pos);
     }
     uniform_int_distribution<int> random_position(0, total - 1);
     int chosen = random_position(generator);

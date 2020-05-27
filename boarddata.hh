@@ -12,6 +12,7 @@
 #include <bitset>
 #include <execution>
 #include <list>
+#include <ranges>
 #include "semantic.hh"
 
 using namespace std;
@@ -302,7 +303,7 @@ class Bitfield {
   bool operator[](Position pos) const {
     return bitfield[pos];
   }
-  auto count() {
+  auto count() const {
     return bitfield.count();
   }
   auto& operator|=(const Bitfield& that) {
@@ -315,6 +316,16 @@ class Bitfield {
   void reset() {
     bitfield.reset();
   }
+  bool none() const {
+    return bitfield.none();
+  }
+  auto all() const {
+    return 
+        views::iota(0, static_cast<int>(board_size)) | 
+        views::filter([&](auto pos) { return bitfield[pos]; }) |
+        views::transform([](auto pos) { return Position{pos}; });
+  } 
+
  private:
   constexpr static Position board_size = Geometry<N, D>::board_size;
   bitset<board_size> bitfield;
