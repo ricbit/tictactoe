@@ -166,13 +166,16 @@ class HeatMap {
     const State<N, D>& state,
     const BoardData<N, D>& data,
     default_random_engine& generator,
-    int trials)
-      : state(state), data(data), generator(generator), trials(trials) {
+    int trials,
+    bool print_board = false)
+      : state(state), data(data), generator(generator),
+        trials(trials), print_board(print_board) {
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
   default_random_engine& generator;
   int trials;
+  bool print_board;
   using Bitfield = typename BoardData<N, D>::Bitfield;
   constexpr static Line line_size = BoardData<N, D>::line_size;
   constexpr static Position board_size = BoardData<N, D>::board_size;
@@ -186,8 +189,10 @@ class HeatMap {
         [&](Position pos) {
       return monte_carlo(mark, flipped, pos);
     });
-    vector<int> norm = normalize_score(score);
-    print(open, norm);
+    if (print_board) {
+      vector<int> norm = normalize_score(score);
+      print(open, norm);
+    }
     auto winner = max_element(begin(score), end(score));
     return open[distance(begin(score), winner)];
   }

@@ -19,7 +19,7 @@ int main() {
   auto s =
       ForcingMove(state) >>
       ForcingStrategy(state, data) >>
-      HeatMap(state, data, generator, 100);
+      HeatMap(state, data, generator, 100, true);
   //auto s = HeatMap(state, data, generator);
   GameEngine b(generator, state, s);
   int current = 0;
