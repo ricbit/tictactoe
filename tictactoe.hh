@@ -187,18 +187,23 @@ class HeatMap {
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
     vector<Position> open = state.get_open_vector(open_positions);
-    Mark flipped = flip(mark);
-    vector<int> score(open.size());
-    transform(execution::par_unseq, begin(open), end(open), begin(score),
-        [&](Position pos) {
-      return monte_carlo(mark, flipped, pos);
-    });
+    vector<int> score = get_scores(mark, open);
     if (print_board) {
       vector<int> norm = normalize_score(score);
       print(open, norm);
     }
     auto winner = max_element(begin(score), end(score));
     return open[distance(begin(score), winner)];
+  }
+
+  vector<int> get_scores(Mark mark, const vector<Position>& open) {
+    Mark flipped = flip(mark);
+    vector<int> score(open.size());
+    transform(execution::par_unseq, begin(open), end(open), begin(score),
+        [&](Position pos) {
+      return monte_carlo(mark, flipped, pos);
+    });
+    return score;
   }
 
   vector<int> normalize_score(const vector<int>& score) {
