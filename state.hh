@@ -138,7 +138,6 @@ class State {
   vector<bool> active_line;
   vector<LineCount> current_accumulation;
   NodeLine trie_node;
-  using EmptyList = list<Position>;
   TrackingList<N, D> empty_cells;
 
   auto& get_current(Mark mark) {
