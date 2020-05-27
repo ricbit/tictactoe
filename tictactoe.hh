@@ -179,12 +179,7 @@ class HeatMap {
 
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
-    vector<Position> open;
-    for (Position i = 0_pos; i < board_size; ++i) {
-      if (open_positions[i]) {
-        open.push_back(i);
-      }
-    }
+    vector<Position> open = state.get_open_vector(open_positions);
     Mark flipped = flip(mark);
     vector<int> score(open.size());
     transform(execution::par_unseq, begin(open), end(open), begin(score),

@@ -45,6 +45,16 @@ class State {
     return open_positions;
   }
 
+  const vector<Position> get_open_vector(const Bitfield& open_positions) const {
+    vector<Position> open;
+    for (Position i = 0_pos; i < board_size; ++i) {
+      if (open_positions[i]) {
+        open.push_back(i);
+      }
+    }
+    return open;
+  }
+
   const auto& get_current(Mark mark) const {
     return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
   }
