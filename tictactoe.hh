@@ -53,7 +53,9 @@ class ForcingMove {
         }
       }
     }
-    return {};
+    // Can't return directly because of g++ bug.
+    optional<Position> empty = {};
+    return empty;
   }
 
   template<typename B>
@@ -92,7 +94,9 @@ class ForcingStrategy {
         }
       }
     }
-    return {};
+    // Can't return directly because of g++ bug.
+    optional<Position> empty = {};
+    return empty;
   }
 
   template<typename B>
