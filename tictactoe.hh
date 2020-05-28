@@ -249,6 +249,65 @@ class HeatMap {
   }
 };
 
+template<int N, int D>
+class MiniMax {
+ public:
+  explicit MiniMax(
+    const State<N, D>& state, 
+    const BoardData<N, D>& data,
+    default_random_engine& generator)
+    :  state(state), data(data), generator(generator) {
+  }
+  const State<N, D>& state;
+  const BoardData<N, D>& data;
+  default_random_engine& generator;
+  constexpr static Position board_size = BoardData<N, D>::board_size;
+
+  template<typename B>
+  optional<Mark> operator()(Mark mark, const B& open_positions) {
+    return play(state, mark, open_positions);
+  }
+
+  template<typename B>
+  optional<Mark> play(
+      State<N, D>& current_state, Mark mark, const B& open_positions) {
+    if (open_positions.none()) {
+      return Mark::empty;
+    }
+    static int id = 0;
+    cout << "id " << id++ << " " << open_positions.count() << endl;
+    HeatMap<N, D> heatmap(state, data, generator, 20);
+    vector<Position> open = open_positions.get_vector();
+    vector<int> scores = heatmap.get_scores(mark, open);
+    vector<pair<int, Position>> paired(scores.size());
+    for (int i = 0; i < static_cast<int>(open.size()); ++i) {
+      paired[i] = make_pair(scores[i], open[i]);
+    }
+    sort(begin(paired), end(paired));
+    Mark current_best = flip(mark);
+    for (const auto [score, pos] : paired) {
+      State<N, D> cloned(current_state);
+      bool result = cloned.play(pos, mark);
+      if (result) {
+        return mark;
+      } else {
+        Mark flipped = flip(mark);
+        optional<Mark> new_result = play(
+            cloned, flipped, cloned.get_open_positions(flipped));
+        if (new_result.has_value()) {
+          if (*new_result == mark) {
+            return mark;
+          }
+          if (*new_result == Mark::empty) {
+            current_best = *new_result;
+          }
+        }        
+      }
+    }
+    return current_best;
+  }
+};
+
 template<int N, int D, Strategy S>
 class GameEngine {
  public:

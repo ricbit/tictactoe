@@ -7,6 +7,9 @@ all : tictactoe heatmap test
 tictactoe : tictactoe.cc ${HEADERS}
 	g++-10 -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
+minimax : minimax.cc ${HEADERS}
+	g++-10 -std=c++2a minimax.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+
 heatmap : heatmap.cc ${HEADERS}
 	g++-10 -std=c++2a heatmap.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
