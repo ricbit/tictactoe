@@ -135,7 +135,7 @@ class State {
   const BoardData<N, D>& data;
   sarray<Position, Mark, board_size> board;
   sarray<Line, MarkCount, line_size> x_marks_on_line, o_marks_on_line;
-  svector<Line, Position> xor_table;
+  sarray<Line, Position, line_size> xor_table;
   vector<bool> active_line;
   sarray<Position, LineCount, board_size> current_accumulation;
   NodeLine trie_node;

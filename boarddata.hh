@@ -84,7 +84,7 @@ class Geometry {
     return _accumulation_points;
   }
 
-  const svector<Line, Position>& xor_table() const {
+  const sarray<Line, Position, line_size>& xor_table() const {
     return _xor_table;
   }
 
@@ -253,12 +253,14 @@ class Geometry {
   }
 
   void construct_xor_table() {
+    Line lpos = 0_line;
     for (const auto& line : _winning_lines) {
       Position ans = accumulate(begin(line), end(line), 0_pos,
           [](auto x, auto y) {
         return Position{x ^ y};
       });
-      _xor_table.push_back(ans);
+      _xor_table[lpos] = ans;
+      lpos++;
     }
   }
 
@@ -279,7 +281,7 @@ class Geometry {
   WinningArray _winning_lines;
   sarray<Position, LineCount, board_size> _accumulation_points;
   vector<vector<Line>> _lines_through_position;
-  svector<Line, Position> _xor_table;
+  sarray<Line, Position, line_size> _xor_table;
   sarray<Position, vector<pair<Line, Line>>, board_size> _crossings;
   Line current_winning;
 };
@@ -320,8 +322,8 @@ class Bitfield {
     return bitfield.none();
   }
   auto all() const {
-    return 
-        views::iota(0, static_cast<int>(board_size)) | 
+    return
+        views::iota(0, static_cast<int>(board_size)) |
         views::filter([&](auto pos) { return bitfield[pos]; }) |
         views::transform([](auto pos) { return Position{pos}; });
   }
@@ -581,7 +583,7 @@ class BoardData {
     return geom.accumulation_points();
   }
 
-  const svector<Line, Position>& xor_table() const {
+  const sarray<Line, Position, line_size>& xor_table() const {
     return geom.xor_table();
   }
 
