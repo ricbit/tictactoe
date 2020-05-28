@@ -40,9 +40,10 @@ class ForcingMove {
   const State<N, D>& state;
   constexpr static Line line_size = BoardData<N, D>::line_size;
 
+  template<typename T>
   optional<Position> find_forcing_move(
-      const svector<Line, MarkCount>& current,
-      const svector<Line, MarkCount>& opponent,
+      const T& current,
+      const T& opponent,
       const Bitfield<N, D>& open_positions) {
     for (Line i = 0_line; i < line_size; ++i) {
       if (current[i] == N - 1 && opponent[i] == 0) {
@@ -78,9 +79,10 @@ class ForcingStrategy {
   const BoardData<N, D>& data;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
+  template<typename T>
   optional<Position> find_forcing_move(
-      const svector<Line, MarkCount>& current,
-      const svector<Line, MarkCount>& opponent,
+      const T& current,
+      const T& opponent,
       const Bitfield<N, D>& open_positions) {
     for (Position pos : open_positions.all()) {
       for (const auto& [line_a, line_b] : data.crossings()[pos]) {

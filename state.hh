@@ -22,8 +22,8 @@ class State {
   explicit State(const BoardData<N, D>& data) :
       data(data),
       board(Mark::empty),
-      x_marks_on_line(data.line_size),
-      o_marks_on_line(data.line_size),
+      x_marks_on_line(0_mcount),
+      o_marks_on_line(0_mcount),
       xor_table(data.xor_table()),
       active_line(data.line_size, true),
       current_accumulation(data.accumulation_points()),
@@ -31,6 +31,7 @@ class State {
   }
 
   constexpr static Position board_size = BoardData<N, D>::board_size;
+  constexpr static Line line_size = BoardData<N, D>::line_size;
 
   Bitfield<N, D> get_open_positions(Mark mark) const {
     Bitfield<N, D> open_positions;
@@ -133,7 +134,7 @@ class State {
  private:
   const BoardData<N, D>& data;
   sarray<Position, Mark, board_size> board;
-  svector<Line, MarkCount> x_marks_on_line, o_marks_on_line;
+  sarray<Line, MarkCount, line_size> x_marks_on_line, o_marks_on_line;
   svector<Line, Position> xor_table;
   vector<bool> active_line;
   vector<LineCount> current_accumulation;
