@@ -25,9 +25,9 @@ class State {
       x_marks_on_line(0_mcount),
       o_marks_on_line(0_mcount),
       xor_table(data.xor_table()),
-      active_line(data.line_size, true),
       current_accumulation(data.accumulation_points()),
       trie_node(0_node) {
+    active_line.set();
   }
 
   constexpr static Position board_size = BoardData<N, D>::board_size;
@@ -136,7 +136,7 @@ class State {
   sarray<Position, Mark, board_size> board;
   sarray<Line, MarkCount, line_size> x_marks_on_line, o_marks_on_line;
   sarray<Line, Position, line_size> xor_table;
-  vector<bool> active_line;
+  bitset<line_size> active_line;
   sarray<Position, LineCount, board_size> current_accumulation;
   NodeLine trie_node;
   TrackingList<N, D> empty_cells;
