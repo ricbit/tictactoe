@@ -253,15 +253,14 @@ class Geometry {
   }
 
   void construct_xor_table() {
-    Line lpos = 0_line;
-    for (const auto& line : _winning_lines) {
-      Position ans = accumulate(begin(line), end(line), 0_pos,
-          [](auto x, auto y) {
+    auto xor_func = [](const auto& line) {
+      return accumulate(begin(line), end(line), 0_pos, [](auto x, auto y) {
         return Position{x ^ y};
       });
-      _xor_table[lpos] = ans;
-      lpos++;
-    }
+    };
+    transform(
+      begin(_winning_lines), end(_winning_lines),
+      begin(_xor_table), xor_func);
   }
 
   void construct_crossings() {
