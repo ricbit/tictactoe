@@ -137,7 +137,7 @@ class State {
   sarray<Line, MarkCount, line_size> x_marks_on_line, o_marks_on_line;
   svector<Line, Position> xor_table;
   vector<bool> active_line;
-  vector<LineCount> current_accumulation;
+  sarray<Position, LineCount, board_size> current_accumulation;
   NodeLine trie_node;
   TrackingList<N, D> empty_cells;
 

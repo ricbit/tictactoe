@@ -52,7 +52,7 @@ template<int N, int D>
 class Geometry {
  public:
   Geometry()
-      : _accumulation_points(board_size),
+      : _accumulation_points(0_lcount),
         _lines_through_position(board_size),
         current_winning(0_line) {
     construct_unique_terrains();
@@ -80,7 +80,7 @@ class Geometry {
     return _winning_lines;
   }
 
-  const vector<LineCount>& accumulation_points() const {
+  const sarray<Position, LineCount, board_size>& accumulation_points() const {
     return _accumulation_points;
   }
 
@@ -277,7 +277,7 @@ class Geometry {
 
   vector<vector<Direction>> unique_terrains;
   WinningArray _winning_lines;
-  vector<LineCount> _accumulation_points;
+  sarray<Position, LineCount, board_size> _accumulation_points;
   vector<vector<Line>> _lines_through_position;
   svector<Line, Position> _xor_table;
   sarray<Position, vector<pair<Line, Line>>, board_size> _crossings;
@@ -577,7 +577,7 @@ class BoardData {
     return trie.mask(line, pos);
   }
 
-  const vector<LineCount>& accumulation_points() const {
+  const sarray<Position, LineCount, board_size>& accumulation_points() const {
     return geom.accumulation_points();
   }
 
