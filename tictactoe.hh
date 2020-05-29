@@ -270,21 +270,30 @@ class MiniMax {
 
   template<typename B>
   optional<Mark> play(
-      State<N, D>& current_state, Mark mark, const B& open_positions) {
+      State<N, D>& current_state, Mark mark, const B& open_positions,
+      vector<int> rank) {
     if (open_positions.none()) {
       return Mark::empty;
     }
     static int id = 0;
-    cout << "id " << id++ << " " << open_positions.count() << endl;
-    HeatMap<N, D> heatmap(state, data, generator, 20);
+    if ((id++ % 1000) == 0) {
+      cout << "id " << id++ << " " << open_positions.count() << endl;
+      cout << "rank ";
+      for (int i : rank) {
+        cout << i <<  " ";
+      }
+      cout << "\n";
+    }
+    HeatMap<N, D> heatmap(state, data, generator, 10);
     vector<Position> open = open_positions.get_vector();
     vector<int> scores = heatmap.get_scores(mark, open);
-    vector<pair<int, Position>> paired(scores.size());
+    vector<pair<int, Position>> paired(open.size());
     for (int i = 0; i < static_cast<int>(open.size()); ++i) {
       paired[i] = make_pair(scores[i], open[i]);
     }
-    sort(begin(paired), end(paired));
+    sort(rbegin(paired), rend(paired));
     Mark current_best = flip(mark);
+    int x = 0;
     for (const auto [score, pos] : paired) {
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
@@ -292,8 +301,10 @@ class MiniMax {
         return mark;
       } else {
         Mark flipped = flip(mark);
+        rank.push_back(x);
         optional<Mark> new_result = play(
-            cloned, flipped, cloned.get_open_positions(flipped));
+            cloned, flipped, cloned.get_open_positions(flipped), rank);
+        rank.pop_back();
         if (new_result.has_value()) {
           if (*new_result == mark) {
             return mark;
@@ -303,6 +314,7 @@ class MiniMax {
           }
         }        
       }
+      x++;
     }
     return current_best;
   }

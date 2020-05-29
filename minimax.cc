@@ -17,7 +17,7 @@ int main() {
   default_random_engine generator(seed);
   State state(data);
   auto s = MiniMax(state, data, generator);
-  auto result = s.play(state, Mark::X, state.get_open_positions(Mark::X));
+  auto result = s.play(state, Mark::X, state.get_open_positions(Mark::X), {});
   if (*result == Mark::X) {
     cout << "X wins\n";
   } else if (*result == Mark::O) {

@@ -19,9 +19,11 @@ class TrackingList {
     bool operator!=(const Iterator& that) {
       return pos != that.pos;
     }
+    // O(1)
     Position operator*() {
       return pos;
     }
+    // O(1)
     Iterator& operator++() {
       pos = tlist.tracking_list[pos].first;
       return *this;
@@ -39,11 +41,13 @@ class TrackingList {
   Iterator begin() const {
     return Iterator{*this, tracking_list[board_size].first};
   }
+  // O(1)
   void remove(Position pos) {
     tracking_list[tracking_list[pos].second].first = tracking_list[pos].first;
     tracking_list[tracking_list[pos].first].second = tracking_list[pos].second;
     tracking_list[pos].first = pos;
   }
+  // O(1)
   bool check(Position pos) const {
     return tracking_list[pos].first != pos;
   }
