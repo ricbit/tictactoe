@@ -265,13 +265,12 @@ class MiniMax {
 
   template<typename B>
   optional<Mark> operator()(Mark mark, const B& open_positions) {
-    return play(state, mark, open_positions);
+    return {};
   }
 
-  template<typename B>
   optional<Mark> play(
-      State<N, D>& current_state, Mark mark, const B& open_positions,
-      vector<int> rank) {
+      State<N, D>& current_state, Mark mark, vector<int> rank) {
+    auto open_positions = current_state.get_open_positions(mark);
     if (open_positions.none()) {
       return Mark::empty;
     }
@@ -302,8 +301,7 @@ class MiniMax {
       } else {
         Mark flipped = flip(mark);
         rank.push_back(x);
-        optional<Mark> new_result = play(
-            cloned, flipped, cloned.get_open_positions(flipped), rank);
+        optional<Mark> new_result = play(cloned, flipped, rank);
         rank.pop_back();
         if (new_result.has_value()) {
           if (*new_result == mark) {
