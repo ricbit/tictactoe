@@ -256,11 +256,13 @@ class MiniMax {
     const State<N, D>& state, 
     const BoardData<N, D>& data,
     default_random_engine& generator)
-    :  state(state), data(data), generator(generator) {
+    :  state(state), data(data), generator(generator),
+       nodes_visited(0) {
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
   default_random_engine& generator;
+  int nodes_visited;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
   template<typename B>
@@ -268,20 +270,18 @@ class MiniMax {
     return {};
   }
 
+  optional<Mark> play(State<N, D>& current_state, Mark mark) {
+    auto ans = play(current_state, mark, {}, flip(mark));
+    cout << "Total nodes visited: " << nodes_visited << "\n";
+    return ans;
+  }
+
   optional<Mark> play(
       State<N, D>& current_state, Mark mark, vector<int> rank, Mark parent) {
     auto open_positions = current_state.get_open_positions(mark);
+    report_progress(open_positions, rank);
     if (open_positions.none()) {
       return Mark::empty;
-    }
-    static int id = 0;
-    if ((id++ % 1000) == 0) {
-      cout << "id " << id++ << " " << open_positions.count() << endl;
-      cout << "rank ";
-      for (int i : rank) {
-        cout << i <<  " ";
-      }
-      cout << "\n";
     }
     auto s =
         ForcingMove<N, D>(state) >>
@@ -312,9 +312,7 @@ class MiniMax {
       for (int i = 0; i < static_cast<int>(open.size()); ++i) {
         paired[i] = make_pair(scores[i], open[i]);
       }
-      auto repaired = choking(state, paired, mark);
-      sort(rbegin(repaired), rend(repaired));
-      //sort(rbegin(paired), rend(paired));
+      sort(rbegin(paired), rend(paired));
     }
     Mark current_best = flip(mark);
     int x = 0;
@@ -346,23 +344,17 @@ class MiniMax {
     return current_best;
   }
 
-  vector<pair<int, Position>> choking(
-      const State<N,D>& state, const vector<pair<int, Position>>& paired,
-      Mark mark) {
-    const auto& current = state.get_current(mark);
-    const auto& opponent = state.get_opponent(mark);
-    auto repaired(paired);
-    for (auto& [score, pos] : repaired) {
-      for (Line i = 0_line; i < BoardData<N,D>::line_size; ++i) {
-        if (current[i] == N - 2 && opponent[i] == 0) {
-          const auto& line = data.winning_lines()[i];
-          if (find(begin(line), end(line), pos) != end(line)) {
-            score *= 10;
-          }
-        }
-      }    
+  template<typename B, typename T>
+  void report_progress(const B& open_positions, const T& rank) {
+    if ((nodes_visited % 1000) == 0) {
+      cout << "id " << nodes_visited << " " << open_positions.count() << endl;
+      cout << "rank ";
+      for (int i : rank) {
+        cout << i <<  " ";
+      }
+      cout << "\n";
     }
-    return repaired;
+    nodes_visited++;
   }
 };
 
