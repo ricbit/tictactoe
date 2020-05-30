@@ -271,33 +271,23 @@ class MiniMax {
   }
 
   optional<Mark> play(State<N, D>& current_state, Mark mark) {
-    auto ans = play(current_state, mark, {}, flip(mark));
+    vector<int> rank;
+    auto ans = play(current_state, mark, rank, flip(mark));
     cout << "Total nodes visited: " << nodes_visited << "\n";
     return ans;
   }
 
   optional<Mark> play(
-      State<N, D>& current_state, Mark mark, vector<int> rank, Mark parent) {
+      State<N, D>& current_state, Mark mark, vector<int>& rank, Mark parent) {
     auto open_positions = current_state.get_open_positions(mark);
     report_progress(open_positions, rank);
     if (open_positions.none()) {
       return Mark::empty;
     }
-    auto s =
-        ForcingMove<N, D>(state) >>
-        ForcingStrategy<N, D>(state, data);
-    auto forcing = s(mark, open_positions);
-    if (forcing.has_value()) {
-      State<N, D> cloned(current_state);
-      bool result = cloned.play(*forcing, mark);
-      if (result) {
-        return mark;
-      }
-      Mark flipped = flip(mark);
-      rank.push_back(-1);
-      auto x = play(cloned, flipped, rank, parent);
-      rank.pop_back();
-      return x;
+    optional<Mark> forced =
+        check_forced_move(current_state, mark, rank, parent, open_positions);
+    if (forced.has_value()) {
+      return forced;
     }
     vector<Position> open = open_positions.get_vector();
     vector<pair<int, Position>> paired(open.size());
@@ -355,6 +345,29 @@ class MiniMax {
       cout << "\n";
     }
     nodes_visited++;
+  }
+
+  template<typename B>
+  optional<Mark> check_forced_move(
+      State<N, D>& current_state, Mark mark, vector<int>& rank, Mark parent,
+      const B& open_positions) {
+    auto s =
+        ForcingMove<N, D>(state) >>
+        ForcingStrategy<N, D>(state, data);
+    auto forcing = s(mark, open_positions);
+    if (forcing.has_value()) {
+      State<N, D> cloned(current_state);
+      bool result = cloned.play(*forcing, mark);
+      if (result) {
+        return mark;
+      }
+      Mark flipped = flip(mark);
+      rank.push_back(-1);
+      auto x = play(cloned, flipped, rank, parent);
+      rank.pop_back();
+      return x;
+    }
+    return {};
   }
 };
 
