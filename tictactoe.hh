@@ -253,7 +253,7 @@ template<int N, int D>
 class MiniMax {
  public:
   explicit MiniMax(
-    const State<N, D>& state, 
+    const State<N, D>& state,
     const BoardData<N, D>& data,
     default_random_engine& generator)
     :  state(state), data(data), generator(generator),
@@ -263,50 +263,32 @@ class MiniMax {
   const BoardData<N, D>& data;
   default_random_engine& generator;
   int nodes_visited;
+  vector<int> rank;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
-  template<typename B>
-  optional<Mark> operator()(Mark mark, const B& open_positions) {
-    return {};
-  }
-
   optional<Mark> play(State<N, D>& current_state, Mark mark) {
-    vector<int> rank;
-    auto ans = play(current_state, mark, rank, flip(mark));
+    auto ans = play(current_state, mark, flip(mark));
     cout << "Total nodes visited: " << nodes_visited << "\n";
     return ans;
   }
 
   optional<Mark> play(
-      State<N, D>& current_state, Mark mark, vector<int>& rank, Mark parent) {
+      State<N, D>& current_state, Mark mark, Mark parent) {
     auto open_positions = current_state.get_open_positions(mark);
-    report_progress(open_positions, rank);
+    report_progress(open_positions);
     if (open_positions.none()) {
       return Mark::empty;
     }
-    optional<Mark> forced =
-        check_forced_move(current_state, mark, rank, parent, open_positions);
-    if (forced.has_value()) {
+    if (optional<Mark> forced = check_forced_move(
+           current_state, mark, parent, open_positions);
+        forced.has_value()) {
       return forced;
     }
     vector<Position> open = open_positions.get_vector();
-    vector<pair<int, Position>> paired(open.size());
-    if (open_positions.count() < 7) {
-      for (int i = 0; i < static_cast<int>(open.size()); ++i) {
-        paired[i] = make_pair(0, open[i]);
-      }
-    } else {
-      int trials = 5 * open_positions.count();
-      HeatMap<N, D> heatmap(state, data, generator, trials);
-      vector<int> scores = heatmap.get_scores(mark, open);
-      for (int i = 0; i < static_cast<int>(open.size()); ++i) {
-        paired[i] = make_pair(scores[i], open[i]);
-      }
-      sort(rbegin(paired), rend(paired));
-    }
+    vector<pair<int, Position>> sorted = get_sorted_positions(open, mark);
     Mark current_best = flip(mark);
     int x = 0;
-    for (const auto [score, pos] : paired) {
+    for (const auto [score, pos] : sorted) {
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
       if (result) {
@@ -314,7 +296,7 @@ class MiniMax {
       } else {
         Mark flipped = flip(mark);
         rank.push_back(x);
-        optional<Mark> new_result = play(cloned, flipped, rank, current_best);
+        optional<Mark> new_result = play(cloned, flipped, current_best);
         rank.pop_back();
         if (new_result.has_value()) {
           if (*new_result == mark) {
@@ -327,15 +309,44 @@ class MiniMax {
               current_best = *new_result;
             }
           }
-        }        
+        }
       }
       x++;
     }
     return current_best;
   }
 
-  template<typename B, typename T>
-  void report_progress(const B& open_positions, const T& rank) {
+  vector<pair<int, Position>> get_sorted_positions(
+      const vector<Position>& open, Mark mark) {
+    vector<pair<int, Position>> paired(open.size());
+    if (open.size() < 9) {
+      uniform_positions(paired, open);
+    } else {
+      heatmap_positions(paired, open, mark);
+    }
+    return paired;
+  }
+
+  void uniform_positions(vector<pair<int, Position>>& paired,
+      const vector<Position>& open) {
+    for (int i = 0; i < static_cast<int>(open.size()); ++i) {
+      paired[i] = make_pair(0, open[i]);
+    }
+  }
+
+  void heatmap_positions(vector<pair<int, Position>>& paired,
+      const vector<Position>& open, Mark mark) {
+    int trials = 20 * open.size();
+    HeatMap<N, D> heatmap(state, data, generator, trials);
+    vector<int> scores = heatmap.get_scores(mark, open);
+    for (int i = 0; i < static_cast<int>(open.size()); ++i) {
+      paired[i] = make_pair(scores[i], open[i]);
+    }
+    sort(rbegin(paired), rend(paired));
+  }
+
+  template<typename B>
+  void report_progress(const B& open_positions) {
     if ((nodes_visited % 1000) == 0) {
       cout << "id " << nodes_visited << " " << open_positions.count() << endl;
       cout << "rank ";
@@ -349,7 +360,7 @@ class MiniMax {
 
   template<typename B>
   optional<Mark> check_forced_move(
-      State<N, D>& current_state, Mark mark, vector<int>& rank, Mark parent,
+      State<N, D>& current_state, Mark mark, Mark parent,
       const B& open_positions) {
     auto s =
         ForcingMove<N, D>(state) >>
@@ -357,15 +368,13 @@ class MiniMax {
     auto forcing = s(mark, open_positions);
     if (forcing.has_value()) {
       State<N, D> cloned(current_state);
-      bool result = cloned.play(*forcing, mark);
-      if (result) {
+      if (cloned.play(*forcing, mark)) {
         return mark;
       }
-      Mark flipped = flip(mark);
       rank.push_back(-1);
-      auto x = play(cloned, flipped, rank, parent);
+      auto result = play(cloned, flip(mark), parent);
       rank.pop_back();
-      return x;
+      return result;
     }
     return {};
   }
