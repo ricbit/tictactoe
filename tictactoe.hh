@@ -300,14 +300,22 @@ class MiniMax {
       return x;
     }
     vector<Position> open = open_positions.get_vector();
-    int trials = 5 * open_positions.count();
-    HeatMap<N, D> heatmap(state, data, generator, trials);
-    vector<int> scores = heatmap.get_scores(mark, open);
     vector<pair<int, Position>> paired(open.size());
-    for (int i = 0; i < static_cast<int>(open.size()); ++i) {
-      paired[i] = make_pair(scores[i], open[i]);
+    if (open_positions.count() < 7) {
+      for (int i = 0; i < static_cast<int>(open.size()); ++i) {
+        paired[i] = make_pair(0, open[i]);
+      }
+    } else {
+      int trials = 5 * open_positions.count();
+      HeatMap<N, D> heatmap(state, data, generator, trials);
+      vector<int> scores = heatmap.get_scores(mark, open);
+      for (int i = 0; i < static_cast<int>(open.size()); ++i) {
+        paired[i] = make_pair(scores[i], open[i]);
+      }
+      auto repaired = choking(state, paired, mark);
+      sort(rbegin(repaired), rend(repaired));
+      //sort(rbegin(paired), rend(paired));
     }
-    sort(rbegin(paired), rend(paired));
     Mark current_best = flip(mark);
     int x = 0;
     for (const auto [score, pos] : paired) {
@@ -336,6 +344,25 @@ class MiniMax {
       x++;
     }
     return current_best;
+  }
+
+  vector<pair<int, Position>> choking(
+      const State<N,D>& state, const vector<pair<int, Position>>& paired,
+      Mark mark) {
+    const auto& current = state.get_current(mark);
+    const auto& opponent = state.get_opponent(mark);
+    auto repaired(paired);
+    for (auto& [score, pos] : repaired) {
+      for (Line i = 0_line; i < BoardData<N,D>::line_size; ++i) {
+        if (current[i] == N - 2 && opponent[i] == 0) {
+          const auto& line = data.winning_lines()[i];
+          if (find(begin(line), end(line), pos) != end(line)) {
+            score *= 10;
+          }
+        }
+      }    
+    }
+    return repaired;
   }
 };
 
