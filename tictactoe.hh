@@ -269,7 +269,7 @@ class MiniMax {
   }
 
   optional<Mark> play(
-      State<N, D>& current_state, Mark mark, vector<int> rank) {
+      State<N, D>& current_state, Mark mark, vector<int> rank, Mark parent) {
     auto open_positions = current_state.get_open_positions(mark);
     if (open_positions.none()) {
       return Mark::empty;
@@ -283,8 +283,25 @@ class MiniMax {
       }
       cout << "\n";
     }
-    HeatMap<N, D> heatmap(state, data, generator, 10);
+    auto s =
+        ForcingMove<N, D>(state) >>
+        ForcingStrategy<N, D>(state, data);
+    auto forcing = s(mark, open_positions);
+    if (forcing.has_value()) {
+      State<N, D> cloned(current_state);
+      bool result = cloned.play(*forcing, mark);
+      if (result) {
+        return mark;
+      }
+      Mark flipped = flip(mark);
+      rank.push_back(-1);
+      auto x = play(cloned, flipped, rank, parent);
+      rank.pop_back();
+      return x;
+    }
     vector<Position> open = open_positions.get_vector();
+    int trials = 5 * open_positions.count();
+    HeatMap<N, D> heatmap(state, data, generator, trials);
     vector<int> scores = heatmap.get_scores(mark, open);
     vector<pair<int, Position>> paired(open.size());
     for (int i = 0; i < static_cast<int>(open.size()); ++i) {
@@ -301,14 +318,18 @@ class MiniMax {
       } else {
         Mark flipped = flip(mark);
         rank.push_back(x);
-        optional<Mark> new_result = play(cloned, flipped, rank);
+        optional<Mark> new_result = play(cloned, flipped, rank, current_best);
         rank.pop_back();
         if (new_result.has_value()) {
           if (*new_result == mark) {
             return mark;
           }
           if (*new_result == Mark::empty) {
-            current_best = *new_result;
+            if (parent == Mark::empty) {
+              return Mark::empty;
+            } else {
+              current_best = *new_result;
+            }
           }
         }        
       }
