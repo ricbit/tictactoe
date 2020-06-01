@@ -5,6 +5,8 @@ namespace {
 
 TEST(GeometryTest, CorrectNumberOfLines) {
   EXPECT_EQ(109, (Geometry<5, 3>::line_size));
+  EXPECT_EQ(76, (Geometry<4, 3>::line_size));
+  EXPECT_EQ(49, (Geometry<3, 3>::line_size));
 }
 
 TEST(SymmetryTest, CorrectNumberOfSymmetries) {
