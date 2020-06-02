@@ -41,50 +41,33 @@ class Elevator {
     floor[current].left->right = &elevator[line];
     
   }
-  /*struct Iterator {
-    const TrackingList& tlist;
-    Position pos;
-    bool operator!=(const Iterator& that) {
-      return pos != that.pos;
-    }
-    // O(1)
-    Position operator*() {
-      return pos;
-    }
-    // O(1)
-    Iterator& operator++() {
-      pos = tlist.tracking_list[pos].first;
-      return *this;
-    }
-  };
-  Iterator end() {
-    return Iterator{*this, board_size};
-  }
-  Iterator begin() {
-    return Iterator{*this, tracking_list[board_size].first};
-  }
-  Iterator end() const {
-    return Iterator{*this, board_size};
-  }
-  Iterator begin() const {
-    return Iterator{*this, tracking_list[board_size].first};
-  }
-  // O(1)
-  void remove(Position pos) {
-    tracking_list[tracking_list[pos].second].first = tracking_list[pos].first;
-    tracking_list[tracking_list[pos].first].second = tracking_list[pos].second;
-    tracking_list[pos].first = pos;
-  }
-  // O(1)
-  bool check(Position pos) const {
-    return tracking_list[pos].first != pos;
-  }*/
- private:
   struct Node {    
     MarkCount floor;
     Line index;
     Node *left, *right;
   };
+  struct Iterator {
+    Node *node;
+    bool operator!=(const Iterator& that) {
+      return node != that.node;
+    }
+    // O(1)
+    Line operator*() {
+      return node->index;
+    }
+    // O(1)
+    Iterator& operator++() {
+      node = node->right;
+      return *this;
+    }
+  };
+  Iterator end(MarkCount mark) {
+    return Iterator{&floor[mark]};
+  }
+  Iterator begin(MarkCount mark) {
+    return Iterator{floor[mark].right};
+  }
+ private:
   constexpr static int line_size = BoardData<N, D>::line_size;
   sarray<Line, Node, line_size> elevator;
   sarray<MarkCount, Node, N + 1> floor;

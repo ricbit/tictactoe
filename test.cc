@@ -133,4 +133,31 @@ TEST(ElevatorTest, IncrementAndDecrement) {
   EXPECT_EQ(0_mcount, elevator[50]);*/
 }
 
+TEST(ElevatorTest, IterateFloorZero) {
+  Elevator<3, 2> elevator;
+  vector<Line> expected(8);
+  iota(begin(expected), end(expected), 0_line);
+  vector<Line> actual;
+  for (auto it = elevator.begin(0_mcount); it != elevator.end(0_mcount); ++it) {
+    actual.push_back(*it);
+  }
+  sort(begin(actual), end(actual));
+  EXPECT_EQ(expected, actual);
+}
+
+TEST(ElevatorTest, IterateFloorOne) {
+  Elevator<3, 2> elevator;
+  elevator.inc(5_line);
+  elevator.inc(2_line);
+  vector<Line> expected{2_line, 5_line};
+  vector<Line> actual;
+  for (auto it = elevator.begin(1_mcount); it != elevator.end(1_mcount); ++it) {
+    actual.push_back(*it);
+  }
+  sort(begin(actual), end(actual));
+  EXPECT_EQ(expected, actual);
+}
+
+
+
 }
