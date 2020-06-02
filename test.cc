@@ -1,4 +1,5 @@
 #include "tictactoe.hh"
+#include "elevator.hh"
 #include "gtest/gtest.h"
 
 namespace {
@@ -112,5 +113,24 @@ TEST(TrackingListTest, EmptyWorks) {
   EXPECT_EQ(0, count);
 }
 
+TEST(ElevatorTest, StartAtLevelZero) {
+  Elevator<5, 3, Line, MarkCount> elevator;
+  for (Line line = 0_line; line < BoardData<5, 3>::line_size; ++line) {
+    EXPECT_EQ(0_mcount, elevator[line]);
+  }
+}
+
+TEST(ElevatorTest, IncrementAndDecrement) {
+  Elevator<5, 3, Line, MarkCount> elevator;
+  Line line = 50_line;
+  elevator.inc(line);
+  EXPECT_EQ(1_mcount, elevator[line]);
+  elevator.inc(line);
+  EXPECT_EQ(2_mcount, elevator[line]);
+/*  elevator.dec(50);
+  EXPECT_EQ(1_mcount, elevator[50]);
+  elevator.dec(50);
+  EXPECT_EQ(0_mcount, elevator[50]);*/
+}
 
 }

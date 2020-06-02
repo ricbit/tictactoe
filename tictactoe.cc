@@ -13,12 +13,12 @@
 #include "tictactoe.hh"
 
 int main() {
-  BoardData<3, 3> data;
+  BoardData<5, 3> data;
   cout << "num symmetries " << data.symmetries_size() << "\n";
   vector<int> search_tree(data.board_size);
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
-  int max_plays = 100;
+  int max_plays = 10;
   vector<int> win_counts(3);
   cout << "winning lines " << data.line_size << "\n";
   for (int i = 0; i < max_plays; ++i) {

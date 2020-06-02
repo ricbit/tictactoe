@@ -22,8 +22,8 @@ int main() {
   for (int i = 0; i < max_plays; ++i) {
     State state(data);
     GameEngine b(generator, state,
-        ForcingMove(state) >>
-        ForcingStrategy(state, data) >>
+//        ForcingMove(state) >>
+//        ForcingStrategy(state, data) >>
         BiasedRandom(state, generator));
     int level = 0;
     Mark winner = b.play(Mark::X, [&](const auto& open_positions) {
