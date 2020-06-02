@@ -249,7 +249,13 @@ class HeatMap {
   }
 };
 
-template<int N, int D>
+enum class Outcome {
+  X_WINS,
+  O_DRAWS,
+  UNKNOWN
+};
+
+template<int N, int D, Outcome outcome = Outcome::UNKNOWN>
 class MiniMax {
  public:
   explicit MiniMax(
@@ -303,6 +309,11 @@ class MiniMax {
             return mark;
           }
           if (*new_result == Mark::empty) {
+            if constexpr (outcome == Outcome::O_DRAWS) {
+              if (mark == Mark::O) {
+                return Mark::empty;
+              }
+            }
             if (parent == Mark::empty) {
               return Mark::empty;
             } else {

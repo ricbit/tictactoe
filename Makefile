@@ -14,6 +14,7 @@ phasediag : phasediag.cc ${HEADERS}
 	g++-10 -std=c++2a phasediag.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
 draw : phasediag
+	./phasediag > phasediag.txt
 	echo "plot 'phasediag.txt' using 1:2 title 'Branch factor' with lines, 125-x" \
 	| gnuplot -persist
 
