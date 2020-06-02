@@ -114,14 +114,14 @@ TEST(TrackingListTest, EmptyWorks) {
 }
 
 TEST(ElevatorTest, StartAtLevelZero) {
-  Elevator<5, 3, Line, MarkCount> elevator;
+  Elevator<5, 3> elevator;
   for (Line line = 0_line; line < BoardData<5, 3>::line_size; ++line) {
     EXPECT_EQ(0_mcount, elevator[line]);
   }
 }
 
 TEST(ElevatorTest, IncrementAndDecrement) {
-  Elevator<5, 3, Line, MarkCount> elevator;
+  Elevator<5, 3> elevator;
   Line line = 50_line;
   elevator.inc(line);
   EXPECT_EQ(1_mcount, elevator[line]);
