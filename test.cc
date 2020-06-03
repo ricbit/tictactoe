@@ -124,10 +124,8 @@ TEST(ElevatorTest, IncrementAndDecrement) {
   Line line = 50_line;
   EXPECT_EQ(1_mcount, ++elevator[line]);
   EXPECT_EQ(2_mcount, ++elevator[line]);
-/*  elevator.dec(50);
-  EXPECT_EQ(1_mcount, elevator[50]);
-  elevator.dec(50);
-  EXPECT_EQ(0_mcount, elevator[50]);*/
+  EXPECT_EQ(1_mcount, --elevator[line]);
+  EXPECT_EQ(0_mcount, --elevator[line]);
 }
 
 TEST(ElevatorTest, IterateFloorZero) {
@@ -149,6 +147,27 @@ TEST(ElevatorTest, IterateFloorOne) {
   vector<Line> expected{2_line, 5_line};
   vector<Line> actual;
   for (auto value : elevator.all(1_mcount)) {
+    actual.push_back(value);
+  }
+  sort(begin(actual), end(actual));
+  EXPECT_EQ(expected, actual);
+}
+
+
+TEST(ElevatorTest, IterateFloorTwo) {
+  Elevator<3, 2> elevator;
+  ++elevator[5_line];
+  ++elevator[2_line];
+  ++elevator[2_line];
+  ++elevator[3_line];
+  ++elevator[5_line];
+  --elevator[2_line];
+  ++elevator[3_line];
+  ++elevator[5_line];
+  --elevator[5_line];
+  vector<Line> expected{3_line, 5_line};
+  vector<Line> actual;
+  for (auto value : elevator.all(2_mcount)) {
     actual.push_back(value);
   }
   sort(begin(actual), end(actual));

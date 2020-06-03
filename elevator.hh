@@ -27,16 +27,24 @@ class Elevator {
       floor[side].right = &floor[side];
     }
   }
+
   struct ElevatorElement {
     Line line;
     Elevator& instance;
     operator MarkCount() const {
       return instance.elevator[line].floor;
     }
+    // O(1)
     MarkCount operator++() {
+      return reattach_node(MarkCount{++instance.elevator[line].floor});
+    }
+    // O(1)
+    MarkCount operator--() {
+      return reattach_node(MarkCount{--instance.elevator[line].floor});
+    }
+    MarkCount reattach_node(MarkCount current) {
       auto& elevator = instance.elevator;
       auto& floor = instance.floor;
-      MarkCount current = MarkCount{++elevator[line].floor};
       elevator[line].left->right = elevator[line].right;
       elevator[line].right->left = elevator[line].left;
       elevator[line].left = &floor[current];
@@ -44,17 +52,19 @@ class Elevator {
       floor[current].right = &elevator[line];
       floor[current].left->right = &elevator[line];
       return current;
-    }  
+    }
   };
+
   ElevatorElement operator[](Line line) {
     return ElevatorElement{line, *this};
   }
 
-  struct Node {    
+  struct Node {
     MarkCount floor;
     Line index;
     Node *left, *right;
   };
+
   struct Iterator {
     Node *node;
     bool operator!=(const Iterator& that) {
@@ -70,6 +80,7 @@ class Elevator {
       return *this;
     }
   };
+
   struct ElevatorRange {
     Node *root;
     Iterator end() {
@@ -79,6 +90,7 @@ class Elevator {
       return Iterator{root->right};
     }
   };
+
   ElevatorRange all(MarkCount mark) {
     return ElevatorRange{&floor[mark]};
   }
