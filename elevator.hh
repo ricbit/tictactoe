@@ -61,11 +61,17 @@ class Elevator {
       return *this;
     }
   };
-  Iterator end(MarkCount mark) {
-    return Iterator{&floor[mark]};
-  }
-  Iterator begin(MarkCount mark) {
-    return Iterator{floor[mark].right};
+  struct ElevatorRange {
+    Node *root;
+    Iterator end() {
+      return Iterator{root};
+    }
+    Iterator begin() {
+      return Iterator{root->right};
+    }
+  };
+  ElevatorRange all(MarkCount mark) {
+    return ElevatorRange{&floor[mark]};
   }
  private:
   constexpr static int line_size = BoardData<N, D>::line_size;
