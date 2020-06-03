@@ -27,20 +27,29 @@ class Elevator {
       floor[side].right = &floor[side];
     }
   }
-  MarkCount operator[](Line line) const {
-    auto x = elevator[line].floor;
-    return MarkCount{x};
+  struct ElevatorElement {
+    Line line;
+    Elevator& instance;
+    operator MarkCount() const {
+      return instance.elevator[line].floor;
+    }
+    MarkCount operator++() {
+      auto& elevator = instance.elevator;
+      auto& floor = instance.floor;
+      MarkCount current = MarkCount{++elevator[line].floor};
+      elevator[line].left->right = elevator[line].right;
+      elevator[line].right->left = elevator[line].left;
+      elevator[line].left = &floor[current];
+      elevator[line].right = floor[current].right;
+      floor[current].right = &elevator[line];
+      floor[current].left->right = &elevator[line];
+      return current;
+    }  
+  };
+  ElevatorElement operator[](Line line) {
+    return ElevatorElement{line, *this};
   }
-  void inc(Line line) {
-    MarkCount current = MarkCount{++elevator[line].floor};
-    elevator[line].left->right = elevator[line].right;
-    elevator[line].right->left = elevator[line].left;
-    elevator[line].left = &floor[current];
-    elevator[line].right = floor[current].right;
-    floor[current].right = &elevator[line];
-    floor[current].left->right = &elevator[line];
-    
-  }
+
   struct Node {    
     MarkCount floor;
     Line index;

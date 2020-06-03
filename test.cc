@@ -114,17 +114,16 @@ TEST(TrackingListTest, EmptyWorks) {
 TEST(ElevatorTest, StartAtLevelZero) {
   Elevator<5, 3> elevator;
   for (Line line = 0_line; line < BoardData<5, 3>::line_size; ++line) {
-    EXPECT_EQ(0_mcount, elevator[line]);
+    MarkCount count = elevator[line];
+    EXPECT_EQ(0_mcount, count);
   }
 }
 
 TEST(ElevatorTest, IncrementAndDecrement) {
   Elevator<5, 3> elevator;
   Line line = 50_line;
-  elevator.inc(line);
-  EXPECT_EQ(1_mcount, elevator[line]);
-  elevator.inc(line);
-  EXPECT_EQ(2_mcount, elevator[line]);
+  EXPECT_EQ(1_mcount, ++elevator[line]);
+  EXPECT_EQ(2_mcount, ++elevator[line]);
 /*  elevator.dec(50);
   EXPECT_EQ(1_mcount, elevator[50]);
   elevator.dec(50);
@@ -145,8 +144,8 @@ TEST(ElevatorTest, IterateFloorZero) {
 
 TEST(ElevatorTest, IterateFloorOne) {
   Elevator<3, 2> elevator;
-  elevator.inc(5_line);
-  elevator.inc(2_line);
+  ++elevator[5_line];
+  ++elevator[2_line];
   vector<Line> expected{2_line, 5_line};
   vector<Line> actual;
   for (auto value : elevator.all(1_mcount)) {
