@@ -174,6 +174,29 @@ TEST(ElevatorTest, IterateFloorTwo) {
   EXPECT_EQ(expected, actual);
 }
 
+TEST(ElevatorTest, IterateFloorThree) {
+  Elevator<4, 2> elevator;
+  ++elevator[5_line];
+  ++elevator[5_line];
+  ++elevator[5_line];
+  vector<Line> expected{5_line};
+  vector<Line> actual;
+  for (auto value : elevator.all(3_mcount)) {
+    actual.push_back(value);
+  }
+  sort(begin(actual), end(actual));
+  EXPECT_EQ(expected, actual);
+}
+
+TEST(ElevatorTest, IterateEmptyFloor) {
+  Elevator<3, 2> elevator;
+  int count = 0;
+  for ([[maybe_unused]] auto value : elevator.all(2_mcount)) {
+    count++;
+  }
+  EXPECT_EQ(0, count);
+}
+
 TEST(ElevatorTest, CopyPreservesOriginal) {
   Elevator<3, 2> elevator;
   ++elevator[4_line];

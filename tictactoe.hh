@@ -45,8 +45,7 @@ class ForcingMove {
       const T& current,
       const T& opponent,
       const Bitfield<N, D>& open_positions) {
-    //for (Line line : state.get_line_marks(MarkCount{N - 1})) {
-    for (Line line = 0_line; line < line_size; ++line) {
+    for (Line line : state.get_line_marks(MarkCount{N - 1})) {
       if (current[line] == N - 1 && opponent[line] == 0) {
         Position trial = state.get_xor_table(line);
         if (open_positions[trial]) {

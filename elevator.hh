@@ -37,7 +37,7 @@ class Elevator {
     if (other_node->index == line_size) {
       return &floor[other_node->floor];
     } else {
-      return &elevator[Line(other_node->floor)];
+      return &elevator[Line(other_node->index)];
     }
   }
 
@@ -72,13 +72,14 @@ class Elevator {
     }
     MarkCount reattach_node(MarkCount current) {
       auto& elevator = instance.elevator;
-      auto& floor = instance.floor;
+      auto* floor = &instance.floor[current];
+      auto* last = instance.floor[current].left;
       elevator[line].left->right = elevator[line].right;
       elevator[line].right->left = elevator[line].left;
-      elevator[line].left = &floor[current];
-      elevator[line].right = floor[current].right;
-      floor[current].right = &elevator[line];
-      floor[current].left->right = &elevator[line];
+      elevator[line].left = last;
+      elevator[line].right = floor;
+      floor->left = &elevator[line];
+      last->right = &elevator[line];
       return current;
     }
   };
