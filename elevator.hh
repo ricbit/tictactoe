@@ -53,7 +53,7 @@ class Elevator {
       floor[mark].floor = other.floor[mark].floor;
       floor[mark].right = convert_pointer(other, other.floor[mark].right);
       floor[mark].left = convert_pointer(other, other.floor[mark].left);
-    }    
+    }
   }
 
   struct ElevatorElement {
@@ -94,7 +94,9 @@ class Elevator {
   };
 
   struct Iterator {
-    Node *node;
+    const Node *node;
+    Iterator(const Node* node) : node(node) {
+    }
     bool operator!=(const Iterator& that) {
       return node != that.node;
     }
@@ -110,7 +112,7 @@ class Elevator {
   };
 
   struct ElevatorRange {
-    Node *root;
+    const Node *root;
     Iterator end() {
       return Iterator{root};
     }
@@ -119,7 +121,7 @@ class Elevator {
     }
   };
 
-  ElevatorRange all(MarkCount mark) {
+  ElevatorRange all(MarkCount mark) const {
     return ElevatorRange{&floor[mark]};
   }
  private:

@@ -101,7 +101,7 @@ class State {
       auto& current = get_current(mark);
       current[line]++;
       xor_table[line] ^= pos;
-      //++line_marks[line];
+      ++line_marks[line];
       if (current[line] == N) {
         return true;
       }
@@ -121,7 +121,7 @@ class State {
     return false;
   }
 
-  auto get_line_marks(MarkCount mark) {
+  auto get_line_marks(MarkCount mark) const {
     return line_marks.all(mark);
   }
 

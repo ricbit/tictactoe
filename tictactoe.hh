@@ -45,9 +45,10 @@ class ForcingMove {
       const T& current,
       const T& opponent,
       const Bitfield<N, D>& open_positions) {
-    for (Line i = 0_line; i < line_size; ++i) {
-      if (current[i] == N - 1 && opponent[i] == 0) {
-        Position trial = state.get_xor_table(i);
+    //for (Line line : state.get_line_marks(MarkCount{N - 1})) {
+    for (Line line = 0_line; line < line_size; ++line) {
+      if (current[line] == N - 1 && opponent[line] == 0) {
+        Position trial = state.get_xor_table(line);
         if (open_positions[trial]) {
           return trial;
         }
@@ -191,8 +192,7 @@ class HeatMap {
   vector<int> get_scores(Mark mark, const vector<Position>& open) {
     Mark flipped = flip(mark);
     vector<int> score(open.size());
-    //transform(execution::par_unseq, begin(open), end(open), begin(score),
-    transform(begin(open), end(open), begin(score),
+    transform(execution::par_unseq, begin(open), end(open), begin(score),
         [&](Position pos) {
       return monte_carlo(mark, flipped, pos);
     });
