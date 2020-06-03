@@ -191,7 +191,8 @@ class HeatMap {
   vector<int> get_scores(Mark mark, const vector<Position>& open) {
     Mark flipped = flip(mark);
     vector<int> score(open.size());
-    transform(execution::par_unseq, begin(open), end(open), begin(score),
+    //transform(execution::par_unseq, begin(open), end(open), begin(score),
+    transform(begin(open), end(open), begin(score),
         [&](Position pos) {
       return monte_carlo(mark, flipped, pos);
     });

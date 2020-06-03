@@ -20,12 +20,40 @@ class Elevator {
     elevator[0_line].right = &elevator[1_line];
     elevator[Line(line_size - 1)].left = &elevator[Line(line_size - 2)];
     elevator[Line(line_size - 1)].right = &floor[0_mcount];
+    for (MarkCount mark = 0_mcount; mark <= N; ++mark) {
+      floor[mark].index = line_size;
+      floor[mark].floor = mark;
+    }
     floor[0_mcount].left = &elevator[Line(line_size - 1)];
     floor[0_mcount].right = &elevator[Line(0)];
-    for (MarkCount side = 1_mcount; side <= N; ++side) {
-      floor[side].left = &floor[side];
-      floor[side].right = &floor[side];
+    for (MarkCount mark = 1_mcount; mark <= N; ++mark) {
+      floor[mark].left = &floor[mark];
+      floor[mark].right = &floor[mark];
     }
+  }
+
+  template<typename T>
+  T* convert_pointer(const Elevator& other, const T* other_node) {
+    if (other_node->index == line_size) {
+      return &floor[other_node->floor];
+    } else {
+      return &elevator[Line(other_node->floor)];
+    }
+  }
+
+  Elevator(const Elevator& other) {
+    for (Line line = 0_line; line < line_size; ++line) {
+      elevator[line].index = other.elevator[line].index;
+      elevator[line].floor = other.elevator[line].floor;
+      elevator[line].right = convert_pointer(other, other.elevator[line].right);
+      elevator[line].left = convert_pointer(other, other.elevator[line].left);
+    }
+    for (MarkCount mark = 0_mcount; mark <= N; ++mark) {
+      floor[mark].index = other.floor[mark].index;
+      floor[mark].floor = other.floor[mark].floor;
+      floor[mark].right = convert_pointer(other, other.floor[mark].right);
+      floor[mark].left = convert_pointer(other, other.floor[mark].left);
+    }    
   }
 
   struct ElevatorElement {
@@ -95,7 +123,7 @@ class Elevator {
     return ElevatorRange{&floor[mark]};
   }
  private:
-  constexpr static int line_size = BoardData<N, D>::line_size;
+  constexpr static Line line_size = BoardData<N, D>::line_size;
   sarray<Line, Node, line_size> elevator;
   sarray<MarkCount, Node, N + 1> floor;
 };

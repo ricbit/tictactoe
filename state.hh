@@ -15,6 +15,7 @@
 #include "semantic.hh"
 #include "boarddata.hh"
 #include "tracking.hh"
+#include "elevator.hh"
 
 template<int N, int D>
 class State {
@@ -100,6 +101,7 @@ class State {
       auto& current = get_current(mark);
       current[line]++;
       xor_table[line] ^= pos;
+      //++line_marks[line];
       if (current[line] == N) {
         return true;
       }
@@ -117,6 +119,10 @@ class State {
       }
     }
     return false;
+  }
+
+  auto get_line_marks(MarkCount mark) {
+    return line_marks.all(mark);
   }
 
   const Position get_xor_table(Line line) const {
@@ -140,6 +146,7 @@ class State {
   sarray<Position, LineCount, board_size> current_accumulation;
   NodeLine trie_node;
   TrackingList<N, D> empty_cells;
+  Elevator<N, D> line_marks;
 
   auto& get_current(Mark mark) {
     return mark == Mark::X ? x_marks_on_line : o_marks_on_line;

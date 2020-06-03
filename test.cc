@@ -174,6 +174,14 @@ TEST(ElevatorTest, IterateFloorTwo) {
   EXPECT_EQ(expected, actual);
 }
 
-
+TEST(ElevatorTest, CopyPreservesOriginal) {
+  Elevator<3, 2> elevator;
+  ++elevator[4_line];
+  ++elevator[4_line];
+  Elevator<3, 2> other(elevator);
+  --other[4_line];
+  EXPECT_EQ(2_mcount, MarkCount{elevator[4_line]});
+  EXPECT_EQ(1_mcount, MarkCount{other[4_line]});
+}
 
 }
