@@ -56,9 +56,8 @@ TEST(TrackingListTest, ProperlyBuilt) {
 TEST(TrackingListTest, IterateElements) {
   TrackingList<3, 1> tracking;
   array expected{0_pos, 1_pos, 2_pos};
-  int i = 0;
-  for (auto it = begin(tracking); it != end(tracking); ++it) {
-    EXPECT_EQ(expected[i++], *it);
+  for (int i = 0; auto value : tracking) {
+    EXPECT_EQ(expected[i++], value);
   }
 }
 
@@ -68,9 +67,8 @@ TEST(TrackingListTest, DeleteElements) {
   tracking.remove(0_pos);
   tracking.remove(2_pos);
   tracking.remove(4_pos);
-  int i = 0;
-  for (auto it = begin(tracking); it != end(tracking); ++it) {
-    EXPECT_EQ(expected[i++], *it);
+  for (int i = 0; auto value : tracking) {
+    EXPECT_EQ(expected[i++], value);
   }
 }
 
