@@ -36,11 +36,11 @@ class Elevator {
       return get_floor(line);
     }
     // O(1)
-    MarkCount operator++() {
+    MarkCount operator+=(Mark mark) {
       return reattach_node(MarkCount{++get_floor(line)});
     }
     // O(1)
-    MarkCount operator--() {
+    MarkCount operator-=(Mark mark) {
       return reattach_node(MarkCount{--get_floor(line)});
     }
    private:

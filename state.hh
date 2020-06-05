@@ -101,7 +101,7 @@ class State {
       auto& current = get_current(mark);
       current[line]++;
       xor_table[line] ^= pos;
-      ++line_marks[line];
+      line_marks[line] += mark;
       if (current[line] == N) {
         return true;
       }

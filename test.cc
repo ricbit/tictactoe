@@ -122,10 +122,10 @@ TEST(ElevatorTest, StartAtLevelZero) {
 TEST(ElevatorTest, IncrementAndDecrement) {
   Elevator<5, 3> elevator;
   Line line = 50_line;
-  EXPECT_EQ(1_mcount, ++elevator[line]);
-  EXPECT_EQ(2_mcount, ++elevator[line]);
-  EXPECT_EQ(1_mcount, --elevator[line]);
-  EXPECT_EQ(0_mcount, --elevator[line]);
+  EXPECT_EQ(1_mcount, elevator[line] += Mark::X);
+  EXPECT_EQ(2_mcount, elevator[line] += Mark::X);
+  EXPECT_EQ(1_mcount, elevator[line] -= Mark::X);
+  EXPECT_EQ(0_mcount, elevator[line] -= Mark::X);
 }
 
 TEST(ElevatorTest, IterateFloorZero) {
@@ -142,8 +142,8 @@ TEST(ElevatorTest, IterateFloorZero) {
 
 TEST(ElevatorTest, IterateFloorOne) {
   Elevator<3, 2> elevator;
-  ++elevator[5_line];
-  ++elevator[2_line];
+  elevator[5_line] += Mark::X;
+  elevator[2_line] += Mark::X;
   vector<Line> expected{2_line, 5_line};
   vector<Line> actual;
   for (auto value : elevator.all(1_mcount)) {
@@ -156,15 +156,15 @@ TEST(ElevatorTest, IterateFloorOne) {
 
 TEST(ElevatorTest, IterateFloorTwo) {
   Elevator<3, 2> elevator;
-  ++elevator[5_line];
-  ++elevator[2_line];
-  ++elevator[2_line];
-  ++elevator[3_line];
-  ++elevator[5_line];
-  --elevator[2_line];
-  ++elevator[3_line];
-  ++elevator[5_line];
-  --elevator[5_line];
+  elevator[5_line] += Mark::X;
+  elevator[2_line] += Mark::X;
+  elevator[2_line] += Mark::X;
+  elevator[3_line] += Mark::X;
+  elevator[5_line] += Mark::X;
+  elevator[2_line] -= Mark::X;
+  elevator[3_line] += Mark::X;
+  elevator[5_line] += Mark::X;
+  elevator[5_line] -= Mark::X;
   vector<Line> expected{3_line, 5_line};
   vector<Line> actual;
   for (auto value : elevator.all(2_mcount)) {
@@ -176,9 +176,9 @@ TEST(ElevatorTest, IterateFloorTwo) {
 
 TEST(ElevatorTest, IterateFloorThree) {
   Elevator<4, 2> elevator;
-  ++elevator[5_line];
-  ++elevator[5_line];
-  ++elevator[5_line];
+  elevator[5_line] += Mark::X;
+  elevator[5_line] += Mark::X;
+  elevator[5_line] += Mark::X;
   vector<Line> expected{5_line};
   vector<Line> actual;
   for (auto value : elevator.all(3_mcount)) {
@@ -199,10 +199,10 @@ TEST(ElevatorTest, IterateEmptyFloor) {
 
 TEST(ElevatorTest, CopyPreservesOriginal) {
   Elevator<3, 2> elevator;
-  ++elevator[4_line];
-  ++elevator[4_line];
+  elevator[4_line] += Mark::X;
+  elevator[4_line] += Mark::X;
   Elevator<3, 2> other(elevator);
-  --other[4_line];
+  other[4_line] -= Mark::X;
   EXPECT_EQ(2_mcount, MarkCount{elevator[4_line]});
   EXPECT_EQ(1_mcount, MarkCount{other[4_line]});
 }
