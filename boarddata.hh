@@ -286,9 +286,10 @@ class Geometry {
 };
 
 enum class Mark {
-  X,
-  O,
-  empty
+  empty = 0,
+  X = 1,
+  O = 2,
+  both = 3
 };
 
 Mark flip(Mark mark) {
