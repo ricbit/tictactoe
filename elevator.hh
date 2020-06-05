@@ -23,9 +23,9 @@ class Elevator {
     elevator[NodeP(line_size - 1)].right = floor(0_mcount);
     elevator[floor(0_mcount)].left = NodeP{line_size - 1};
     elevator[floor(0_mcount)].right = 0_np;
-    for (MarkCount mark = 1_mcount; mark <= N; ++mark) {
-      elevator[floor(mark)].left = floor(mark);
-      elevator[floor(mark)].right = floor(mark);
+    for (MarkCount count = 1_mcount; count <= N; ++count) {
+      elevator[floor(count)].left = floor(count);
+      elevator[floor(count)].right = floor(count);
     }
   }
 
@@ -94,8 +94,8 @@ class Elevator {
     }
   };
 
-  ElevatorRange all(MarkCount mark) const {
-    return ElevatorRange{*this, floor(mark)};
+  ElevatorRange all(MarkCount count) const {
+    return ElevatorRange{*this, floor(count)};
   }
  private:
   struct ElevatorValue {
@@ -109,8 +109,8 @@ class Elevator {
     NodeP left, right;
   };
 
-  NodeP floor(MarkCount mark) const {
-    return NodeP{line_size + mark};
+  NodeP floor(MarkCount count) const {
+    return NodeP{line_size + count};
   }
 
   constexpr static Line line_size = BoardData<N, D>::line_size;
