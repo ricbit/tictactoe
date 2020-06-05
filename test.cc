@@ -133,7 +133,7 @@ TEST(ElevatorTest, IterateFloorZero) {
   vector<Line> expected(8);
   iota(begin(expected), end(expected), 0_line);
   vector<Line> actual;
-  for (auto value : elevator.all(0_mcount)) {
+  for (auto value : elevator.all(0_mcount, Mark::X)) {
     actual.push_back(value);
   }
   sort(begin(actual), end(actual));
@@ -146,7 +146,7 @@ TEST(ElevatorTest, IterateFloorOne) {
   elevator[2_line] += Mark::X;
   vector<Line> expected{2_line, 5_line};
   vector<Line> actual;
-  for (auto value : elevator.all(1_mcount)) {
+  for (auto value : elevator.all(1_mcount, Mark::X)) {
     actual.push_back(value);
   }
   sort(begin(actual), end(actual));
@@ -167,7 +167,7 @@ TEST(ElevatorTest, IterateFloorTwo) {
   elevator[5_line] -= Mark::X;
   vector<Line> expected{3_line, 5_line};
   vector<Line> actual;
-  for (auto value : elevator.all(2_mcount)) {
+  for (auto value : elevator.all(2_mcount, Mark::X)) {
     actual.push_back(value);
   }
   sort(begin(actual), end(actual));
@@ -181,7 +181,7 @@ TEST(ElevatorTest, IterateFloorThree) {
   elevator[5_line] += Mark::X;
   vector<Line> expected{5_line};
   vector<Line> actual;
-  for (auto value : elevator.all(3_mcount)) {
+  for (auto value : elevator.all(3_mcount, Mark::X)) {
     actual.push_back(value);
   }
   sort(begin(actual), end(actual));
@@ -191,7 +191,7 @@ TEST(ElevatorTest, IterateFloorThree) {
 TEST(ElevatorTest, IterateEmptyFloor) {
   Elevator<3, 2> elevator;
   int count = 0;
-  for ([[maybe_unused]] auto value : elevator.all(2_mcount)) {
+  for ([[maybe_unused]] auto value : elevator.all(2_mcount, Mark::X)) {
     count++;
   }
   EXPECT_EQ(0, count);
@@ -206,5 +206,24 @@ TEST(ElevatorTest, CopyPreservesOriginal) {
   EXPECT_EQ(2_mcount, MarkCount{elevator[4_line]});
   EXPECT_EQ(1_mcount, MarkCount{other[4_line]});
 }
+
+TEST(ElevatorTest, IterateDifferentMarks) {
+  Elevator<3, 2> elevator;
+  elevator[2_line] += Mark::X;
+  elevator[2_line] += Mark::X;
+  elevator[3_line] += Mark::O;
+  elevator[3_line] += Mark::O;
+  elevator[5_line] += Mark::X;
+  elevator[5_line] += Mark::X;
+  elevator[5_line] += Mark::X;
+  vector<Line> expected{2_line};
+  vector<Line> actual;
+  for (auto value : elevator.all(2_mcount, Mark::X)) {
+    actual.push_back(value);
+  }
+  sort(begin(actual), end(actual));
+  EXPECT_EQ(expected, actual);
+}
+
 
 }
