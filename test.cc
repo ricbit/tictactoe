@@ -133,7 +133,7 @@ TEST(ElevatorTest, IterateFloorZero) {
   vector<Line> expected(8);
   iota(begin(expected), end(expected), 0_line);
   vector<Line> actual;
-  for (auto value : elevator.all(0_mcount, Mark::X)) {
+  for (auto value : elevator.all(0_mcount, Mark::empty)) {
     actual.push_back(value);
   }
   sort(begin(actual), end(actual));

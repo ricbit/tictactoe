@@ -27,6 +27,13 @@ class Elevator {
       elevator[floor(count, Mark::empty)].left = floor(count, Mark::empty);
       elevator[floor(count, Mark::empty)].right = floor(count, Mark::empty);
     }
+    for (Mark mark = Mark::X; mark <= Mark::both;) {
+      for (MarkCount count = 0_mcount; count <= N; ++count) {
+        elevator[floor(count, mark)].left = floor(count, mark);
+        elevator[floor(count, mark)].right = floor(count, mark);
+      }
+      mark = static_cast<Mark>(1 + static_cast<int>(mark));
+    }
   }
 
   struct ElevatorElement {
@@ -71,6 +78,14 @@ class Elevator {
 
   ElevatorElement operator[](Line line) {
     return ElevatorElement{NodeP{line}, *this};
+  }
+
+  void dump() const {
+    cout << "\n----\n";
+    for (int i = 0; auto node : elevator) {
+      cout << "node " << i++ << " left " << node.left;
+      cout << " right " << node.right << "\n";
+    }
   }
 
   struct Iterator {
