@@ -11,8 +11,7 @@ class Elevator {
  public:
   Elevator() {
     for (NodeP line = 0_np; line < line_size; ++line) {
-      elevator[line].index = Line{line};
-      elevator[line].floor = 0_mcount;
+      elevator[line].value = ElevatorValue{0_mcount, Line{line}};
     }
     for (NodeP line = 1_np; line < line_size - 1; ++line) {
       elevator[line].left = NodeP{line - 1};
@@ -22,10 +21,6 @@ class Elevator {
     elevator[0_np].right = 1_np;
     elevator[NodeP(line_size - 1)].left = NodeP{line_size - 2};
     elevator[NodeP(line_size - 1)].right = floor(0_mcount);
-    for (MarkCount mark = 0_mcount; mark <= N; ++mark) {
-      elevator[floor(mark)].index = line_size;
-      elevator[floor(mark)].floor = mark;
-    }
     elevator[floor(0_mcount)].left = NodeP{line_size - 1};
     elevator[floor(0_mcount)].right = 0_np;
     for (MarkCount mark = 1_mcount; mark <= N; ++mark) {
@@ -34,23 +29,23 @@ class Elevator {
     }
   }
 
-  NodeP floor(MarkCount mark) const {
-    return NodeP{line_size + mark};
-  }
-
   struct ElevatorElement {
     NodeP line;
     Elevator& instance;
     operator MarkCount() const {
-      return instance.elevator[line].floor;
+      return get_floor(line);
     }
     // O(1)
     MarkCount operator++() {
-      return reattach_node(MarkCount{++instance.elevator[line].floor});
+      return reattach_node(MarkCount{++get_floor(line)});
     }
     // O(1)
     MarkCount operator--() {
-      return reattach_node(MarkCount{--instance.elevator[line].floor});
+      return reattach_node(MarkCount{--get_floor(line)});
+    }
+   private:
+    MarkCount& get_floor(const NodeP line) const {
+      return get<ElevatorValue>(instance.elevator[line].value).floor;
     }
     MarkCount reattach_node(MarkCount current) {
       auto& elevator = instance.elevator;
@@ -71,12 +66,6 @@ class Elevator {
     return ElevatorElement{NodeP{line}, *this};
   }
 
-  struct Node {
-    MarkCount floor;
-    Line index;
-    NodeP left, right;
-  };
-
   struct Iterator {
     const Elevator& instance;
     NodeP node;
@@ -85,7 +74,7 @@ class Elevator {
     }
     // O(1)
     Line operator*() const {
-      return instance.elevator[node].index;
+      return get<ElevatorValue>(instance.elevator[node].value).index;
     }
     // O(1)
     Iterator& operator++() {
@@ -109,6 +98,21 @@ class Elevator {
     return ElevatorRange{*this, floor(mark)};
   }
  private:
+  struct ElevatorValue {
+    MarkCount floor;
+    Line index;
+  };
+  struct FloorValue {
+  };
+  struct Node {
+    variant<ElevatorValue, FloorValue> value;
+    NodeP left, right;
+  };
+
+  NodeP floor(MarkCount mark) const {
+    return NodeP{line_size + mark};
+  }
+
   constexpr static Line line_size = BoardData<N, D>::line_size;
   sarray<NodeP, Node, line_size + N + 1> elevator;
 };
