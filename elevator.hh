@@ -4,60 +4,42 @@
 #include <variant>
 #include "boarddata.hh"
 
+SEMANTIC_INDEX(NodeP, np);
+
 template<int N, int D>
 class Elevator {
  public:
   Elevator() {
-    for (Line line = 0_line; line < line_size; ++line) {
-      elevator[line].index = line;
+    for (NodeP line = 0_np; line < line_size; ++line) {
+      elevator[line].index = Line{line};
       elevator[line].floor = 0_mcount;
     }
-    for (Line line = 1_line; line < line_size - 1; ++line) {
-      elevator[line].left = &elevator[Line(line - 1)];
-      elevator[line].right = &elevator[Line(line + 1)];
+    for (NodeP line = 1_np; line < line_size - 1; ++line) {
+      elevator[line].left = NodeP{line - 1};
+      elevator[line].right = NodeP{line + 1};
     }
-    elevator[0_line].left = &floor[0_mcount];
-    elevator[0_line].right = &elevator[1_line];
-    elevator[Line(line_size - 1)].left = &elevator[Line(line_size - 2)];
-    elevator[Line(line_size - 1)].right = &floor[0_mcount];
+    elevator[0_np].left = floor(0_mcount);
+    elevator[0_np].right = 1_np;
+    elevator[NodeP(line_size - 1)].left = NodeP{line_size - 2};
+    elevator[NodeP(line_size - 1)].right = floor(0_mcount);
     for (MarkCount mark = 0_mcount; mark <= N; ++mark) {
-      floor[mark].index = line_size;
-      floor[mark].floor = mark;
+      elevator[floor(mark)].index = line_size;
+      elevator[floor(mark)].floor = mark;
     }
-    floor[0_mcount].left = &elevator[Line(line_size - 1)];
-    floor[0_mcount].right = &elevator[Line(0)];
+    elevator[floor(0_mcount)].left = NodeP{line_size - 1};
+    elevator[floor(0_mcount)].right = 0_np;
     for (MarkCount mark = 1_mcount; mark <= N; ++mark) {
-      floor[mark].left = &floor[mark];
-      floor[mark].right = &floor[mark];
+      elevator[floor(mark)].left = floor(mark);
+      elevator[floor(mark)].right = floor(mark);
     }
   }
 
-  template<typename T>
-  T* convert_pointer(const Elevator& other, const T* other_node) {
-    if (other_node->index == line_size) {
-      return &floor[other_node->floor];
-    } else {
-      return &elevator[Line(other_node->index)];
-    }
-  }
-
-  Elevator(const Elevator& other) {
-    for (Line line = 0_line; line < line_size; ++line) {
-      elevator[line].index = other.elevator[line].index;
-      elevator[line].floor = other.elevator[line].floor;
-      elevator[line].right = convert_pointer(other, other.elevator[line].right);
-      elevator[line].left = convert_pointer(other, other.elevator[line].left);
-    }
-    for (MarkCount mark = 0_mcount; mark <= N; ++mark) {
-      floor[mark].index = other.floor[mark].index;
-      floor[mark].floor = other.floor[mark].floor;
-      floor[mark].right = convert_pointer(other, other.floor[mark].right);
-      floor[mark].left = convert_pointer(other, other.floor[mark].left);
-    }
+  NodeP floor(MarkCount mark) const {
+    return NodeP{line_size + mark};
   }
 
   struct ElevatorElement {
-    Line line;
+    NodeP line;
     Elevator& instance;
     operator MarkCount() const {
       return instance.elevator[line].floor;
@@ -72,63 +54,63 @@ class Elevator {
     }
     MarkCount reattach_node(MarkCount current) {
       auto& elevator = instance.elevator;
-      auto* floor = &instance.floor[current];
-      auto* last = instance.floor[current].left;
-      elevator[line].left->right = elevator[line].right;
-      elevator[line].right->left = elevator[line].left;
-      elevator[line].left = last;
-      elevator[line].right = floor;
-      floor->left = &elevator[line];
-      last->right = &elevator[line];
+      NodeP floor = instance.floor(current);
+      NodeP last = elevator[floor].left;
+      auto& eline = elevator[line];
+      elevator[eline.left].right = eline.right;
+      elevator[eline.right].left = eline.left;
+      eline.left = last;
+      eline.right = floor;
+      elevator[floor].left = line;
+      elevator[last].right = line;
       return current;
     }
   };
 
   ElevatorElement operator[](Line line) {
-    return ElevatorElement{line, *this};
+    return ElevatorElement{NodeP{line}, *this};
   }
 
   struct Node {
     MarkCount floor;
     Line index;
-    Node *left, *right;
+    NodeP left, right;
   };
 
   struct Iterator {
-    const Node *node;
-    Iterator(const Node* node) : node(node) {
-    }
-    bool operator!=(const Iterator& that) {
+    const Elevator& instance;
+    NodeP node;
+    bool operator!=(const Iterator& that) const {
       return node != that.node;
     }
     // O(1)
-    Line operator*() {
-      return node->index;
+    Line operator*() const {
+      return instance.elevator[node].index;
     }
     // O(1)
     Iterator& operator++() {
-      node = node->right;
+      node = instance.elevator[node].right;
       return *this;
     }
   };
 
   struct ElevatorRange {
-    const Node *root;
-    Iterator end() {
-      return Iterator{root};
+    const Elevator& instance;
+    const NodeP root;
+    Iterator end() const {
+      return Iterator{instance, root};
     }
-    Iterator begin() {
-      return Iterator{root->right};
+    Iterator begin() const {
+      return Iterator{instance, instance.elevator[root].right};
     }
   };
 
   ElevatorRange all(MarkCount mark) const {
-    return ElevatorRange{&floor[mark]};
+    return ElevatorRange{*this, floor(mark)};
   }
  private:
   constexpr static Line line_size = BoardData<N, D>::line_size;
-  sarray<Line, Node, line_size> elevator;
-  sarray<MarkCount, Node, N + 1> floor;
+  sarray<NodeP, Node, line_size + N + 1> elevator;
 };
 
 #endif
