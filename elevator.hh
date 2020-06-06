@@ -66,8 +66,8 @@ class Elevator {
       NodeP next_floor = instance.floor(next, next_mark);
       NodeP last = elevator[next_floor].left;
       auto& eline = elevator[line];
-      elevator[eline.left].right = eline.right;
       elevator[eline.right].left = eline.left;
+      elevator[eline.left].right = eline.right;
       eline.left = last;
       eline.right = next_floor;
       prev_mark = next_mark;

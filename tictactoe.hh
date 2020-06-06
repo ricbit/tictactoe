@@ -40,11 +40,8 @@ class ForcingMove {
   const State<N, D>& state;
   constexpr static Line line_size = BoardData<N, D>::line_size;
 
-  template<typename T>
   optional<Position> find_forcing_move(
       Mark mark,
-      const T& current,
-      const T& opponent,
       const Bitfield<N, D>& open_positions) {
     for (Line line : state.get_line_marks(MarkCount{N - 1}, mark)) {
       Position trial = state.get_xor_table(line);
@@ -59,12 +56,9 @@ class ForcingMove {
 
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
-    const auto& current = state.get_current(mark);
-    const auto& opponent = state.get_opponent(mark);
     return
-        find_forcing_move(mark, current, opponent, open_positions) ||
-        [&](){ return find_forcing_move(
-            flip(mark), opponent, current, open_positions); };
+        find_forcing_move(mark, open_positions) ||
+        [&](){ return find_forcing_move(flip(mark), open_positions); };
   }
 };
 
@@ -213,7 +207,7 @@ class HeatMap {
   }
 
   int monte_carlo(Mark mark, Mark flipped, Position pos) {
-    vector<int> win_counts(3);
+    array<int, 3> win_counts = {0, 0, 0};
     for (int i = 0; i < trials; ++i) {
       State<N, D> cloned(state);
       cloned.play(pos, mark);
