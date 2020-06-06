@@ -227,5 +227,27 @@ TEST(ElevatorTest, IterateDifferentMarks) {
   EXPECT_EQ(expected, actual);
 }
 
+TEST(ElevatorTest, CheckLine) {
+  Elevator<3, 2> elevator;
+  EXPECT_TRUE(elevator.check(2_line, 0_mcount, Mark::empty));
+  EXPECT_FALSE(elevator.check(2_line, 1_mcount, Mark::X));
+  EXPECT_FALSE(elevator.check(2_line, 2_mcount, Mark::X));
+  EXPECT_FALSE(elevator.check(2_line, 3_mcount, Mark::both));
+  elevator[2_line] += Mark::X;
+  EXPECT_FALSE(elevator.check(2_line, 0_mcount, Mark::empty));
+  EXPECT_TRUE(elevator.check(2_line, 1_mcount, Mark::X));
+  EXPECT_FALSE(elevator.check(2_line, 2_mcount, Mark::X));
+  EXPECT_FALSE(elevator.check(2_line, 3_mcount, Mark::both));
+  elevator[2_line] += Mark::X;
+  EXPECT_FALSE(elevator.check(2_line, 0_mcount, Mark::empty));
+  EXPECT_FALSE(elevator.check(2_line, 1_mcount, Mark::X));
+  EXPECT_TRUE(elevator.check(2_line, 2_mcount, Mark::X));
+  EXPECT_FALSE(elevator.check(2_line, 3_mcount, Mark::both));
+  elevator[2_line] += Mark::O;
+  EXPECT_FALSE(elevator.check(2_line, 0_mcount, Mark::empty));
+  EXPECT_FALSE(elevator.check(2_line, 1_mcount, Mark::X));
+  EXPECT_FALSE(elevator.check(2_line, 2_mcount, Mark::X));
+  EXPECT_TRUE(elevator.check(2_line, 3_mcount, Mark::both));
+}
 
 }

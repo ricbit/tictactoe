@@ -120,6 +120,12 @@ class Elevator {
   ElevatorRange all(MarkCount count, Mark mark) const {
     return ElevatorRange{*this, floor(count, mark)};
   }
+
+  bool check(Line line, MarkCount count, Mark mark) const {
+    return elevator_value(line).floor == count &&
+           elevator_value(line).mark == mark;
+  }
+
  private:
   struct ElevatorValue {
     Mark mark;
@@ -135,6 +141,10 @@ class Elevator {
 
   NodeP floor(MarkCount count, Mark mark) const {
     return NodeP{line_size + static_cast<int>(mark) * (N + 1) + count};
+  }
+
+  const ElevatorValue& elevator_value(Line line) const {
+    return get<ElevatorValue>(elevator[NodeP(line)].value);
   }
 
   constexpr static Line line_size = BoardData<N, D>::line_size;
