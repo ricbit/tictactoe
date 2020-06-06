@@ -10,6 +10,9 @@ tictactoe : tictactoe.cc ${HEADERS}
 minimax : minimax.cc ${HEADERS}
 	g++-10 -std=c++2a minimax.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
+minimaxc : minimax.cc ${HEADERS}
+	clang-10 -std=c++2a minimax.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+
 phasediag : phasediag.cc ${HEADERS}
 	g++-10 -std=c++2a phasediag.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
 
@@ -45,4 +48,4 @@ clean :
 	rm -f test asm tictactoe
 
 cppcheck :
-	cppcheck --enable=style tictactoe.cc heatmap.cc minimax.cc
+	cppcheck --enable=style,warning tictactoe.cc heatmap.cc minimax.cc

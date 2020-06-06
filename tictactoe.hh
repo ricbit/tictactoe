@@ -113,10 +113,11 @@ class BiasedRandom {
 
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
-    int total = 0;
-    for (Position pos : open_positions.all()) {
-      total += state.get_current_accumulation(pos);
-    }
+    auto open_pos = open_positions.all();
+    int total = accumulate(begin(open_pos), end(open_pos), 0,
+      [&](int a, auto pos) {
+        return a + state.get_current_accumulation(pos);
+      });
     uniform_int_distribution<int> random_position(0, total - 1);
     int chosen = random_position(generator);
     int previous = 0;

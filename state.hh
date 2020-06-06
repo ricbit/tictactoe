@@ -137,6 +137,14 @@ class State {
     return board[pos];
   }
 
+  void print_accumulation() {
+    data.print(data.board_size, [&](Position k) {
+      return data.decode(k);
+    }, [&](Position k) {
+      return data.encode_points(current_accumulation[k]);
+    });
+  }
+
  private:
   const BoardData<N, D>& data;
   sarray<Position, Mark, board_size> board;
@@ -150,18 +158,6 @@ class State {
 
   auto& get_current(Mark mark) {
     return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
-  }
-
-  auto& get_opponent(Mark mark) {
-    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
-  }
-
-  void print_accumulation() {
-    data.print(data.board_size, [&](Position k) {
-      return data.decode(k);
-    }, [&](Position k) {
-      return data.encode_points(current_accumulation[k]);
-    });
   }
 
   char encode_position(Mark pos) const {
