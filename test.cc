@@ -216,6 +216,8 @@ TEST(ElevatorTest, IterateDifferentMarks) {
   elevator[5_line] += Mark::X;
   elevator[5_line] += Mark::X;
   elevator[5_line] += Mark::X;
+  elevator[4_line] += Mark::O;
+  elevator[4_line] += Mark::X;
   vector<Line> expected{2_line};
   vector<Line> actual;
   for (auto value : elevator.all(2_mcount, Mark::X)) {

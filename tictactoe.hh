@@ -42,15 +42,14 @@ class ForcingMove {
 
   template<typename T>
   optional<Position> find_forcing_move(
+      Mark mark,
       const T& current,
       const T& opponent,
       const Bitfield<N, D>& open_positions) {
-    for (Line line : state.get_line_marks(MarkCount{N - 1})) {
-      if (current[line] == N - 1 && opponent[line] == 0) {
-        Position trial = state.get_xor_table(line);
-        if (open_positions[trial]) {
-          return trial;
-        }
+    for (Line line : state.get_line_marks(MarkCount{N - 1}, mark)) {
+      Position trial = state.get_xor_table(line);
+      if (open_positions[trial]) {
+        return trial;
       }
     }
     // Can't return directly because of g++ bug.
@@ -63,8 +62,9 @@ class ForcingMove {
     const auto& current = state.get_current(mark);
     const auto& opponent = state.get_opponent(mark);
     return
-        find_forcing_move(current, opponent, open_positions) ||
-        [&](){ return find_forcing_move(opponent, current, open_positions); };
+        find_forcing_move(mark, current, opponent, open_positions) ||
+        [&](){ return find_forcing_move(
+            flip(mark), opponent, current, open_positions); };
   }
 };
 

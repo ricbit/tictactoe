@@ -121,8 +121,8 @@ class State {
     return false;
   }
 
-  auto get_line_marks(MarkCount mark) const {
-    return line_marks.all(mark);
+  auto get_line_marks(MarkCount count, Mark mark) const {
+    return line_marks.all(count, mark);
   }
 
   const Position get_xor_table(Line line) const {

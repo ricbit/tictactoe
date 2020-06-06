@@ -60,7 +60,7 @@ class Elevator {
     }
     MarkCount reattach_node(Mark mark, MarkCount prev, MarkCount next) {
       auto& elevator = instance.elevator;
-      Mark prev_mark = get<ElevatorValue>(instance.elevator[line].value).mark;
+      Mark& prev_mark = get<ElevatorValue>(instance.elevator[line].value).mark;
       Mark next_mark = static_cast<Mark>(
           static_cast<int>(prev_mark) | static_cast<int>(mark));
       NodeP next_floor = instance.floor(next, next_mark);
@@ -70,6 +70,7 @@ class Elevator {
       elevator[eline.right].left = eline.left;
       eline.left = last;
       eline.right = next_floor;
+      prev_mark = next_mark;
       elevator[next_floor].left = line;
       elevator[last].right = line;
       return next;
