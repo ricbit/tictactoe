@@ -56,7 +56,7 @@ class Elevator {
     }
    private:
     MarkCount& get_floor(const NodeP line) const {
-      return get<ElevatorValue>(instance.elevator[line].value).floor;
+      return instance.elevator_value(line).floor;
     }
     MarkCount reattach_node(Mark mark, MarkCount prev, MarkCount next) {
       auto& elevator = instance.elevator;
@@ -97,7 +97,7 @@ class Elevator {
     }
     // O(1)
     Line operator*() const {
-      return get<ElevatorValue>(instance.elevator[node].value).index;
+      return instance.elevator_value(node).index;
     }
     // O(1)
     Iterator& operator++() {
@@ -143,7 +143,13 @@ class Elevator {
     return NodeP{line_size + static_cast<int>(mark) * (N + 1) + count};
   }
 
-  const ElevatorValue& elevator_value(Line line) const {
+  template<typename T>
+  const ElevatorValue& elevator_value(T line) const {
+    return get<ElevatorValue>(elevator[NodeP(line)].value);
+  }
+
+  template<typename T>
+  ElevatorValue& elevator_value(T line) {
     return get<ElevatorValue>(elevator[NodeP(line)].value);
   }
 
