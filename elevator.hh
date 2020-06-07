@@ -130,6 +130,16 @@ class Elevator {
     return elevator_value(line).mark;
   }
 
+  bool empty(MarkCount count, Mark mark) const {
+    NodeP p = floor(count, mark);
+    return elevator[p].right == p;
+  }
+
+  bool one(MarkCount count, Mark mark) const {
+    NodeP p = floor(count, mark);
+    return elevator[p].right != p && elevator[elevator[p].right].right == p;
+  }
+
  private:
   struct ElevatorValue {
     Mark mark;

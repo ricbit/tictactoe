@@ -250,4 +250,30 @@ TEST(ElevatorTest, CheckLine) {
   EXPECT_TRUE(elevator.check(2_line, 3_mcount, Mark::both));
 }
 
+TEST(ElevatorTest, Empty) {
+  Elevator<3, 2> elevator;
+  EXPECT_TRUE(elevator.empty(2_mcount, Mark::X));
+  elevator[5_line] += Mark::X;
+  EXPECT_TRUE(elevator.empty(2_mcount, Mark::X));
+  elevator[5_line] += Mark::X;
+  EXPECT_FALSE(elevator.empty(2_mcount, Mark::X));
+  elevator[5_line] += Mark::X;
+  EXPECT_TRUE(elevator.empty(2_mcount, Mark::X));
+}
+
+TEST(ElevatorTest, One) {
+  Elevator<3, 2> elevator;
+  EXPECT_FALSE(elevator.one(2_mcount, Mark::X));
+  elevator[5_line] += Mark::X;
+  EXPECT_FALSE(elevator.one(2_mcount, Mark::X));
+  elevator[5_line] += Mark::X;
+  EXPECT_TRUE(elevator.one(2_mcount, Mark::X));
+  elevator[3_line] += Mark::X;
+  elevator[3_line] += Mark::X;
+  EXPECT_FALSE(elevator.one(2_mcount, Mark::X));
+  elevator[5_line] += Mark::X;
+  EXPECT_TRUE(elevator.one(2_mcount, Mark::X));
+}
+
+
 }
