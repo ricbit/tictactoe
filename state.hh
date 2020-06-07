@@ -46,14 +46,6 @@ class State {
     return open_positions;
   }
 
-  const auto& get_current(Mark mark) const {
-    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
-  }
-
-  const auto& get_opponent(Mark mark) const {
-    return mark == Mark::X ? o_marks_on_line : x_marks_on_line;
-  }
-
   void print() const {
     data.print(data.board_size, [&](Position k) {
       return data.decode(k);
@@ -143,6 +135,10 @@ class State {
     }, [&](Position k) {
       return data.encode_points(current_accumulation[k]);
     });
+  }
+
+  bool check_line(Line line, MarkCount count, Mark mark) const {
+    return line_marks.check(line, count, mark);
   }
 
  private:

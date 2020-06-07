@@ -73,15 +73,12 @@ class ForcingStrategy {
   const BoardData<N, D>& data;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
-  template<typename T>
-  optional<Position> find_forcing_move(
-      const T& current,
-      const T& opponent,
+  optional<Position> find_forcing_move(Mark mark,
       const Bitfield<N, D>& open_positions) {
     for (Position pos : open_positions.all()) {
       for (const auto& [line_a, line_b] : data.crossings()[pos]) {
-        if (current[line_a] == N - 2 && opponent[line_a] == 0 &&
-            current[line_b] == N - 2 && opponent[line_b] == 0) {
+        if (state.check_line(line_a, MarkCount{N - 2}, mark) &&
+            state.check_line(line_b, MarkCount{N - 2}, mark)) {
           return pos;
         }
       }
@@ -93,11 +90,9 @@ class ForcingStrategy {
 
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
-    const auto& current = state.get_current(mark);
-    const auto& opponent = state.get_opponent(mark);
     return
-        find_forcing_move(current, opponent, open_positions) ||
-        [&](){ return find_forcing_move(opponent, current, open_positions); };
+        find_forcing_move(mark, open_positions) ||
+        [&](){ return find_forcing_move(flip(mark), open_positions); };
   }
 };
 
