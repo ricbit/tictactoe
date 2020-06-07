@@ -63,6 +63,61 @@ class ForcingMove {
 };
 
 template<int N, int D>
+class ChainingStrategy {
+ public:
+  explicit ChainingStrategy(const State<N, D>& state) : state(state) {
+  }
+  const State<N, D>& state;
+  constexpr static Line line_size = BoardData<N, D>::line_size;
+
+  template<typename B>
+  optional<Position> operator()(Mark mark, const B& open_positions) {
+    return search_current(state, mark);
+  }
+
+  optional<Position> search_current(const State<N, D>& state, Mark mark) {
+    for (Line line : state.get_line_marks(MarkCount{N - 1}, mark)) {
+      return state.get_xor_table(line);
+    }
+    if (!state.empty(MarkCount{N - 1}, flip(mark))) {
+      return {};
+    }
+    if (state.empty(MarkCount{N - 2}, mark)) {
+      return {};
+    }
+    for (const auto& line : state.get_line_marks(MarkCount{N - 2}, mark)) {
+      for (Position pos : state.get_line(line)) {
+        if (state.get_board(pos) == Mark::empty) {
+          State cloned(state);
+          cloned.play(pos, mark);
+          optional<Position> opponent = search_opponent(cloned, flip(mark));
+          if (opponent.has_value()) {
+            return pos;
+          }
+        }
+      }
+    }
+    return {};
+  }
+
+  optional<Position> search_opponent(const State<N, D>& state, Mark mark) {
+    if (state.empty(MarkCount{N - 1}, mark)) {
+      return {};
+    }
+    for (const auto& line : state.get_line_marks(MarkCount{N - 1}, mark)) {
+      Position pos = state.get_xor_table(line);
+      State cloned(state);
+      cloned.play(pos, mark);
+      optional<Position> current = search_current(cloned, flip(mark));
+      if (current.has_value()) {
+        return pos;
+      }
+    }
+    return {};
+  }
+};
+
+template<int N, int D>
 class ForcingStrategy {
  public:
   explicit ForcingStrategy(
@@ -309,7 +364,7 @@ class MiniMax {
     vector<pair<int, Position>> sorted = get_sorted_positions(open, mark);
     Mark current_best = flip(mark);
     int x = 0;
-    for (const auto [score, pos] : sorted) {
+    for (const auto& [score, pos] : sorted) {
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
       if (result) {
@@ -388,9 +443,12 @@ class MiniMax {
   optional<Mark> check_forced_move(
       State<N, D>& current_state, Mark mark, Mark parent,
       const B& open_positions) {
-    auto s =
-        ForcingMove<N, D>(state) >>
-        ForcingStrategy<N, D>(state, data);
+    auto c = ChainingStrategy(state);
+    auto pos = c(mark, open_positions);
+    if (pos.has_value()) {
+      return mark;
+    }
+    auto s = ForcingMove<N, D>(state);
     auto forcing = s(mark, open_positions);
     if (forcing.has_value()) {
       State<N, D> cloned(current_state);

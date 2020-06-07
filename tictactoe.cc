@@ -25,7 +25,8 @@ int main() {
     State state(data);
     GameEngine b(generator, state,
         ForcingMove(state) >>
-        ForcingStrategy(state, data) >>
+        //ForcingStrategy(state, data) >>
+        ChainingStrategy(state) >>
         BiasedRandom(state, generator));
         //ForcingMove(state) >> BiasedRandom(state, generator));
         //ForcingMove(state) >> HeatMap(state, data, generator));

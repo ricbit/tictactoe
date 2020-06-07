@@ -135,6 +135,18 @@ class State {
     return line_marks.check(line, count, mark);
   }
 
+  bool empty(MarkCount count, Mark mark) const {
+    return line_marks.empty(count, mark);
+  }
+
+  bool one(MarkCount count, Mark mark) const {
+    return line_marks.one(count, mark);
+  }
+
+  auto get_line(Line line) const {
+    return data.winning_lines()[line];
+  }
+
  private:
   const BoardData<N, D>& data;
   sarray<Position, Mark, board_size> board;
