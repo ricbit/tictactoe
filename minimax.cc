@@ -16,7 +16,7 @@ int main() {
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   State state(data);
-  auto s = MiniMax<4, 2, Outcome::O_DRAWS>(state, data, generator);
+  auto s = MiniMax(state, data, generator);
   auto result = s.play(state, Mark::X);
   if (*result == Mark::X) {
     cout << "X wins\n";

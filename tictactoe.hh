@@ -245,7 +245,32 @@ enum class Outcome {
   UNKNOWN
 };
 
-template<int N, int D, Outcome outcome = Outcome::UNKNOWN>
+template<int N, int D>
+constexpr Outcome known_outcome() {
+  return Outcome::UNKNOWN;
+}
+
+template<>
+constexpr Outcome known_outcome<3, 2>() {
+  return Outcome::O_DRAWS;
+}
+
+template<>
+constexpr Outcome known_outcome<4, 2>() {
+  return Outcome::O_DRAWS;
+}
+
+template<>
+constexpr Outcome known_outcome<3, 3>() {
+  return Outcome::X_WINS;
+}
+
+template<>
+constexpr Outcome known_outcome<4, 3>() {
+  return Outcome::X_WINS;
+}
+
+template<int N, int D, Outcome outcome = known_outcome<N, D>()>
 class MiniMax {
  public:
   explicit MiniMax(
