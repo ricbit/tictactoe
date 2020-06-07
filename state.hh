@@ -23,12 +23,9 @@ class State {
   explicit State(const BoardData<N, D>& data) :
       data(data),
       board(Mark::empty),
-      x_marks_on_line(0_mcount),
-      o_marks_on_line(0_mcount),
       xor_table(data.xor_table()),
       current_accumulation(data.accumulation_points()),
       trie_node(0_node) {
-    active_line.set();
   }
 
   constexpr static Position board_size = BoardData<N, D>::board_size;
@@ -90,17 +87,14 @@ class State {
     empty_cells.remove(pos);
     trie_node = data.next(trie_node, pos);
     for (Line line : data.lines_through_position()[pos]) {
-      auto& current = get_current(mark);
-      current[line]++;
+      Mark old_mark = line_marks.get_mark(line);
       xor_table[line] ^= pos;
-      line_marks[line] += mark;
-      if (current[line] == N) {
+      MarkCount count = (line_marks[line] += mark);
+      Mark new_mark = line_marks.get_mark(line);
+      if (count == N && new_mark != Mark::both) {
         return true;
       }
-      if (x_marks_on_line[line] > 0 &&
-          o_marks_on_line[line] > 0 &&
-          active_line[line]) {
-        active_line[line] = false;
+      if (old_mark != new_mark && new_mark == Mark::both) {
         for (Side j = 0_side; j < N; ++j) {
           Position neigh = data.winning_lines()[line][j];
           current_accumulation[neigh]--;
@@ -144,17 +138,11 @@ class State {
  private:
   const BoardData<N, D>& data;
   sarray<Position, Mark, board_size> board;
-  sarray<Line, MarkCount, line_size> x_marks_on_line, o_marks_on_line;
   sarray<Line, Position, line_size> xor_table;
-  bitset<line_size> active_line;
   sarray<Position, LineCount, board_size> current_accumulation;
   NodeLine trie_node;
   TrackingList<N, D> empty_cells;
   Elevator<N, D> line_marks;
-
-  auto& get_current(Mark mark) {
-    return mark == Mark::X ? x_marks_on_line : o_marks_on_line;
-  }
 
   char encode_position(Mark pos) const {
     return pos == Mark::X ? 'X'

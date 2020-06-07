@@ -126,6 +126,10 @@ class Elevator {
            elevator_value(line).mark == mark;
   }
 
+  Mark get_mark(Line line) const {
+    return elevator_value(line).mark;
+  }
+
  private:
   struct ElevatorValue {
     Mark mark;
