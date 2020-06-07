@@ -149,12 +149,12 @@ class Elevator {
 
   template<typename T>
   const ElevatorValue& elevator_value(T line) const {
-    return get<ElevatorValue>(elevator[NodeP(line)].value);
+    return *get_if<ElevatorValue>(&elevator[NodeP(line)].value);
   }
 
   template<typename T>
   ElevatorValue& elevator_value(T line) {
-    return get<ElevatorValue>(elevator[NodeP(line)].value);
+    return *get_if<ElevatorValue>(&elevator[NodeP(line)].value);
   }
 
   constexpr static Line line_size = BoardData<N, D>::line_size;
