@@ -75,6 +75,7 @@ class Geometry {
 
   using CrossingArray = sarray<Position, vector<pair<Line, Line>>, board_size>;
   using WinningArray = sarray<Line, sarray<Side, Position, N>, line_size>;
+  using SideArray = sarray<Dim, Side, D>;
 
   const WinningArray& winning_lines() const {
     return _winning_lines;
@@ -92,8 +93,8 @@ class Geometry {
     return _crossings;
   }
 
-  sarray<Dim, Side, D> decode(Position pos) const {
-    sarray<Dim, Side, D> ans;
+  SideArray decode(Position pos) const {
+    SideArray ans;
     for (Dim i = 0_dim; i < D; ++i) {
       ans[i] = Side{pos % N};
       pos /= N;
@@ -119,6 +120,17 @@ class Geometry {
 
   template<typename X, typename T>
   void print(int limit, X decoder, T func) const {
+    if constexpr (D == 3) {
+      print3(limit, decoder, func);
+    } else if constexpr (D == 2) {
+      print2(limit, decoder, func);
+    } else {
+      static_assert(D == 3 || D == 2);
+    }
+  }
+
+  template<typename X, typename T>
+  void print3(int limit, X decoder, T func) const {
     static_assert(D == 3);
     vector<vector<vector<string>>> board(N, vector<vector<string>>(
         N, vector<string>(N, "."s)));
@@ -137,6 +149,23 @@ class Geometry {
     }
   }
 
+  template<typename X, typename T>
+  void print2(int limit, X decoder, T func) const {
+    static_assert(D == 2);
+    vector<vector<string>> board(N, vector<string>(N, "."s));
+    for (Position k = 0_pos; k < limit; ++k) {
+      auto decoded = decoder(k);
+      board[decoded[0_dim]][decoded[1_dim]] = func(k);
+    }
+    for (Side j = 0_side; j < N; ++j) {
+      for (Side i = 0_side; i < N; ++i) {
+        cout << board[j][i];
+      }
+      cout << "\n";
+    }
+    cout << "\n";
+  }
+
   void print_points() {
     print(board_size, [&](Position k) {
       return decode(k);
@@ -144,6 +173,16 @@ class Geometry {
       int points = _accumulation_points[k];
       return encode_points(points);
     });
+  }
+
+  Position encode(const SideArray& dim_index) const {
+    Position ans = 0_pos;
+    int factor = 1;
+    for (auto index : dim_index) {
+      ans += index * factor;
+      factor *= N;
+    }
+    return ans;
   }
 
  private:
@@ -210,16 +249,6 @@ class Geometry {
         }
         break;
     }
-  }
-
-  Position encode(const sarray<Dim, Side, D>& dim_index) const {
-    Position ans = 0_pos;
-    int factor = 1;
-    for (auto index : dim_index) {
-      ans += index * factor;
-      factor *= N;
-    }
-    return ans;
   }
 
   void construct_winning_lines() {
@@ -605,6 +634,10 @@ class BoardData {
 
   const sarray<Dim, Side, D> decode(Position pos) const {
     return geom.decode(pos);
+  }
+
+  Position encode(initializer_list<Side> vec) const {
+    return geom.encode(vec);
   }
 
  private:

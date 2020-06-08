@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <array>
+#include <initializer_list>
+#include <algorithm>
 
 template<typename Source, typename Dest, int array_size>
 class sarray {
@@ -15,6 +17,9 @@ class sarray {
     a.fill(value);
   }
   sarray() {
+  }
+  sarray(std::initializer_list<Dest> contents) {
+    std::copy(std::begin(contents), std::end(contents), std::begin(a));
   }
   Dest& operator[](const Source& index) {
     return a[index];
@@ -39,6 +44,9 @@ class sarray {
   }
   bool operator<(const sarray<Source, Dest, array_size>& that) const {
     return a < that.a;
+  }
+  bool operator==(const sarray<Source, Dest, array_size>& that) const {
+    return a == that.a;
   }
  private:
   array_type a;

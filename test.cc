@@ -10,6 +10,25 @@ TEST(GeometryTest, CorrectNumberOfLines) {
   EXPECT_EQ(49, (Geometry<3, 3>::line_size));
 }
 
+TEST(GeometryTest, Decode) {
+  Geometry<4, 2> data;
+  auto actual = data.decode(12_pos);
+  auto expected = Geometry<4, 2>::SideArray{0_side, 3_side};
+  EXPECT_EQ(expected, actual);
+}
+
+TEST(GeometryTest, DecodeEncode) {
+  Geometry<4, 2> data;
+  auto actual = data.decode(12_pos);
+  EXPECT_EQ(12_pos, data.encode(actual));
+}
+
+TEST(GeometryTest, EncodeDecode) {
+  Geometry<4, 2> data;
+  auto expected = Geometry<4,2>::SideArray{0_side, 3_side};
+  EXPECT_EQ(expected, data.decode(data.encode(expected)));
+}
+
 TEST(SymmetryTest, CorrectNumberOfSymmetries) {
   Geometry<5, 3> geom;
   Symmetry sym(geom);
@@ -275,5 +294,48 @@ TEST(ElevatorTest, One) {
   EXPECT_TRUE(elevator.one(2_mcount, Mark::X));
 }
 
+TEST(ChainingStrategyTest, LineOfX) {
+  BoardData<3, 2> data;
+  State state(data);
+  state.play({0_side, 0_side}, Mark::X);
+  state.play({0_side, 1_side}, Mark::X);
+  ChainingStrategy strat(state);
+  EXPECT_EQ(
+      data.encode({0_side, 2_side}),
+      *strat(Mark::X, state.get_open_positions(Mark::X)));
+  EXPECT_FALSE(
+      strat(Mark::O, state.get_open_positions(Mark::O)).has_value());
+}
+
+TEST(ChainingStrategyTest, CrossOfX) {
+  BoardData<4, 2> data;
+  State state(data);
+  state.play({0_side, 0_side}, Mark::X);
+  state.play({0_side, 1_side}, Mark::X);
+  state.play({2_side, 3_side}, Mark::X);
+  state.play({3_side, 3_side}, Mark::X);
+  ChainingStrategy strat(state);
+  EXPECT_TRUE(
+      strat(Mark::X, state.get_open_positions(Mark::X)).has_value());
+  EXPECT_FALSE(
+      strat(Mark::O, state.get_open_positions(Mark::O)).has_value());
+}
+
+TEST(ChainingStrategyTest, BlockedCrossOfX) {
+  BoardData<4, 2> data;
+  State state(data);
+  state.play({0_side, 0_side}, Mark::X);
+  state.play({0_side, 1_side}, Mark::X);
+  state.play({2_side, 3_side}, Mark::X);
+  state.play({3_side, 3_side}, Mark::X);
+  state.play({3_side, 0_side}, Mark::O);
+  state.play({2_side, 1_side}, Mark::O);
+  state.play({1_side, 2_side}, Mark::O);
+  ChainingStrategy strat(state);
+  EXPECT_FALSE(
+      strat(Mark::X, state.get_open_positions(Mark::X)).has_value());
+  EXPECT_TRUE(
+      strat(Mark::O, state.get_open_positions(Mark::O)).has_value());
+}
 
 }

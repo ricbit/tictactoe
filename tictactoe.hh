@@ -65,30 +65,38 @@ class ForcingMove {
 template<int N, int D>
 class ChainingStrategy {
  public:
-  explicit ChainingStrategy(const State<N, D>& state) : state(state) {
+  explicit ChainingStrategy(const State<N, D>& state, bool debug=false)
+    : state(state), debug(debug) {
   }
   const State<N, D>& state;
+  const bool debug;
   constexpr static Line line_size = BoardData<N, D>::line_size;
 
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
+    if (debug) {
+      cout << "---\n";
+    }
     return search_current(state, mark);
   }
 
-  optional<Position> search_current(const State<N, D>& state, Mark mark) {
-    for (Line line : state.get_line_marks(MarkCount{N - 1}, mark)) {
-      return state.get_xor_table(line);
+  optional<Position> search_current(const State<N, D>& current, Mark mark) {
+    if (debug) {
+      current.print();
     }
-    if (!state.empty(MarkCount{N - 1}, flip(mark))) {
+    for (Line line : current.get_line_marks(MarkCount{N - 1}, mark)) {
+      return current.get_xor_table(line);
+    }
+    if (!current.empty(MarkCount{N - 1}, flip(mark))) {
       return {};
     }
-    if (state.empty(MarkCount{N - 2}, mark)) {
+    if (current.empty(MarkCount{N - 2}, mark)) {
       return {};
     }
-    for (const auto& line : state.get_line_marks(MarkCount{N - 2}, mark)) {
-      for (Position pos : state.get_line(line)) {
-        if (state.get_board(pos) == Mark::empty) {
-          State cloned(state);
+    for (const auto& line : current.get_line_marks(MarkCount{N - 2}, mark)) {
+      for (Position pos : current.get_line(line)) {
+        if (current.get_board(pos) == Mark::empty) {
+          State cloned(current);
           cloned.play(pos, mark);
           optional<Position> opponent = search_opponent(cloned, flip(mark));
           if (opponent.has_value()) {
@@ -100,16 +108,19 @@ class ChainingStrategy {
     return {};
   }
 
-  optional<Position> search_opponent(const State<N, D>& state, Mark mark) {
-    if (state.empty(MarkCount{N - 1}, mark)) {
+  optional<Position> search_opponent(const State<N, D>& current, Mark mark) {
+    if (debug) {
+      current.print();
+    }
+    if (!current.empty(MarkCount{N - 1}, mark)) {
       return {};
     }
-    for (const auto& line : state.get_line_marks(MarkCount{N - 1}, mark)) {
-      Position pos = state.get_xor_table(line);
-      State cloned(state);
+    for (const auto& line : current.get_line_marks(MarkCount{N - 1}, flip(mark))) {
+      Position pos = current.get_xor_table(line);
+      State cloned(current);
       cloned.play(pos, mark);
-      optional<Position> current = search_current(cloned, flip(mark));
-      if (current.has_value()) {
+      optional<Position> value = search_current(cloned, flip(mark));
+      if (value.has_value()) {
         return pos;
       }
     }
@@ -446,6 +457,9 @@ class MiniMax {
     auto c = ChainingStrategy(state);
     auto pos = c(mark, open_positions);
     if (pos.has_value()) {
+      cout << "found pos " << static_cast<int>(*pos) << "\n";
+      /*auto c = ChainingStrategy(state, true);
+      auto pos = c(mark, open_positions);    */
       return mark;
     }
     auto s = ForcingMove<N, D>(state);

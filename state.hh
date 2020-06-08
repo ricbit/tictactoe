@@ -82,6 +82,10 @@ class State {
     });
   }
 
+  bool play(initializer_list<Side> pos, Mark mark) {
+    return play(data.encode(pos), mark);
+  }
+
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
     empty_cells.remove(pos);
