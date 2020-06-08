@@ -108,21 +108,23 @@ class ChainingStrategy {
     return {};
   }
 
-  optional<Position> search_opponent(const State<N, D>& current, Mark mark) {
+  optional<Position> search_opponent(State<N, D>& current, Mark mark) {
     if (debug) {
       current.print();
     }
     if (!current.empty(MarkCount{N - 1}, mark)) {
       return {};
     }
-    for (const auto& line : current.get_line_marks(MarkCount{N - 1}, flip(mark))) {
-      Position pos = current.get_xor_table(line);
-      State cloned(current);
-      cloned.play(pos, mark);
-      optional<Position> value = search_current(cloned, flip(mark));
-      if (value.has_value()) {
-        return pos;
-      }
+    if (!current.one(MarkCount{N - 1}, flip(mark))) {
+      Position dummy = 0_pos;
+      return dummy;
+    }
+    Line line = *current.get_line_marks(MarkCount{N - 1}, flip(mark)).begin();
+    Position pos = current.get_xor_table(line);
+    current.play(pos, mark);
+    optional<Position> value = search_current(current, flip(mark));
+    if (value.has_value()) {
+      return pos;
     }
     return {};
   }
