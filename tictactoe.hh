@@ -376,38 +376,47 @@ class MiniMax {
     vector<Position> open = open_positions.get_vector();
     vector<pair<int, Position>> sorted = get_sorted_positions(open, mark);
     Mark current_best = flip(mark);
-    int x = 0;
-    for (const auto& [score, pos] : sorted) {
+    for (int rank_value = 0; const auto& [score, pos] : sorted) {
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
       if (result) {
         return mark;
       } else {
         Mark flipped = flip(mark);
-        rank.push_back(x);
+        rank.push_back(rank_value);
         optional<Mark> new_result = play(cloned, flipped, current_best);
         rank.pop_back();
-        if (new_result.has_value()) {
-          if (*new_result == mark) {
-            return mark;
-          }
-          if (*new_result == Mark::empty) {
-            if constexpr (outcome == Outcome::O_DRAWS) {
-              if (mark == Mark::O) {
-                return Mark::empty;
-              }
-            }
-            if (parent == Mark::empty) {
-              return Mark::empty;
-            } else {
-              current_best = *new_result;
-            }
-          }
+        auto final_result = process_result(
+            new_result, mark, parent, current_best);
+        if (final_result.has_value()) {
+          return final_result;
         }
       }
-      x++;
+      rank_value++;
     }
     return current_best;
+  }
+
+  optional<Mark> process_result(
+      optional<Mark> new_result, Mark mark, Mark parent, Mark& current_best) {
+    if (new_result.has_value()) {
+      if (*new_result == mark) {
+        return mark;
+      }
+      if (*new_result == Mark::empty) {
+        if constexpr (outcome == Outcome::O_DRAWS) {
+          if (mark == Mark::O) {
+            return Mark::empty;
+          }
+        }
+        if (parent == Mark::empty) {
+          return Mark::empty;
+        } else {
+          current_best = *new_result;
+        }
+      }
+    }
+    return {};
   }
 
   vector<pair<int, Position>> get_sorted_positions(

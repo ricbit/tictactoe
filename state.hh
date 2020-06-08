@@ -91,16 +91,15 @@ class State {
     empty_cells.remove(pos);
     trie_node = data.next(trie_node, pos);
     for (Line line : data.lines_through_position()[pos]) {
-      Mark old_mark = line_marks.get_mark(line);
       xor_table[line] ^= pos;
+      Mark old_mark = line_marks.get_mark(line);
       MarkCount count = (line_marks[line] += mark);
       Mark new_mark = line_marks.get_mark(line);
       if (count == N && new_mark != Mark::both) {
         return true;
       }
       if (old_mark != new_mark && new_mark == Mark::both) {
-        for (Side j = 0_side; j < N; ++j) {
-          Position neigh = data.winning_lines()[line][j];
+        for (Position neigh : data.winning_lines()[line]) {
           current_accumulation[neigh]--;
           if (current_accumulation[neigh] == 0 && empty_cells.check(neigh)) {
             empty_cells.remove(neigh);
