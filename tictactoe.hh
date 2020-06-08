@@ -454,12 +454,9 @@ class MiniMax {
   optional<Mark> check_forced_move(
       State<N, D>& current_state, Mark mark, Mark parent,
       const B& open_positions) {
-    auto c = ChainingStrategy(state);
+    auto c = ChainingStrategy(current_state);
     auto pos = c(mark, open_positions);
     if (pos.has_value()) {
-      cout << "found pos " << static_cast<int>(*pos) << "\n";
-      /*auto c = ChainingStrategy(state, true);
-      auto pos = c(mark, open_positions);    */
       return mark;
     }
     auto s = ForcingMove<N, D>(state);
