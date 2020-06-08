@@ -52,3 +52,7 @@ clean :
 
 cppcheck :
 	cppcheck --enable=style,warning tictactoe.cc heatmap.cc minimax.cc
+
+callminimax :
+	valgrind --tool=callgrind --dump-instr=yes  ./minimax
+	kcachegrind `ls callgrind* -t | head -n 1`
