@@ -90,9 +90,6 @@ class ChainingStrategy {
     if (!current.empty(MarkCount{N - 1}, flip(mark))) {
       return {};
     }
-    if (current.empty(MarkCount{N - 2}, mark)) {
-      return {};
-    }
     for (const auto& line : current.get_line_marks(MarkCount{N - 2}, mark)) {
       for (Position pos : current.get_line(line)) {
         if (current.get_board(pos) == Mark::empty) {
