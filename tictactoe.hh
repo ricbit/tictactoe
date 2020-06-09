@@ -70,6 +70,7 @@ class ChainingStrategy {
     : state(state) {
   }
   const State<N, D>& state;
+  int visited = 0;
   constexpr static Line line_size = BoardData<N, D>::line_size;
 
   template<typename B>
@@ -82,6 +83,7 @@ class ChainingStrategy {
   }
 
   optional<Position> search_current(const State<N, D>& current, Mark mark) {
+    visited++;
     Print()(current);
     for (Line line : current.get_line_marks(MarkCount{N - 1}, mark)) {
       return current.get_xor_table(line);
@@ -105,6 +107,7 @@ class ChainingStrategy {
   }
 
   optional<Position> search_opponent(State<N, D>& current, Mark mark) {
+    visited++;
     Print()(current);
     if (!current.empty(MarkCount{N - 1}, mark)) {
       return {};
@@ -462,6 +465,11 @@ class MiniMax {
       const B& open_positions) {
     auto c = ChainingStrategy(current_state);
     auto pos = c.search(mark);
+    static int max_visited = 0;
+    if (c.visited > max_visited) {
+      max_visited = c.visited;
+      cout << "new record " << max_visited << endl;
+    }
     if (pos.has_value()) {
       return mark;
     }
