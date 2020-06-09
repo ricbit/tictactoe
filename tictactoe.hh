@@ -15,6 +15,7 @@
 #include "semantic.hh"
 #include "boarddata.hh"
 #include "state.hh"
+#include "solutiontree.hh"
 
 template<typename T, typename F>
 optional<T> operator||(optional<T> first, F func) {
@@ -346,10 +347,11 @@ class MiniMax {
   default_random_engine& generator;
   int nodes_visited;
   vector<int> rank;
+  SolutionTree solution;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
   optional<Mark> play(State<N, D>& current_state, Mark mark) {
-    auto ans = play(current_state, mark, flip(mark));
+    auto ans = play(current_state, mark, flip(mark), );
     cout << "Total nodes visited: " << nodes_visited << "\n";
     return ans;
   }
