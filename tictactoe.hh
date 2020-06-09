@@ -62,28 +62,26 @@ class ForcingMove {
   }
 };
 
-template<int N, int D>
+template<int N, int D, typename Print = decltype([](const State<N, D>& x){})>
 class ChainingStrategy {
  public:
-  explicit ChainingStrategy(const State<N, D>& state, bool debug=false)
-    : state(state), debug(debug) {
+  explicit ChainingStrategy(const State<N, D>& state)
+    : state(state) {
   }
   const State<N, D>& state;
-  const bool debug;
   constexpr static Line line_size = BoardData<N, D>::line_size;
 
   template<typename B>
   optional<Position> operator()(Mark mark, const B& open_positions) {
-    if (debug) {
-      cout << "---\n";
-    }
+    return search(mark);
+  }
+
+  optional<Position> search(Mark mark) {
     return search_current(state, mark);
   }
 
   optional<Position> search_current(const State<N, D>& current, Mark mark) {
-    if (debug) {
-      current.print();
-    }
+    Print()(current);
     for (Line line : current.get_line_marks(MarkCount{N - 1}, mark)) {
       return current.get_xor_table(line);
     }
@@ -106,9 +104,7 @@ class ChainingStrategy {
   }
 
   optional<Position> search_opponent(State<N, D>& current, Mark mark) {
-    if (debug) {
-      current.print();
-    }
+    Print()(current);
     if (!current.empty(MarkCount{N - 1}, mark)) {
       return {};
     }
