@@ -351,7 +351,7 @@ class MiniMax {
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
   optional<Mark> play(State<N, D>& current_state, Mark mark) {
-    auto ans = play(current_state, mark, flip(mark), );
+    auto ans = play(current_state, mark, flip(mark));
     cout << "Total nodes visited: " << nodes_visited << "\n";
     return ans;
   }
@@ -461,7 +461,7 @@ class MiniMax {
       State<N, D>& current_state, Mark mark, Mark parent,
       const B& open_positions) {
     auto c = ChainingStrategy(current_state);
-    auto pos = c(mark, open_positions);
+    auto pos = c.search(mark);
     if (pos.has_value()) {
       return mark;
     }
