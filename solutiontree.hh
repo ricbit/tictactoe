@@ -2,21 +2,25 @@
 #define SOLUTIONTREE_HH
 
 #include <variant>
-
 #include "boarddata.hh"
 
 class SolutionTree {
-  struct Node;
-  struct Child {
-    Position pos;
-    shared_ptr<Node> next;
-  };
+ public:
   struct Node {
-    Mark value;
+    Node() : value(BoardValue::UNKNOWN), count(1) {
+    }
+    BoardValue value;
     int count;
-    vector<Child> children;
+    vector<unique_ptr<Node>> children;
   };
-  shared_ptr<Node> root;
+  SolutionTree() : root(make_unique<Node>()) {
+  }
+  Node *get_root() {
+    return root.get();
+  }
+ private:
+  unique_ptr<Node> root;
 };
+
 
 #endif

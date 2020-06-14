@@ -321,6 +321,13 @@ enum class Mark {
   both = 3
 };
 
+enum class BoardValue {
+  X_WIN,
+  O_WIN,
+  DRAW,
+  UNKNOWN
+};
+
 Mark flip(Mark mark) {
   return mark == Mark::X ? Mark::O : Mark::X;
 }
