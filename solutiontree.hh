@@ -13,7 +13,7 @@ class SolutionTree {
     BoardValue value;
     int count;
     vector<pair<Position, unique_ptr<Node>>> children;
-    Node *get_last_child() {
+    Node *get_last_child() const {
       return children.rbegin()->second.get();
     }
   };
@@ -23,12 +23,13 @@ class SolutionTree {
     return root.get();
   }
   template<int N, int D>
-  void dump(const BoardData<N, D>& data, string filename) {
+  void dump(const BoardData<N, D>& data, string filename) const {
     ofstream ofs(filename);
     ofs << N << " " << D << "\n";
     dump_node(ofs, root.get());
   }
-  void dump_node(ofstream& ofs, Node* node) {
+ private:
+  void dump_node(ofstream& ofs, const Node* node) const {
     ofs << static_cast<int>(node->value) << " ";
     ofs << node->count << " " << node->children.size() << " : ";
     for (const auto& [pos, p] : node->children) {
@@ -39,7 +40,6 @@ class SolutionTree {
       dump_node(ofs, p.get());
     }
   }
- private:
   unique_ptr<Node> root;
 };
 

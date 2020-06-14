@@ -357,8 +357,11 @@ class MiniMax {
     auto ans = play(current_state, mark, flip(mark), solution.get_root());
     cout << "Total nodes visited: " << nodes_visited << "\n";
     cout << "Nodes in solution tree: " << solution.get_root()->count << "\n";
-    solution.dump(data, "solution.txt");
     return ans;
+  }
+
+  const SolutionTree& get_solution() const {
+    return solution;
   }
 
   optional<Mark> play(
