@@ -12,15 +12,15 @@
 #include "tictactoe.hh"
 
 int main() {
-  BoardData<3, 3> data;
+  BoardData<4, 2> data;
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   State state(data);
   auto minimax = MiniMax(state, data, generator);
   auto result = minimax.play(state, Mark::X);
-  if (*result == Mark::X) {
+  if (*result == BoardValue::X_WIN) {
     cout << "X wins\n";
-  } else if (*result == Mark::O) {
+  } else if (*result == BoardValue::O_WIN) {
     cout << "O wins\n";
   } else {
     cout << "Draw\n";

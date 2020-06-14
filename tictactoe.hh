@@ -353,8 +353,9 @@ class MiniMax {
   SolutionTree solution;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
-  optional<Mark> play(State<N, D>& current_state, Mark mark) {
-    auto ans = play(current_state, mark, flip(mark), solution.get_root());
+  optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
+    auto ans = play(current_state, mark,
+        winner(flip(mark)), solution.get_root());
     cout << "Total nodes visited: " << nodes_visited << "\n";
     cout << "Nodes in solution tree: " << solution.get_root()->count << "\n";
     return ans;
@@ -364,24 +365,22 @@ class MiniMax {
     return solution;
   }
 
-  optional<Mark> play(
-      State<N, D>& current_state, Mark mark, Mark parent,
+  optional<BoardValue> play(
+      State<N, D>& current_state, Mark mark, BoardValue parent,
       SolutionTree::Node *node) {
     auto open_positions = current_state.get_open_positions(mark);
     report_progress(open_positions);
     if (open_positions.none()) {
-      node->value = BoardValue::DRAW;
-      return Mark::empty;
+      return node->value = BoardValue::DRAW;
     }
-    if (optional<Mark> forced = check_forced_move(
+    if (auto forced = check_forced_move(
            current_state, mark, parent, open_positions, node);
         forced.has_value()) {
-      node->value = winner(mark);
-      return forced;
+      return node->value = winner(mark);
     }
     vector<Position> open = open_positions.get_vector();
     vector<pair<int, Position>> sorted = get_sorted_positions(open, mark);
-    Mark current_best = flip(mark);
+    BoardValue current_best = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>());
       auto *child_node = node->get_last_child();
@@ -389,26 +388,24 @@ class MiniMax {
       bool result = cloned.play(pos, mark);
       if (result) {
         node->count += count_children(node);
-        node->value = winner(mark);
-        return mark;
+        return node->value = winner(mark);
       } else {
         Mark flipped = flip(mark);
         rank.push_back(rank_value);
-        optional<Mark> new_result = play(cloned, flipped, current_best, child_node);
+        optional<BoardValue> new_result =
+            play(cloned, flipped, current_best, child_node);
         rank.pop_back();
         auto final_result = process_result(
             new_result, mark, parent, current_best);
         if (final_result.has_value()) {
           node->count += count_children(node);
-          node->value = winner(*final_result);
-          return final_result;
+          return node->value = *final_result;
         }
       }
       rank_value++;
     }
     node->count += count_children(node);
-    node->value = winner(current_best);
-    return current_best;
+    return node->value = current_best;
   }
 
   BoardValue winner(Mark mark) {
@@ -422,20 +419,21 @@ class MiniMax {
       });
   }
 
-  optional<Mark> process_result(
-      optional<Mark> new_result, Mark mark, Mark parent, Mark& current_best) {
+  optional<BoardValue> process_result(
+      optional<BoardValue> new_result, Mark mark,
+      BoardValue parent, BoardValue& current_best) {
     if (new_result.has_value()) {
-      if (*new_result == mark) {
-        return mark;
+      if (*new_result == winner(mark)) {
+        return new_result;
       }
-      if (*new_result == Mark::empty) {
+      if (*new_result == BoardValue::DRAW) {
         if constexpr (outcome == Outcome::O_DRAWS) {
           if (mark == Mark::O) {
-            return Mark::empty;
+            return new_result;
           }
         }
-        if (parent == Mark::empty) {
-          return Mark::empty;
+        if (parent == BoardValue::DRAW) {
+          return parent;
         } else {
           current_best = *new_result;
         }
@@ -487,8 +485,8 @@ class MiniMax {
   }
 
   template<typename B>
-  optional<Mark> check_forced_move(
-      State<N, D>& current_state, Mark mark, Mark parent,
+  optional<BoardValue> check_forced_move(
+      State<N, D>& current_state, Mark mark, BoardValue parent,
       const B& open_positions, SolutionTree::Node *node) {
     auto c = ChainingStrategy(current_state);
     auto pos = c.search(mark);
@@ -498,23 +496,23 @@ class MiniMax {
       cout << "new record " << max_visited << endl;
     }
     if (pos.has_value()) {
-      return mark;
+      return winner(mark);
     }
     auto s = ForcingMove<N, D>(state);
     auto forcing = s(mark, open_positions);
     if (forcing.has_value()) {
       State<N, D> cloned(current_state);
       if (cloned.play(*forcing, mark)) {
-        return mark;
+        return winner(mark);
       }
       rank.push_back(-1);
       node->children.emplace_back(*forcing, make_unique<SolutionTree::Node>());
       auto *child_node = node->get_last_child();
       auto result = play(cloned, flip(mark), parent, child_node);
       node->count += count_children(node);
-      node->value = winner(*result);
+      node->value = *result;
       rank.pop_back();
-      return result;
+      return node->value;
     }
     return {};
   }
