@@ -11,7 +11,10 @@ class SolutionTree {
     }
     BoardValue value;
     int count;
-    vector<unique_ptr<Node>> children;
+    vector<pair<Position, unique_ptr<Node>>> children;
+    Node *get_last_child() {
+      return children.rbegin()->second.get();
+    }
   };
   SolutionTree() : root(make_unique<Node>()) {
   }

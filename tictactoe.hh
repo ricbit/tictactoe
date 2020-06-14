@@ -356,6 +356,7 @@ class MiniMax {
   optional<Mark> play(State<N, D>& current_state, Mark mark) {
     auto ans = play(current_state, mark, flip(mark), solution.get_root());
     cout << "Total nodes visited: " << nodes_visited << "\n";
+    cout << "Nodes in solution tree: " << solution.get_root()->count << "\n";
     return ans;
   }
 
@@ -378,8 +379,8 @@ class MiniMax {
     vector<pair<int, Position>> sorted = get_sorted_positions(open, mark);
     Mark current_best = flip(mark);
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
-      node->children.emplace_back(make_unique<SolutionTree::Node>());
-      auto *child_node = node->children.rbegin()->get();
+      node->children.emplace_back(pos, make_unique<SolutionTree::Node>());
+      auto *child_node = node->get_last_child();
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
       if (result) {
@@ -413,7 +414,7 @@ class MiniMax {
   int count_children(SolutionTree::Node *parent) {
     return accumulate(begin(parent->children), end(parent->children), 0,
       [](auto a, auto& b) {
-        return a + b->count;
+        return a + b.second->count;
       });
   }
 
@@ -503,8 +504,8 @@ class MiniMax {
         return mark;
       }
       rank.push_back(-1);
-      node->children.emplace_back(make_unique<SolutionTree::Node>());
-      auto *child_node = node->children.rbegin()->get();
+      node->children.emplace_back(*forcing, make_unique<SolutionTree::Node>());
+      auto *child_node = node->get_last_child();
       auto result = play(cloned, flip(mark), parent, child_node);
       node->count += count_children(node);
       node->value = winner(*result);    
