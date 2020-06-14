@@ -32,28 +32,57 @@ def read_file(filename):
   read_line(f, root)
   return Tree(n, d, root)
 
-def print_board(n, d, board):
+def print_board(n, d, board, node):
   if d == 2:
-    print(board)
     x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
     o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
-    s = []
+    s = ['<table class="border board">']
+    children = node.children.keys()
     for j in range(0, n):
+      s.append('<tr class="border">')
       for i in range(0, n):
+        s.append('<td class="border cell">')
         pos = j * n + i
         if pos in x_set:
           s.append("X")
         elif pos in o_set:
           s.append("O")
+        elif pos in children:
+          s.append('<a href="sffdf">*</a><br>(%s)' % node.children[pos].count)
         else:
-          s.append(".")
-      s.append("\n")
-    print("".join(s))
+          s.append("&nbsp;")
+        s.append("</td>")
+      s.append("</tr>")
+    s.append("</table><br><br>")
+    return "".join(s)
 
+def top_html():
+  return """
+  <html>
+  <head>
+  <style>
+    .board {
+      border-collapse: collapse;
+    }
+    .border {
+      border: 1px solid black;
+    }
+    .cell {
+      width: 60px;
+      height: 60px;
+    }
+  </style>
+  </head>
+  <body>"""
 
+def bottom_html():
+  return """
+  </body>
+  </html>
+  """
 
 def print_tree(tree, node, board, max_depth, depth):
-  print_board(tree.n, tree.d, board)
+  print(print_board(tree.n, tree.d, board, node))
   if depth < max_depth:
     for pos, childnode in node.children.items():
       board.append(pos)
@@ -62,7 +91,9 @@ def print_tree(tree, node, board, max_depth, depth):
 
 def main():
   tree = read_file("solution.txt")
+  print(top_html())
   print_tree(tree, tree.root, [], 3, 0)
+  print(bottom_html())
 
 if __name__ == '__main__':
   main()
