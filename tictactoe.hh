@@ -357,6 +357,7 @@ class MiniMax {
     auto ans = play(current_state, mark, flip(mark), solution.get_root());
     cout << "Total nodes visited: " << nodes_visited << "\n";
     cout << "Nodes in solution tree: " << solution.get_root()->count << "\n";
+    solution.dump(data, "solution.txt");
     return ans;
   }
 
@@ -508,7 +509,7 @@ class MiniMax {
       auto *child_node = node->get_last_child();
       auto result = play(cloned, flip(mark), parent, child_node);
       node->count += count_children(node);
-      node->value = winner(*result);    
+      node->value = winner(*result);
       rank.pop_back();
       return result;
     }

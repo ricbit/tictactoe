@@ -322,10 +322,10 @@ enum class Mark {
 };
 
 enum class BoardValue {
-  X_WIN,
-  O_WIN,
-  DRAW,
-  UNKNOWN
+  X_WIN = 0,
+  O_WIN = 1,
+  DRAW = 2,
+  UNKNOWN = 3
 };
 
 Mark flip(Mark mark) {
