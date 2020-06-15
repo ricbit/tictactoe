@@ -379,7 +379,7 @@ class MiniMax {
       return node->value = winner(mark);
     }
     vector<Position> open = open_positions.get_vector();
-    vector<pair<int, Position>> sorted = get_sorted_positions(open, mark);
+    vector<pair<int, Position>> sorted = get_sorted_positions(current_state, open, mark);
     BoardValue current_best = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>());
@@ -442,13 +442,13 @@ class MiniMax {
     return {};
   }
 
-  vector<pair<int, Position>> get_sorted_positions(
+  vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state,
       const vector<Position>& open, Mark mark) {
     vector<pair<int, Position>> paired(open.size());
     if (open.size() < 9) {
       uniform_positions(paired, open);
     } else {
-      heatmap_positions(paired, open, mark);
+      heatmap_positions(current_state, paired, open, mark);
     }
     return paired;
   }
@@ -460,10 +460,11 @@ class MiniMax {
     }
   }
 
-  void heatmap_positions(vector<pair<int, Position>>& paired,
+  void heatmap_positions(const State<N, D>& current_state,
+      vector<pair<int, Position>>& paired,
       const vector<Position>& open, Mark mark) {
     int trials = 20 * open.size();
-    HeatMap<N, D> heatmap(state, data, generator, trials);
+    HeatMap<N, D> heatmap(current_state, data, generator, trials);
     vector<int> scores = heatmap.get_scores(mark, open);
     for (int i = 0; i < static_cast<int>(open.size()); ++i) {
       paired[i] = make_pair(scores[i], open[i]);
@@ -498,7 +499,9 @@ class MiniMax {
     if (pos.has_value()) {
       return winner(mark);
     }
-    auto s = ForcingMove<N, D>(state);
+    return {};
+    /*
+    auto s = ForcingMove<N, D>(current_state);
     auto forcing = s(mark, open_positions);
     if (forcing.has_value()) {
       State<N, D> cloned(current_state);
@@ -508,13 +511,13 @@ class MiniMax {
       rank.push_back(-1);
       node->children.emplace_back(*forcing, make_unique<SolutionTree::Node>());
       auto *child_node = node->get_last_child();
-      auto result = play(cloned, flip(mark), parent, child_node);
+      auto result = play(cloned, flip(mark), winner(mark), child_node);
       node->count += count_children(node);
       node->value = *result;
       rank.pop_back();
       return node->value;
     }
-    return {};
+    return {};*/
   }
 };
 
