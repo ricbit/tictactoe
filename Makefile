@@ -3,7 +3,7 @@ TEST_BASE=${GOOGLE_TEST}/googletest
 HEADERS = boarddata.hh semantic.hh tictactoe.hh state.hh elevator.hh \
           solutiontree.hh
 
-all : tictactoe heatmap test
+all : tictactoe heatmap test minimax
 
 tictactoe : tictactoe.cc ${HEADERS}
 	g++-10 -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
@@ -53,6 +53,10 @@ clean :
 
 cppcheck :
 	cppcheck --enable=style,warning tictactoe.cc heatmap.cc minimax.cc
+
+html : minimax dumper.py
+	./minimax
+	python3 dumper.py > solution.html
 
 callminimax :
 	valgrind --tool=callgrind --dump-instr=yes  ./minimax
