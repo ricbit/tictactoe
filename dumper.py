@@ -32,11 +32,15 @@ def read_file(filename):
   read_line(f, root)
   return Tree(n, d, root)
 
+def encode(value):
+  d = {0: "X wins", 1: "O wins", 2: "draw"}
+  return d[value]
+
 def print_board(n, d, board, node):
   if d == 2:
     x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
     o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
-    s = ['<table class="border board">']
+    s = ['<p>Result: %s</p><table class="border board">' % encode(node.result)]
     children = node.children.keys()
     for j in range(0, n):
       s.append('<tr class="border">')
@@ -48,7 +52,8 @@ def print_board(n, d, board, node):
         elif pos in o_set:
           s.append("O")
         elif pos in children:
-          s.append('<a href="sffdf">*</a><br>(%s)' % node.children[pos].count)
+          s.append('<a href="sffdf">%d</a><br>(%s)' %
+              (node.children[pos].count, encode(node.children[pos].result)))
         else:
           s.append("&nbsp;")
         s.append("</td>")
@@ -92,7 +97,7 @@ def print_tree(tree, node, board, max_depth, depth):
 def main():
   tree = read_file("solution.txt")
   print(top_html())
-  print_tree(tree, tree.root, [], 3, 0)
+  print_tree(tree, tree.root, [], 5, 0)
   print(bottom_html())
 
 if __name__ == '__main__':
