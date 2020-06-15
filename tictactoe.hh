@@ -61,6 +61,19 @@ class ForcingMove {
         find_forcing_move(mark, open_positions) ||
         [&](){ return find_forcing_move(flip(mark), open_positions); };
   }
+
+  template<typename B>
+  pair<optional<Position>, Mark> check(Mark mark, const B& open_positions) {
+    auto current = find_forcing_move(mark, open_positions);
+    if (current.has_value()) {
+      return make_pair(current, mark);
+    }
+    auto opponent = find_forcing_move(flip(mark), open_positions);
+    if (opponent.has_value()) {
+      return make_pair(opponent, flip(mark));
+    }
+    return {{}, Mark::empty};
+  }
 };
 
 template<int N, int D, typename Print = decltype([](const State<N, D>& x){})>
@@ -500,16 +513,18 @@ class MiniMax {
       return winner(mark);
     }
     return {};
-    /*
     auto s = ForcingMove<N, D>(current_state);
-    auto forcing = s(mark, open_positions);
-    if (forcing.has_value()) {
+    auto forcing = s.check(mark, open_positions);
+    if (forcing.first.has_value()) {
+      if (forcing.second == mark) {
+        return winner(mark);
+      }
       State<N, D> cloned(current_state);
-      if (cloned.play(*forcing, mark)) {
+      if (cloned.play(*forcing.first, mark)) {
         return winner(mark);
       }
       rank.push_back(-1);
-      node->children.emplace_back(*forcing, make_unique<SolutionTree::Node>());
+      node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>());
       auto *child_node = node->get_last_child();
       auto result = play(cloned, flip(mark), winner(mark), child_node);
       node->count += count_children(node);
@@ -517,7 +532,7 @@ class MiniMax {
       rank.pop_back();
       return node->value;
     }
-    return {};*/
+    return {};
   }
 };
 
