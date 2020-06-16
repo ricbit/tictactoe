@@ -1,10 +1,10 @@
 import reader
 
-def encode(value):
+def encode_result(value):
   d = {0: "X wins", 1: "O wins", 2: "draw"}
   return d[value]
 
-def print_table(n, d, board, node, x_set, o_set):
+def print_table(n, d, board, node, x_set, o_set, encode):
     s = []
     s.append('<table class="border board">')
     children = node.children.keys()
@@ -12,14 +12,14 @@ def print_table(n, d, board, node, x_set, o_set):
       s.append('<tr class="border">')
       for i in range(0, n):
         s.append('<td class="border cell">')
-        pos = j * n + i
+        pos = encode(i, j)
         if pos in x_set:
           s.append("X")
         elif pos in o_set:
           s.append("O")
         elif pos in children:
           s.append('<a href="sffdf">%d</a><br>(%s)' %
-              (node.children[pos].count, encode(node.children[pos].result)))
+              (node.children[pos].count, encode_result(node.children[pos].result)))
         else:
           s.append("&nbsp;")
         s.append("</td>")
@@ -28,11 +28,20 @@ def print_table(n, d, board, node, x_set, o_set):
     return s
 
 def print_board(n, d, board, node):
+  x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
+  o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
+  s = ['<p>Result: %s</p>' % encode_result(node.result)]
   if d == 2:
-    x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
-    o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
-    s = ['<p>Result: %s</p>' % encode(node.result)]
-    s.extend(print_table(n, d, board, node, x_set, o_set))
+    s.extend(print_table(n, d, board, node, x_set, o_set, lambda i, j: j * n + i))
+    return "".join(s)
+  elif d == 3:
+    s.append("<table><tr>")
+    for k in range(n):
+      s.append('<td class="dim3">')
+      s.extend(print_table(
+        n, d, board, node, x_set, o_set, lambda i, j: k * n *n + j * n + i))
+      s.append("</td>")
+    s.append("</tr></table>")
     return "".join(s)
 
 def top_html():
@@ -50,6 +59,9 @@ def top_html():
       width: 60px;
       height: 60px;
       text-align: center;
+    }
+    .dim3 {
+      padding: 20px;
     }
   </style>
   </head>
