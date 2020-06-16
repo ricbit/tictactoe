@@ -520,9 +520,8 @@ class MiniMax {
         return winner(mark);
       }
       State<N, D> cloned(current_state);
-      if (cloned.play(*forcing.first, mark)) {
-        return winner(mark);
-      }
+      bool game_ended = cloned.play(*forcing.first, mark);
+      assert(!game_ended);
       rank.push_back(-1);
       node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>());
       auto *child_node = node->get_last_child();
