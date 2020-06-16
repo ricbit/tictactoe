@@ -526,7 +526,7 @@ class MiniMax {
       rank.push_back(-1);
       node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>());
       auto *child_node = node->get_last_child();
-      auto result = play(cloned, flip(mark), parent, child_node);
+      auto result = play(cloned, flip(mark), winner(flip(mark)), child_node);
       node->count += count_children(node);
       node->value = *result;
       rank.pop_back();

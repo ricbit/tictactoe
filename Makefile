@@ -54,8 +54,10 @@ clean :
 cppcheck :
 	cppcheck --enable=style,warning tictactoe.cc heatmap.cc minimax.cc test.cc
 
-html : minimax dumper.py
+solution.txt : minimax
 	./minimax
+
+html : solution.txt dumper.py
 	python3 dumper.py > solution.html
 
 callminimax :

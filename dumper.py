@@ -4,11 +4,9 @@ def encode(value):
   d = {0: "X wins", 1: "O wins", 2: "draw"}
   return d[value]
 
-def print_board(n, d, board, node):
-  if d == 2:
-    x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
-    o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
-    s = ['<p>Result: %s</p><table class="border board">' % encode(node.result)]
+def print_table(n, d, board, node, x_set, o_set):
+    s = []
+    s.append('<table class="border board">')
     children = node.children.keys()
     for j in range(0, n):
       s.append('<tr class="border">')
@@ -27,6 +25,14 @@ def print_board(n, d, board, node):
         s.append("</td>")
       s.append("</tr>")
     s.append("</table><br><br>")
+    return s
+
+def print_board(n, d, board, node):
+  if d == 2:
+    x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
+    o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
+    s = ['<p>Result: %s</p>' % encode(node.result)]
+    s.extend(print_table(n, d, board, node, x_set, o_set))
     return "".join(s)
 
 def top_html():
