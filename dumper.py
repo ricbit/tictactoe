@@ -43,6 +43,7 @@ def top_html():
     .cell {
       width: 60px;
       height: 60px;
+      text-align: center;
     }
   </style>
   </head>
