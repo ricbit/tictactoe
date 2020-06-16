@@ -18,3 +18,4 @@ tictactoe
 velha
 callgrind.*
 *.html
+__pycache__

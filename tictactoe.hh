@@ -458,7 +458,7 @@ class MiniMax {
   vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state,
       const vector<Position>& open, Mark mark) {
     vector<pair<int, Position>> paired(open.size());
-    if (open.size() < 9) {
+    if (open.size() < 5) {
       uniform_positions(paired, open);
     } else {
       heatmap_positions(current_state, paired, open, mark);
