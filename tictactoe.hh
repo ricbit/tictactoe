@@ -61,6 +61,19 @@ class ForcingMove {
         find_forcing_move(mark, open_positions) ||
         [&](){ return find_forcing_move(flip(mark), open_positions); };
   }
+
+  template<typename B>
+  pair<optional<Position>, Mark> check(Mark mark, const B& open_positions) {
+    auto current = find_forcing_move(mark, open_positions);
+    if (current.has_value()) {
+      return make_pair(current, mark);
+    }
+    auto opponent = find_forcing_move(flip(mark), open_positions);
+    if (opponent.has_value()) {
+      return make_pair(opponent, flip(mark));
+    }
+    return {{}, Mark::empty};
+  }
 };
 
 template<int N, int D, typename Print = decltype([](const State<N, D>& x){})>
@@ -376,10 +389,10 @@ class MiniMax {
     if (auto forced = check_forced_move(
            current_state, mark, parent, open_positions, node);
         forced.has_value()) {
-      return node->value = winner(mark);
+      return node->value = *forced;
     }
     vector<Position> open = open_positions.get_vector();
-    vector<pair<int, Position>> sorted = get_sorted_positions(open, mark);
+    vector<pair<int, Position>> sorted = get_sorted_positions(current_state, open, mark);
     BoardValue current_best = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>());
@@ -442,13 +455,13 @@ class MiniMax {
     return {};
   }
 
-  vector<pair<int, Position>> get_sorted_positions(
+  vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state,
       const vector<Position>& open, Mark mark) {
     vector<pair<int, Position>> paired(open.size());
-    if (open.size() < 9) {
+    if (open.size() < 5) {
       uniform_positions(paired, open);
     } else {
-      heatmap_positions(paired, open, mark);
+      heatmap_positions(current_state, paired, open, mark);
     }
     return paired;
   }
@@ -460,10 +473,11 @@ class MiniMax {
     }
   }
 
-  void heatmap_positions(vector<pair<int, Position>>& paired,
+  void heatmap_positions(const State<N, D>& current_state,
+      vector<pair<int, Position>>& paired,
       const vector<Position>& open, Mark mark) {
     int trials = 20 * open.size();
-    HeatMap<N, D> heatmap(state, data, generator, trials);
+    HeatMap<N, D> heatmap(current_state, data, generator, trials);
     vector<int> scores = heatmap.get_scores(mark, open);
     for (int i = 0; i < static_cast<int>(open.size()); ++i) {
       paired[i] = make_pair(scores[i], open[i]);
@@ -498,15 +512,17 @@ class MiniMax {
     if (pos.has_value()) {
       return winner(mark);
     }
-    auto s = ForcingMove<N, D>(state);
-    auto forcing = s(mark, open_positions);
-    if (forcing.has_value()) {
-      State<N, D> cloned(current_state);
-      if (cloned.play(*forcing, mark)) {
+    auto s = ForcingMove<N, D>(current_state);
+    auto forcing = s.check(mark, open_positions);
+    if (forcing.first.has_value()) {
+      if (forcing.second == mark) {
         return winner(mark);
       }
+      State<N, D> cloned(current_state);
+      bool game_ended = cloned.play(*forcing.first, mark);
+      assert(!game_ended);
       rank.push_back(-1);
-      node->children.emplace_back(*forcing, make_unique<SolutionTree::Node>());
+      node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>());
       auto *child_node = node->get_last_child();
       auto result = play(cloned, flip(mark), parent, child_node);
       node->count += count_children(node);

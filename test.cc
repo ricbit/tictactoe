@@ -338,4 +338,33 @@ TEST(ChainingStrategyTest, BlockedCrossOfX) {
       strat(Mark::O, state.get_open_positions(Mark::O)).has_value());
 }
 
+TEST(ForcingMoveTest, CheckDefensiveMoveUsingOperator) {
+  BoardData<3, 2> data;
+  State state(data);
+  state.play({0_side, 0_side}, Mark::X);
+  state.play({0_side, 2_side}, Mark::O);
+  state.play({0_side, 1_side}, Mark::X);
+  state.play({1_side, 1_side}, Mark::O);
+  auto open = state.get_open_positions(Mark::X);
+  ForcingMove f(state);
+  auto pos = f(Mark::X, open);
+  EXPECT_TRUE(pos);
+  EXPECT_EQ(data.encode({2_side, 0_side}), *pos);
+}
+
+TEST(ForcingMoveTest, CheckDefensiveMoveUsingCheck) {
+  BoardData<3, 2> data;
+  State state(data);
+  state.play({0_side, 0_side}, Mark::X);
+  state.play({0_side, 2_side}, Mark::O);
+  state.play({0_side, 1_side}, Mark::X);
+  state.play({1_side, 1_side}, Mark::O);
+  auto open = state.get_open_positions(Mark::X);
+  ForcingMove f(state);
+  auto pos = f.check(Mark::X, open);
+  EXPECT_TRUE(pos.first);
+  EXPECT_EQ(data.encode({2_side, 0_side}), *pos.first);
+  EXPECT_EQ(Mark::O, pos.second);
+}
+
 }
