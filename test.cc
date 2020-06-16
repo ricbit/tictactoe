@@ -367,4 +367,24 @@ TEST(ForcingMoveTest, CheckDefensiveMoveUsingCheck) {
   EXPECT_EQ(Mark::O, pos.second);
 }
 
+TEST(MiniMaxTest, Check32) {
+  BoardData<3, 2> data;
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  default_random_engine generator(seed);
+  State state(data);
+  auto minimax = MiniMax(state, data, generator);
+  auto result = minimax.play(state, Mark::X);
+  EXPECT_EQ(BoardValue::DRAW, *result);
+}
+
+TEST(MiniMaxTest, Check33) {
+  BoardData<3, 3> data;
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  default_random_engine generator(seed);
+  State state(data);
+  auto minimax = MiniMax(state, data, generator);
+  auto result = minimax.play(state, Mark::X);
+  EXPECT_EQ(BoardValue::X_WIN, *result);
+}
+
 }
