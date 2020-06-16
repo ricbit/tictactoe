@@ -389,7 +389,7 @@ class MiniMax {
     if (auto forced = check_forced_move(
            current_state, mark, parent, open_positions, node);
         forced.has_value()) {
-      return node->value = winner(mark);
+      return node->value = *forced;
     }
     vector<Position> open = open_positions.get_vector();
     vector<pair<int, Position>> sorted = get_sorted_positions(current_state, open, mark);
@@ -512,7 +512,6 @@ class MiniMax {
     if (pos.has_value()) {
       return winner(mark);
     }
-    return {};
     auto s = ForcingMove<N, D>(current_state);
     auto forcing = s.check(mark, open_positions);
     if (forcing.first.has_value()) {
@@ -525,7 +524,7 @@ class MiniMax {
       rank.push_back(-1);
       node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>());
       auto *child_node = node->get_last_child();
-      auto result = play(cloned, flip(mark), winner(mark), child_node);
+      auto result = play(cloned, flip(mark), parent, child_node);
       node->count += count_children(node);
       node->value = *result;
       rank.pop_back();

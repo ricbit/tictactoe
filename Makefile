@@ -52,7 +52,7 @@ clean :
 	rm -f test asm tictactoe
 
 cppcheck :
-	cppcheck --enable=style,warning tictactoe.cc heatmap.cc minimax.cc
+	cppcheck --enable=style,warning tictactoe.cc heatmap.cc minimax.cc test.cc
 
 html : minimax dumper.py
 	./minimax
