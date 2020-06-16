@@ -76,7 +76,9 @@ class ForcingMove {
   }
 };
 
-template<int N, int D, typename Print = decltype([](const State<N, D>& x){})>
+auto empty_printer = [](const auto& x){};
+
+template<int N, int D, typename Print = decltype(empty_printer)>
 class ChainingStrategy {
  public:
   explicit ChainingStrategy(const State<N, D>& state)

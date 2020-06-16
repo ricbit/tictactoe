@@ -12,7 +12,7 @@
 #include "tictactoe.hh"
 
 int main() {
-  BoardData<4, 3> data;
+  BoardData<3, 3> data;
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   State state(data);
