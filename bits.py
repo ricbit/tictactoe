@@ -12,7 +12,7 @@ def main():
   total, children = Counter(), Counter()
   collect_bits(tree.root, 0, total, children)
   maxlevel = max(total.keys())
-  for level in range(maxlevel + 1):  
+  for level in range(maxlevel + 1):
     print("level %d : %.2f" % (level, children[level] / total[level]))
 
 if __name__ == '__main__':

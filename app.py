@@ -1,6 +1,6 @@
 from flask import Flask
 import reader
- 
+
 def encode_result(value):
   d = {0: "X wins", 1: "O wins", 2: "draw"}
   return d[value]
@@ -19,8 +19,10 @@ def print_table(n, d, board, node, x_set, o_set, encode):
         elif pos in o_set:
           s.append("O")
         elif pos in children:
-          s.append('<a href="sffdf">%d</a><br>(%s)' %
-              (node.children[pos].count, encode_result(node.children[pos].result)))
+          s.append('<a href="%s">%d</a><br>(%s)' %
+              ("/%d" % pos,
+               node.children[pos].count,
+               encode_result(node.children[pos].result)))
         else:
           s.append("&nbsp;")
         s.append("</td>")
@@ -74,23 +76,31 @@ def bottom_html():
   </html>
   """
 
-def print_tree(tree, node, board, max_depth, depth):
+def print_tree(tree, node, board, max_depth, depth, path):
   s = []
   s.extend(print_board(tree.n, tree.d, board, node))
-  if depth < max_depth:
-    for pos, childnode in node.children.items():
-      board.append(pos)
-      s.extend(print_tree(tree, childnode, board, max_depth, depth + 1))
-      board.pop()
+  if node.children and depth < len(path):
+    childnode = node.children[path[0]]
+    board.append(path[0])
+    s.extend(print_tree(tree, childnode, board, max_depth, depth + 1, path[1:]))
+    board.pop()
   return s
 
 app = Flask(__name__)
+@app.route("/<path:subpath>")
+def root(subpath):
+  return render(subpath)
+
 @app.route("/")
-def root():
+def rootempty():
+  return render("")
+
+def render(subpath):
   tree = reader.read_file("solution.txt")
+  path = [int(x) for x in subpath.split("/") if x]
   s = []
   s.append(top_html())
-  s.extend(print_tree(tree, tree.root, [], 5, 0))
+  s.extend(print_tree(tree, tree.root, [], 5, 0, path))
   s.append(bottom_html())
   return "".join(s)
 

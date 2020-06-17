@@ -46,7 +46,7 @@ asm :
 	g++ -std=c++2a tictactoe.cc -o $@ -O1 -Wall -g -S -masm=intel
 
 spaces :
-	for i in `ls *.hh *.cc Makefile`; do sed -i "s/\s\+$$//g" $$i ; done
+	for i in `ls *.hh *.cc *.py Makefile`; do sed -i "s/\s\+$$//g" $$i ; done
 
 clean :
 	rm -f test asm tictactoe

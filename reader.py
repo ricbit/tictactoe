@@ -17,7 +17,7 @@ parser = re.compile(r"(\d+) (\d+) (\d+) :(.*)$")
 def read_line(f, node):
   line = f.readline()
   p = parser.match(line)
-  (result, count, size, children) = [p.group(x) for x in range(1, 5)]  
+  (result, count, size, children) = [p.group(x) for x in range(1, 5)]
   node.result = int(result)
   node.count = int(count)
   for childpos in map(int, children.split()):
