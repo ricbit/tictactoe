@@ -39,7 +39,7 @@ def print_board(n, d, board, node):
     for k in range(n):
       s.append('<td class="dim3">')
       s.extend(print_table(
-        n, d, board, node, x_set, o_set, lambda i, j: k * n *n + j * n + i))
+        n, d, board, node, x_set, o_set, lambda i, j: i * n * n + k * n + j))
       s.append("</td>")
     s.append("</tr></table>")
     return "".join(s)

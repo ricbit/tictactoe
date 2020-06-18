@@ -370,14 +370,15 @@ TEST(ForcingMoveTest, CheckDefensiveMoveUsingCheck) {
 TEST(ForcingMoveTest, CheckDefensiveMoveIn33) {
   BoardData<3, 3> data;
   State state(data);
-  state.play({0_side, 1_side, 0_side}, Mark::X);
+  state.play({1_side, 0_side, 0_side}, Mark::X);
   state.play({1_side, 1_side, 1_side}, Mark::O);
   state.play({1_side, 1_side, 0_side}, Mark::X);
+  state.print();
   auto open = state.get_open_positions(Mark::O);
   ForcingMove f(state);
   auto pos = f.check(Mark::X, open);
   EXPECT_TRUE(pos.first);
-  EXPECT_EQ(data.encode({2_side, 1_side, 0_side}), *pos.first);
+  EXPECT_EQ(data.encode({1_side, 2_side, 0_side}), *pos.first);
   EXPECT_EQ(Mark::X, pos.second);
 }
 
