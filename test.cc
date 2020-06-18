@@ -30,9 +30,12 @@ TEST(GeometryTest, EncodeDecode) {
 }
 
 TEST(SymmetryTest, CorrectNumberOfSymmetries) {
-  Geometry<5, 3> geom;
-  Symmetry sym(geom);
-  EXPECT_EQ(192u, sym.symmetries().size());
+  Geometry<5, 3> geom53;
+  EXPECT_EQ(192u, Symmetry(geom53).symmetries().size());
+  Geometry<3, 3> geom33;
+  EXPECT_EQ(48u, Symmetry(geom33).symmetries().size());
+  Geometry<3, 2> geom32;
+  EXPECT_EQ(8u, Symmetry(geom32).symmetries().size());
 }
 
 TEST(StateTest, CorrectNumberOfOpeningPositions) {
@@ -70,7 +73,13 @@ TEST(StateTest, OpenPositionsOnDefensiveMoveIn33) {
   state.play({1_side, 1_side, 1_side}, Mark::O);
   state.play({1_side, 1_side, 0_side}, Mark::X);
   state.print();
+  state.print_accumulation();
   auto open = state.get_open_positions(Mark::O);
+  State scratchpad(data);
+  for (Position pos : open.all()) {
+    scratchpad.play(pos, Mark::X);
+  }
+  scratchpad.print();
   EXPECT_TRUE(open[data.encode({1_side, 2_side, 0_side})]);
 }
 

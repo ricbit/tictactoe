@@ -48,6 +48,15 @@ constexpr T pow(T a, T b) {
   return ans;
 }
 
+template<typename T>
+constexpr T factorial(T a) {
+  T ans = T{1};
+  for (int i = 1; i <= a; i++) {
+    ans *= i;
+  }
+  return ans;
+}
+
 template<int N, int D>
 class Geometry {
  public:
@@ -185,6 +194,11 @@ class Geometry {
     return ans;
   }
 
+  char encode_points(int points) const {
+    return points < 10 ? '0' + points :
+        points < 10 + 26 ? 'A' + points - 10 : '-';
+  }
+
  private:
   Position apply_permutation(const vector<Side>& permutation, Position pos) const {
     auto decoded = decode(pos);
@@ -266,11 +280,6 @@ class Geometry {
         _accumulation_points[pos]++;
       }
     }
-  }
-
-  char encode_points(int points) const {
-    return points < 10 ? '0' + points :
-        points < 10 + 26 ? 'A' + points - 10 : '-';
   }
 
   void construct_lines_through_position() {
@@ -381,9 +390,12 @@ class Symmetry {
     generate_all_rotations();
     generate_all_eviscerations();
     multiply_groups();
+    assert(_symmetries.size() == symmetries_size);
   }
 
   constexpr static Position board_size = Geometry<N, D>::board_size;
+  constexpr static SymLine symmetries_size =
+      SymLine{pow(2, D - 1 + (N >> 1)) * factorial(D) * factorial(N >> 1)};
 
   const vector<vector<Position>>& symmetries() const {
     return _symmetries;
@@ -645,6 +657,10 @@ class BoardData {
 
   Position encode(initializer_list<Side> vec) const {
     return geom.encode(vec);
+  }
+
+  char encode_points(int points) const {
+    return geom.encode_points(points);
   }
 
  private:
