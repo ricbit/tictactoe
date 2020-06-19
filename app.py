@@ -20,7 +20,7 @@ def print_table(n, d, board, node, x_set, o_set, current, encode):
           s.append("O")
         elif pos in children:
           s.append('<a href="%s">%d</a><br>(%s)' %
-              ("/%s%d" % (current, pos),
+              ("/game/%s%d" % (current, pos),
                node.children[pos].count,
                encode_result(node.children[pos].result)))
         else:
@@ -44,7 +44,7 @@ def print_board(n, d, board, current, node):
       s.append('<td class="dim3">')
       s.extend(print_table(
         n, d, board, node, x_set, o_set,
-        current, lambda i, j: k * n * n + j * n + i))
+        current, lambda i, j: i * n * n + k * n + j))
       s.append("</td>")
     s.append("</tr></table>")
     return "".join(s)
@@ -91,7 +91,7 @@ def print_tree(tree, node, board, max_depth, depth, current, path):
 
 tree = reader.read_file("solution.txt")
 app = Flask(__name__)
-@app.route("/<path:subpath>")
+@app.route("/game/<path:subpath>")
 def root(subpath):
   return render(subpath)
 

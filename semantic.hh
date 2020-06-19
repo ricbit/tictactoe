@@ -27,7 +27,7 @@ class sarray {
   const Dest& operator[](const Source& index) const {
     return a[index];
   }
-  size_type size() {
+  size_type size() const {
     return a.size();
   }
   iterator begin() {
@@ -69,7 +69,7 @@ class svector {
   const Dest& operator[](const Source& index) const {
     return v[index];
   }
-  size_type size() {
+  size_type size() const {
     return v.size();
   }
   void push_back(const Dest& value) {

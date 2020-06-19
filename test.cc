@@ -38,6 +38,22 @@ TEST(SymmetryTest, CorrectNumberOfSymmetries) {
   EXPECT_EQ(8u, Symmetry(geom32).symmetries().size());
 }
 
+TEST(SymmeTrieTest, CheckTrieInvariant) {
+  Geometry<3, 3> geom;
+  Symmetry sym(geom);
+  SymmeTrie trie(sym);
+  Position board_size = Geometry<3, 3>::board_size;
+  for (NodeLine line = 0_node; line < trie.size(); ++line) {
+    for (Position pos = 0_pos; pos < board_size; ++pos) {
+      auto before = trie.mask(line, pos);
+      for (Position next = 0_pos; next < board_size; ++next) {
+        auto after = trie.mask(trie.next(line, pos), pos);
+        EXPECT_EQ(after, before & after);
+      }
+    }
+  }
+}
+
 TEST(StateTest, CorrectNumberOfOpeningPositions) {
   EXPECT_EQ(2u, (State(BoardData<4, 3>()).get_open_positions(Mark::X).count()));
   EXPECT_EQ(6u, (State(BoardData<5, 3>()).get_open_positions(Mark::X).count()));
@@ -72,14 +88,17 @@ TEST(StateTest, OpenPositionsOnDefensiveMoveIn33) {
   state.play({1_side, 0_side, 0_side}, Mark::X);
   state.play({1_side, 1_side, 1_side}, Mark::O);
   state.play({1_side, 1_side, 0_side}, Mark::X);
-  state.print();
-  state.print_accumulation();
   auto open = state.get_open_positions(Mark::O);
-  State scratchpad(data);
-  for (Position pos : open.all()) {
-    scratchpad.play(pos, Mark::X);
-  }
-  scratchpad.print();
+  EXPECT_TRUE(open[data.encode({1_side, 2_side, 0_side})]);
+}
+
+TEST(StateTest, DefensiveMoveIn33DifferentOrder) {
+  BoardData<3, 3> data;
+  State state(data);
+  state.play({1_side, 1_side, 0_side}, Mark::X);
+  state.play({1_side, 1_side, 1_side}, Mark::O);
+  state.play({1_side, 0_side, 0_side}, Mark::X);
+  auto open = state.get_open_positions(Mark::O);
   EXPECT_TRUE(open[data.encode({1_side, 2_side, 0_side})]);
 }
 

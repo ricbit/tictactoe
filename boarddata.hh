@@ -2,6 +2,7 @@
 #define BOARDDATA_HH
 
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <algorithm>
 #include <random>
@@ -26,6 +27,9 @@ SEMANTIC_INDEX(NodeLine, node)
 SEMANTIC_INDEX(LineCount, lcount)
 SEMANTIC_INDEX(MarkCount, mcount)
 SEMANTIC_INDEX(Crossing, cross)
+
+template<typename T>
+using bag = vector<T>;
 
 enum class Direction {
   equal,
@@ -376,9 +380,19 @@ class Bitfield {
     auto positions = all();
     return vector<Position>(begin(positions), end(positions));
   }
+  bool operator==(const Bitfield<N, D>& that) const {
+    return bitfield == that.bitfield;
+  }
+  Bitfield<N, D> operator&(const Bitfield<N, D>& that) const {
+    return Bitfield<N, D>{bitfield & that.bitfield};
+  }
+  Bitfield<N, D>() {
+  }
 
  private:
   constexpr static Position board_size = Geometry<N, D>::board_size;
+  Bitfield<N, D>(const bitset<board_size>& bits) : bitfield(bits) {
+  }
   bitset<board_size> bitfield;
 };
 
@@ -399,6 +413,17 @@ class Symmetry {
 
   const vector<vector<Position>>& symmetries() const {
     return _symmetries;
+  }
+
+  void dump_symmetries() const {
+    int line = 0;
+    for (const auto& board : _symmetries) {
+      cout << setw(2) << line++ << " : ";
+      for (Position pos : board) {
+        cout << setw(2) << static_cast<int>(pos) << " ";
+      }
+      cout << "\n";
+    }
   }
 
  private:
@@ -507,10 +532,17 @@ class SymmeTrie {
     construct_mask();
   }
 
-  constexpr static int board_size = Symmetry<N, D>::board_size;
+  constexpr static Position board_size = Symmetry<N, D>::board_size;
 
   const vector<SymLine>& similar(NodeLine line) const {
     return nodes[line].similar;
+  }
+
+  void dump_similar(NodeLine line) const {
+    for (auto symline : similar(line)) {
+      cout << symline << " ";
+    }
+    cout << "\n";
   }
 
   NodeLine next(NodeLine line, Position pos) const {
@@ -531,6 +563,9 @@ class SymmeTrie {
       }
     }
   }
+  SymLine size() const {
+    return static_cast<SymLine>(nodes.size());
+  }
 
  private:
   struct Node {
@@ -546,14 +581,15 @@ class SymmeTrie {
   vector<Node> nodes;
 
   void construct_mask() {
-    for (auto& node : nodes) {
+    transform(begin(nodes), end(nodes), begin(nodes), [&](Node& node) {
       for (Position pos = 0_pos; pos < board_size; ++pos) {
         node.mask[pos].reset();
         for (SymLine line : node.similar) {
           node.mask[pos].set(sym.symmetries()[line][pos]);
         }
       }
-    }
+      return node;
+    });
   }
 
   void print_node(const Node& node) {
@@ -572,13 +608,12 @@ class SymmeTrie {
     while (!pool.empty()) {
       auto current_node = pool.front();
       vector<SymLine> current = nodes[current_node].similar;
-      const SymLine current_size = static_cast<SymLine>(current.size());
       pool.pop();
       for (Position i = 0_pos; i < board_size; ++i) {
-        vector<SymLine> next_similar;
-        for (SymLine j = 0_sym; j < current_size; ++j) {
-          if (i == sym.symmetries()[current[j]][i]) {
-            next_similar.push_back(j);
+        bag<SymLine> next_similar;
+        for (SymLine line : current) {
+          if (i == sym.symmetries()[line][i]) {
+            next_similar.push_back(line);
           }
         }
         auto it = find_if(begin(nodes), end(nodes), [&](const auto& x) {
@@ -661,6 +696,10 @@ class BoardData {
 
   char encode_points(int points) const {
     return geom.encode_points(points);
+  }
+
+  void dump_similar(NodeLine line) const {
+    trie.dump_similar(line);
   }
 
  private:

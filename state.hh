@@ -51,6 +51,14 @@ class State {
     });
   }
 
+  void print_bitfield(const Bitfield<N, D>& bitfield, string marker) const {
+    data.print(data.board_size, [&](Position k) {
+      return data.decode(k);
+    }, [&](Position k) {
+      return bitfield[k] ? marker : "."s;
+    });
+  }
+
   void print_last_position(Position pos) const {
     data.print(data.board_size, [&](Position k) {
       return data.decode(k);
@@ -131,6 +139,14 @@ class State {
       return data.decode(k);
     }, [&](Position k) {
       return data.encode_points(current_accumulation[k]);
+    });
+  }
+
+  void print_empty_cells() {
+    data.print(data.board_size, [&](Position k) {
+      return data.decode(k);
+    }, [&](Position k) {
+      return empty_cells.check(k) ? "E" : ".";
     });
   }
 
