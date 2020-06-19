@@ -25,7 +25,7 @@ TEST(GeometryTest, DecodeEncode) {
 
 TEST(GeometryTest, EncodeDecode) {
   Geometry<4, 2> data;
-  auto expected = Geometry<4,2>::SideArray{0_side, 3_side};
+  auto expected = Geometry<4, 2>::SideArray{0_side, 3_side};
   EXPECT_EQ(expected, data.decode(data.encode(expected)));
 }
 
