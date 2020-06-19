@@ -54,6 +54,21 @@ TEST(SymmeTrieTest, CheckTrieInvariant) {
   }
 }
 
+TEST(SymmeTrieTest, PlayingInTheMiddleNeverChangesSymmetry) {
+  Geometry<3, 3> geom;
+  Symmetry sym(geom);
+  SymmeTrie trie(sym);
+  Position board_size = Geometry<3, 3>::board_size;
+  const Position middle = geom.encode({1_side, 1_side, 1_side});
+  for (NodeLine line = 0_node; line < trie.size(); ++line) {
+    for (Position pos = 0_pos; pos < board_size; ++pos) {
+      auto before = trie.mask(line, pos);
+      auto after = trie.mask(trie.next(line, middle), pos);
+      EXPECT_EQ(before, after);
+    }
+  }
+}
+
 TEST(StateTest, CorrectNumberOfOpeningPositions) {
   EXPECT_EQ(2u, (State(BoardData<4, 3>()).get_open_positions(Mark::X).count()));
   EXPECT_EQ(6u, (State(BoardData<5, 3>()).get_open_positions(Mark::X).count()));
