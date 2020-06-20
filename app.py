@@ -2,7 +2,7 @@ from flask import Flask
 import reader
 
 def encode_result(value):
-  d = {0: "X wins", 1: "O wins", 2: "draw"}
+  d = {0: "X wins", 1: "O wins", 2: "draw", 3: "unknown"}
   return d[value]
 
 def print_table(n, d, board, node, x_set, o_set, current, encode, depth):
