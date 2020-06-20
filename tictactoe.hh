@@ -355,6 +355,7 @@ enum class SortingChoice {
   HEATMAP
 };
 
+template<int N, int D>
 auto get_sorting_choice = [](
    const auto& current_state,
    const vector<Position>& open, Mark mark)
@@ -366,8 +367,16 @@ auto get_sorting_choice = [](
   }
 };
 
+template<>
+auto get_sorting_choice<3, 3> = [](
+   const auto& current_state,
+   const vector<Position>& open, Mark mark)
+       -> SortingChoice {
+  return SortingChoice::HEATMAP;
+};
+
 template<int N, int D, Outcome outcome = known_outcome<N, D>(),
-    typename Sorting = decltype(get_sorting_choice)>
+    typename Sorting = decltype(get_sorting_choice<N, D>)>
 class MiniMax {
  public:
   explicit MiniMax(
