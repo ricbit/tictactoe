@@ -350,7 +350,24 @@ constexpr Outcome known_outcome<4, 3>() {
   return Outcome::X_WINS;
 }
 
-template<int N, int D, Outcome outcome = known_outcome<N, D>()>
+enum class SortingChoice {
+  UNIFORM,
+  HEATMAP
+};
+
+auto get_sorting_choice = [](
+   const auto& current_state,
+   const vector<Position>& open, Mark mark)
+       -> SortingChoice {
+  if (open.size() < 9) {
+    return SortingChoice::UNIFORM;
+  } else {
+    return SortingChoice::HEATMAP;
+  }
+};
+
+template<int N, int D, Outcome outcome = known_outcome<N, D>(),
+    typename Sorting = decltype(get_sorting_choice)>
 class MiniMax {
  public:
   explicit MiniMax(
@@ -460,10 +477,14 @@ class MiniMax {
   vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state,
       const vector<Position>& open, Mark mark) {
     vector<pair<int, Position>> paired(open.size());
-    if (open.size() < 9) {
-      uniform_positions(paired, open);
-    } else {
-      heatmap_positions(current_state, paired, open, mark);
+    SortingChoice choice = Sorting()(current_state, open, mark);
+    switch (choice) {
+      case SortingChoice::UNIFORM:
+        uniform_positions(paired, open);
+        break;
+      case SortingChoice::HEATMAP:
+        heatmap_positions(current_state, paired, open, mark);
+        break;
     }
     return paired;
   }
