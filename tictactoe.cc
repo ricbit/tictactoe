@@ -10,7 +10,7 @@
 #include <bitset>
 #include <execution>
 #include <list>
-#include "tictactoe.hh"
+#include "strategies.hh"
 
 int main() {
   BoardData<3, 3> data;

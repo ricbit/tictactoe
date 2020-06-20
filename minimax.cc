@@ -9,7 +9,7 @@
 #include <bitset>
 #include <execution>
 #include <list>
-#include "tictactoe.hh"
+#include "minimax.hh"
 
 int main() {
   BoardData<4, 2> data;

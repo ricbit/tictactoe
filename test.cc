@@ -1,5 +1,4 @@
-#include "tictactoe.hh"
-#include "elevator.hh"
+#include "minimax.hh"
 #include "gtest/gtest.h"
 
 namespace {

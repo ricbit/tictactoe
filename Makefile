@@ -1,6 +1,6 @@
 # Set GOOGLE_TEST in your .bashrc as /home/ricbit/src/googletest or whatever.
 TEST_BASE=${GOOGLE_TEST}/googletest
-HEADERS = boarddata.hh semantic.hh tictactoe.hh state.hh elevator.hh \
+HEADERS = boarddata.hh semantic.hh strategies.hh minimax.hh state.hh elevator.hh \
           solutiontree.hh
 
 all : tictactoe heatmap test minimax
