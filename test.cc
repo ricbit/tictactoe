@@ -69,6 +69,19 @@ TEST(SymmeTrieTest, PlayingInTheMiddleNeverChangesSymmetry) {
   }
 }
 
+TEST(SymmeTrieTest, CheckIdentityNode) {
+  Geometry<3, 3> geom;
+  Symmetry sym(geom);
+  SymmeTrie trie(sym);
+  EXPECT_FALSE(trie.is_identity(0_node));
+  NodeLine current = 0_node;
+  Position board_size = Geometry<3, 3>::board_size;
+  for (Position pos = 0_pos; pos < board_size; ++pos) {
+    current = trie.next(current, pos);
+  }
+  EXPECT_TRUE(trie.is_identity(current));
+}
+
 TEST(StateTest, CorrectNumberOfOpeningPositions) {
   EXPECT_EQ(2u, (State(BoardData<4, 3>()).get_open_positions(Mark::X).count()));
   EXPECT_EQ(6u, (State(BoardData<5, 3>()).get_open_positions(Mark::X).count()));

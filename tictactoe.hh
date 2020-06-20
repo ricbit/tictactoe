@@ -375,6 +375,18 @@ auto get_sorting_choice<3, 3> = [](
   return SortingChoice::HEATMAP;
 };
 
+template<>
+auto get_sorting_choice<4, 2> = [](
+   const auto& current_state,
+   const vector<Position>& open, Mark mark)
+       -> SortingChoice {
+  if (open.size() < 9 || mark == Mark::X) {
+    return SortingChoice::UNIFORM;
+  } else {
+    return SortingChoice::HEATMAP;
+  }
+};
+
 template<int N, int D, Outcome outcome = known_outcome<N, D>(),
     typename Sorting = decltype(get_sorting_choice<N, D>)>
 class MiniMax {

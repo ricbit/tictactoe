@@ -553,6 +553,10 @@ class SymmeTrie {
     return nodes[line].mask[pos];
   }
 
+  bool is_identity(const NodeLine line) const {
+    return nodes[line].similar.size() == 1;
+  }
+
   void print() {
     for (const auto& node : nodes) {
       cout << " --- \n";
