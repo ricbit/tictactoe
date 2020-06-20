@@ -706,6 +706,10 @@ class BoardData {
     trie.dump_similar(line);
   }
 
+  bool has_symmetry(NodeLine line) const {
+    return !trie.is_identity(line);
+  }
+
  private:
   const Geometry<N, D> geom;
   const Symmetry<N, D> sym;

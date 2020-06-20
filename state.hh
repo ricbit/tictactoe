@@ -126,6 +126,10 @@ class State {
     return xor_table[line];
   }
 
+  bool has_symmetry() const {
+    return data.has_symmetry(trie_node);
+  }
+
   const LineCount get_current_accumulation(Position pos) const {
     return current_accumulation[pos];
   };
