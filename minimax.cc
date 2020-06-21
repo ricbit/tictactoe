@@ -12,11 +12,13 @@
 #include "minimax.hh"
 
 int main() {
-  BoardData<4, 2> data;
+  constexpr int N = 4;
+  constexpr int D = 2;
+  BoardData<N, D> data;
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
   State state(data);
-  auto minimax = MiniMax<4, 3, 1000000>(state, data, generator);
+  auto minimax = MiniMax<N, D, 1000000>(state, data, generator);
   auto result = minimax.play(state, Mark::X);
   if (*result == BoardValue::X_WIN) {
     cout << "X wins\n";

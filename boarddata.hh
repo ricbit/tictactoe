@@ -744,7 +744,7 @@ class BoardData {
   }
 
   Zobrist get_zobrist(Position pos, Mark mark) const {
-      return mark == Mark::X ? geom.zobrist_x()[pos] : geom.zobrist_o()[pos];
+    return mark == Mark::X ? geom.zobrist_x()[pos] : geom.zobrist_o()[pos];
   }
 
  private:

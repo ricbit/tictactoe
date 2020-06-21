@@ -91,6 +91,10 @@ class State {
     });
   }
 
+  Zobrist get_zobrist() const {
+    return zobrist;
+  }
+
   bool play(initializer_list<Side> pos, Mark mark) {
     return play(data.encode(pos), mark);
   }

@@ -118,6 +118,7 @@ class MiniMax {
   int nodes_visited;
   vector<int> rank;
   SolutionTree solution;
+  unordered_map<Zobrist, BoardValue> zobrist;
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
@@ -138,18 +139,25 @@ class MiniMax {
     if (nodes_visited > max_nodes) {
       return BoardValue::UNKNOWN;
     }
+    auto has_zobrist = zobrist.find(current_state.get_zobrist());
+    if (has_zobrist != zobrist.end()) {
+      return has_zobrist->second;
+    }
     auto open_positions = current_state.get_open_positions(mark);
     report_progress(open_positions);
     if (open_positions.none()) {
+      zobrist[current_state.get_zobrist()] = BoardValue::DRAW;
       return node->value = BoardValue::DRAW;
     }
     if (auto forced = check_forced_move(
            current_state, mark, parent, open_positions, node);
         forced.has_value()) {
+      zobrist[current_state.get_zobrist()] = *forced;
       return node->value = *forced;
     }
     vector<Position> open = open_positions.get_vector();
-    vector<pair<int, Position>> sorted = get_sorted_positions(current_state, open, mark);
+    vector<pair<int, Position>> sorted =
+        get_sorted_positions(current_state, open, mark);
     BoardValue current_best = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>());
@@ -157,6 +165,7 @@ class MiniMax {
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
       if (result) {
+        zobrist[current_state.get_zobrist()] = winner(mark);
         node->count += count_children(node);
         return node->value = winner(mark);
       } else {
@@ -168,12 +177,14 @@ class MiniMax {
         auto final_result = process_result(
             new_result, mark, parent, current_best);
         if (final_result.has_value()) {
+          zobrist[current_state.get_zobrist()] = *final_result;
           node->count += count_children(node);
           return node->value = *final_result;
         }
       }
       rank_value++;
     }
+    zobrist[current_state.get_zobrist()] = current_best;
     node->count += count_children(node);
     return node->value = current_best;
   }
