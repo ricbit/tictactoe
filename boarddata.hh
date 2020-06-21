@@ -13,6 +13,7 @@
 #include <bitset>
 #include <execution>
 #include <list>
+#include <limits>
 #include <ranges>
 #include "semantic.hh"
 
@@ -61,19 +62,42 @@ constexpr T factorial(T a) {
   return ans;
 }
 
+enum class Mark {
+  empty = 0,
+  X = 1,
+  O = 2,
+  both = 3
+};
+
+enum class BoardValue {
+  X_WIN = 0,
+  O_WIN = 1,
+  DRAW = 2,
+  UNKNOWN = 3
+};
+
+Mark flip(Mark mark) {
+  return mark == Mark::X ? Mark::O : Mark::X;
+}
+
+using Zobrist = uint64_t;
+
 template<int N, int D>
 class Geometry {
  public:
+  constexpr static int zobrist_seed = 1;
   Geometry()
       : _accumulation_points(0_lcount),
         _lines_through_position(board_size),
-        current_winning(0_line) {
+        current_winning(0_line),
+        zobrist_generator(zobrist_seed) {
     construct_unique_terrains();
     construct_winning_lines();
     construct_accumulation_points();
     construct_lines_through_position();
     construct_xor_table();
     construct_crossings();
+    construct_zobrist();
   }
 
   constexpr static Position board_size =
@@ -318,32 +342,33 @@ class Geometry {
     }
   }
 
+  void construct_zobrist() {
+    uniform_int_distribution<Zobrist> dist(
+        numeric_limits<Zobrist>::min(),
+        numeric_limits<Zobrist>::max());
+    assert(numeric_limits<Zobrist>::min() >= dist.min());
+    assert(numeric_limits<Zobrist>::max() <= dist.max());
+    construct_zobrist_array(dist, _zobrist_x);
+    construct_zobrist_array(dist, _zobrist_o);
+  }
+
+  template<typename Array, typename Dist>
+  void construct_zobrist_array(Dist& dist, Array& zobrist) {
+    generate(begin(zobrist), end(zobrist), [&]() {
+      return dist(zobrist_generator);
+    });
+  }
+
   vector<vector<Direction>> unique_terrains;
   WinningArray _winning_lines;
   sarray<Position, LineCount, board_size> _accumulation_points;
   vector<vector<Line>> _lines_through_position;
   sarray<Line, Position, line_size> _xor_table;
   sarray<Position, vector<pair<Line, Line>>, board_size> _crossings;
+  sarray<Position, Zobrist, board_size> _zobrist_x, _zobrist_o;
   Line current_winning;
+  default_random_engine zobrist_generator;
 };
-
-enum class Mark {
-  empty = 0,
-  X = 1,
-  O = 2,
-  both = 3
-};
-
-enum class BoardValue {
-  X_WIN = 0,
-  O_WIN = 1,
-  DRAW = 2,
-  UNKNOWN = 3
-};
-
-Mark flip(Mark mark) {
-  return mark == Mark::X ? Mark::O : Mark::X;
-}
 
 template<int N, int D>
 class Bitfield {
