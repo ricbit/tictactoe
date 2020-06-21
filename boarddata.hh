@@ -130,6 +130,14 @@ class Geometry {
     return _crossings;
   }
 
+  const auto& zobrist_x() const {
+    return _zobrist_x;
+  }
+
+  const auto& zobrist_o() const {
+    return _zobrist_o;
+  }
+
   SideArray decode(Position pos) const {
     SideArray ans;
     for (Dim i = 0_dim; i < D; ++i) {
@@ -733,6 +741,10 @@ class BoardData {
 
   bool has_symmetry(NodeLine line) const {
     return !trie.is_identity(line);
+  }
+
+  Zobrist get_zobrist(Position pos, Mark mark) const {
+      return mark == Mark::X ? geom.zobrist_x()[pos] : geom.zobrist_o()[pos];
   }
 
  private:

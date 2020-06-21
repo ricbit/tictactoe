@@ -25,7 +25,8 @@ class State {
       board(Mark::empty),
       xor_table(data.xor_table()),
       current_accumulation(data.accumulation_points()),
-      trie_node(0_node) {
+      trie_node(0_node),
+      zobrist(0) {
   }
 
   constexpr static Position board_size = BoardData<N, D>::board_size;
@@ -96,6 +97,7 @@ class State {
 
   bool play(Position pos, Mark mark) {
     board[pos] = mark;
+    zobrist ^= data.get_zobrist(pos, mark);
     empty_cells.remove(pos);
     trie_node = data.next(trie_node, pos);
     for (Line line : data.lines_through_position()[pos]) {
@@ -178,6 +180,7 @@ class State {
   NodeLine trie_node;
   TrackingList<N, D> empty_cells;
   Elevator<N, D> line_marks;
+  Zobrist zobrist;
 
   char encode_position(Mark pos) const {
     return pos == Mark::X ? 'X'
