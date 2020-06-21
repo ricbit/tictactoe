@@ -141,6 +141,7 @@ class MiniMax {
     }
     auto has_zobrist = zobrist.find(current_state.get_zobrist());
     if (has_zobrist != zobrist.end()) {
+      node->value = has_zobrist->second;
       return has_zobrist->second;
     }
     auto open_positions = current_state.get_open_positions(mark);
