@@ -49,60 +49,8 @@ constexpr Outcome known_outcome<4, 3>() {
   return Outcome::X_WINS;
 }
 
-enum class SortingChoice {
-  UNIFORM,
-  HEATMAP
-};
-
-template<int N, int D>
-auto get_sorting_choice = [](
-   const auto& current_state,
-   const vector<Position>& open, Mark mark)
-       -> SortingChoice {
-  if (open.size() < 9 && !current_state.has_symmetry()) {
-    return SortingChoice::UNIFORM;
-  } else {
-    return SortingChoice::HEATMAP;
-  }
-};
-
-template<>
-auto get_sorting_choice<3, 3> = [](
-   const auto& current_state,
-   const vector<Position>& open, Mark mark)
-       -> SortingChoice {
-  return SortingChoice::HEATMAP;
-};
-
-template<>
-auto get_sorting_choice<4, 2> = [](
-   const auto& current_state,
-   const vector<Position>& open, Mark mark)
-       -> SortingChoice {
-  if ((open.size() < 5 && !current_state.has_symmetry()) 
-      || mark == Mark::X) {
-    return SortingChoice::UNIFORM;
-  } else {
-    return SortingChoice::HEATMAP;
-  }
-};
-
-template<>
-auto get_sorting_choice<4, 3> = [](
-   const auto& current_state,
-   const vector<Position>& open, Mark mark)
-       -> SortingChoice {
-  if ((open.size() < 5 && !current_state.has_symmetry()) 
-      || mark == Mark::O) {
-    return SortingChoice::UNIFORM;
-  } else {
-    return SortingChoice::HEATMAP;
-  }
-};
-
 template<int N, int D, int max_nodes = 1000000,
-    Outcome outcome = known_outcome<N, D>(),
-    typename Sorting = decltype(get_sorting_choice<N, D>)>
+    Outcome outcome = known_outcome<N, D>()>
 class MiniMax {
  public:
   explicit MiniMax(
@@ -229,15 +177,7 @@ class MiniMax {
   vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state,
       const vector<Position>& open, Mark mark) {
     vector<pair<int, Position>> paired(open.size());
-    SortingChoice choice = Sorting()(current_state, open, mark);
-    switch (choice) {
-      case SortingChoice::UNIFORM:
-        uniform_positions(paired, open);
-        break;
-      case SortingChoice::HEATMAP:
-        heatmap_positions(current_state, paired, open, mark);
-        break;
-    }
+    uniform_positions(paired, open);
     return paired;
   }
 
@@ -246,18 +186,6 @@ class MiniMax {
     for (int i = 0; i < static_cast<int>(open.size()); ++i) {
       paired[i] = make_pair(0, open[i]);
     }
-  }
-
-  void heatmap_positions(const State<N, D>& current_state,
-      vector<pair<int, Position>>& paired,
-      const vector<Position>& open, Mark mark) {
-    int trials = 20 * open.size();
-    HeatMap<N, D> heatmap(current_state, data, generator, trials);
-    vector<int> scores = heatmap.get_scores(mark, open);
-    for (int i = 0; i < static_cast<int>(open.size()); ++i) {
-      paired[i] = make_pair(scores[i], open[i]);
-    }
-    sort(rbegin(paired), rend(paired));
   }
 
   template<typename B>

@@ -64,6 +64,6 @@ html : solution.txt dumper.py
 flask : app.py solution.txt
 	flask run
 
-callminimax :
+callminimax : minimax
 	valgrind --tool=callgrind --dump-instr=yes  ./minimax
 	kcachegrind `ls callgrind* -t | head -n 1`
