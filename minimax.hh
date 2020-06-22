@@ -157,10 +157,8 @@ class MiniMax {
         return new_result;
       }
       if (*new_result == BoardValue::DRAW) {
-        if constexpr (outcome == Outcome::O_DRAWS) {
-          if (mark == Mark::O) {
-            return new_result;
-          }
+        if (mark == Mark::O) {
+          return new_result;
         }
         if (parent == BoardValue::DRAW) {
           return parent;
@@ -177,15 +175,17 @@ class MiniMax {
   vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state,
       const vector<Position>& open, Mark mark) {
     vector<pair<int, Position>> paired(open.size());
-    uniform_positions(paired, open);
+    uniform_positions(paired, open, current_state);
     return paired;
   }
 
   void uniform_positions(vector<pair<int, Position>>& paired,
-      const vector<Position>& open) {
+      const vector<Position>& open, const State<N, D>& current_state) {
     for (int i = 0; i < static_cast<int>(open.size()); ++i) {
-      paired[i] = make_pair(0, open[i]);
+      paired[i] = make_pair(
+          current_state.get_current_accumulation(open[i]), open[i]);
     }
+    sort(rbegin(paired), rend(paired));
   }
 
   template<typename B>
