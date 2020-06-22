@@ -8,7 +8,7 @@
 class SolutionTree {
  public:
   struct Node {
-    Node(int children_size) : value(BoardValue::UNKNOWN), count(1) {
+    explicit Node(int children_size) : value(BoardValue::UNKNOWN), count(1) {
       children.reserve(children_size);
     }
     BoardValue value;
@@ -18,7 +18,7 @@ class SolutionTree {
       return children.rbegin()->second.get();
     }
   };
-  SolutionTree(int board_size) : root(make_unique<Node>(board_size)) {
+  explicit SolutionTree(int board_size) : root(make_unique<Node>(board_size)) {
   }
   Node *get_root() {
     return root.get();
