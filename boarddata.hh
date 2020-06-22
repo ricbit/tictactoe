@@ -77,7 +77,7 @@ enum class BoardValue {
 };
 
 Mark flip(Mark mark) {
-  return mark == Mark::X ? Mark::O : Mark::X;
+  return static_cast<Mark>(static_cast<int>(mark) ^ 3);
 }
 
 using Zobrist = uint64_t;
