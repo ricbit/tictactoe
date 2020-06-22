@@ -137,7 +137,7 @@ class MiniMax {
       State<N, D>& current_state, Mark mark, BoardValue parent,
       SolutionTree::Node *node) {
     if (nodes_visited > max_nodes) {
-      return BoardValue::UNKNOWN;
+      return node->value = BoardValue::UNKNOWN;
     }
     auto has_zobrist = zobrist.find(current_state.get_zobrist());
     if (has_zobrist != zobrist.end()) {
