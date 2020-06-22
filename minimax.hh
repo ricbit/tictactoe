@@ -53,12 +53,16 @@ template<int N, int D, int max_nodes = 1000000,
     Outcome outcome = known_outcome<N, D>()>
 class MiniMax {
  public:
+  constexpr static Position board_size = BoardData<N, D>::board_size;
+
   explicit MiniMax(
     const State<N, D>& state,
     const BoardData<N, D>& data,
     default_random_engine& generator)
     :  state(state), data(data), generator(generator),
-       nodes_visited(0) {
+       nodes_visited(0),
+       solution(board_size) {
+    rank.reserve(board_size);
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
@@ -67,7 +71,6 @@ class MiniMax {
   vector<int> rank;
   SolutionTree solution;
   unordered_map<Zobrist, BoardValue> zobrist;
-  constexpr static Position board_size = BoardData<N, D>::board_size;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
     auto ans = play(current_state, mark,
@@ -109,7 +112,7 @@ class MiniMax {
         get_sorted_positions(current_state, open, mark);
     BoardValue current_best = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
-      node->children.emplace_back(pos, make_unique<SolutionTree::Node>());
+      node->children.emplace_back(pos, make_unique<SolutionTree::Node>(open.size()));
       auto *child_node = node->get_last_child();
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
@@ -225,7 +228,8 @@ class MiniMax {
       bool game_ended = cloned.play(*forcing.first, mark);
       assert(!game_ended);
       rank.push_back(-1);
-      node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>());
+      node->children.emplace_back(*forcing.first,
+          make_unique<SolutionTree::Node>(1));
       auto *child_node = node->get_last_child();
       auto result = play(cloned, flip(mark), winner(flip(mark)), child_node);
       node->count += count_children(node);
