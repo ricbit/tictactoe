@@ -13,7 +13,7 @@
 
 int main() {
   constexpr int N = 4;
-  constexpr int D = 3;
+  constexpr int D = 2;
   BoardData<N, D> data;
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
@@ -24,8 +24,10 @@ int main() {
     cout << "X wins\n";
   } else if (*result == BoardValue::O_WIN) {
     cout << "O wins\n";
-  } else {
+  } else if (*result == BoardValue::DRAW) {
     cout << "Draw\n";
+  } else {
+    cout << "Unknown\n";
   }
   minimax.get_solution().dump(data, "solution.txt");
   return 0;
