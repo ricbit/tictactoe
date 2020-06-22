@@ -107,12 +107,12 @@ class MiniMax {
       zobrist[current_state.get_zobrist()] = *forced;
       return node->value = *forced;
     }
-    vector<Position> open = open_positions.get_vector();
     vector<pair<int, Position>> sorted =
-        get_sorted_positions(current_state, open, mark);
+        get_sorted_positions(current_state, open_positions, mark);
     BoardValue current_best = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
-      node->children.emplace_back(pos, make_unique<SolutionTree::Node>(open.size()));
+      node->children.emplace_back(
+          pos, make_unique<SolutionTree::Node>(open_positions.count()));
       auto *child_node = node->get_last_child();
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
@@ -175,18 +175,21 @@ class MiniMax {
     return {};
   }
 
-  vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state,
-      const vector<Position>& open, Mark mark) {
-    vector<pair<int, Position>> paired(open.size());
+  template<typename B>
+  vector<pair<int, Position>> get_sorted_positions(
+      const State<N, D>& current_state, const B& open, Mark mark) {
+    vector<pair<int, Position>> paired;
+    paired.reserve(open.count());
     uniform_positions(paired, open, current_state);
     return paired;
   }
 
+  template<typename B>
   void uniform_positions(vector<pair<int, Position>>& paired,
-      const vector<Position>& open, const State<N, D>& current_state) {
-    for (int i = 0; i < static_cast<int>(open.size()); ++i) {
-      paired[i] = make_pair(
-          current_state.get_current_accumulation(open[i]), open[i]);
+      const B& open, const State<N, D>& current_state) {
+    for (Position pos : open.all()) {
+      paired.push_back(make_pair(
+          current_state.get_current_accumulation(pos), pos));
     }
     sort(rbegin(paired), rend(paired));
   }
