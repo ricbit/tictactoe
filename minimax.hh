@@ -93,24 +93,21 @@ class MiniMax {
       State<N, D>& current_state, Mark mark, BoardValue parent,
       SolutionTree::Node *node) {
     if (nodes_visited > max_nodes) {
-      return node->value = BoardValue::UNKNOWN;
+      return save_node(node, current_state, 0, BoardValue::UNKNOWN);
     }
     auto has_zobrist = zobrist.find(current_state.get_zobrist());
     if (has_zobrist != zobrist.end()) {
-      node->value = has_zobrist->second;
-      return has_zobrist->second;
+      return save_node(node, current_state, 0, has_zobrist->second);
     }
     auto open_positions = current_state.get_open_positions(mark);
     report_progress(open_positions);
     if (open_positions.none()) {
-      zobrist[current_state.get_zobrist()] = BoardValue::DRAW;
-      return node->value = BoardValue::DRAW;
+      return save_node(node, current_state, 0, BoardValue::DRAW);
     }
     if (auto forced = check_forced_move(
            current_state, mark, parent, open_positions, node);
         forced.has_value()) {
-      zobrist[current_state.get_zobrist()] = *forced;
-      return node->value = *forced;
+      return save_node(node, current_state, 0, *forced);
     }
     vector<pair<int, Position>> sorted =
         get_sorted_positions(current_state, open_positions, mark);
@@ -122,9 +119,7 @@ class MiniMax {
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
       if (result) {
-        zobrist[current_state.get_zobrist()] = winner(mark);
-        node->count += count_children(node);
-        return node->value = winner(mark);
+        return save_node(node, current_state, count_children(node), winner(mark));
       } else {
         Mark flipped = flip(mark);
         rank.push_back(rank_value);
@@ -134,16 +129,19 @@ class MiniMax {
         auto final_result = process_result(
             new_result, mark, parent, current_best);
         if (final_result.has_value()) {
-          zobrist[current_state.get_zobrist()] = *final_result;
-          node->count += count_children(node);
-          return node->value = *final_result;
+          return save_node(node, current_state, count_children(node), *final_result);
         }
       }
       rank_value++;
     }
-    zobrist[current_state.get_zobrist()] = current_best;
-    node->count += count_children(node);
-    return node->value = current_best;
+    return save_node(node, current_state, count_children(node), current_best);
+  }
+
+  BoardValue save_node(SolutionTree::Node *node, State<N, D>& state,
+      int children_count, BoardValue value) {
+    zobrist[state.get_zobrist()] = value;
+    node->count += children_count;
+    return node->value = value;
   }
 
   BoardValue winner(Mark mark) {

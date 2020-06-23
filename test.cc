@@ -94,7 +94,8 @@ optional<Position> get_first_open_position(State& state) {
       return pos;
     }
   }
-  return {};
+  optional<Position> empty_position = {};
+  return empty_position;
 }
 
 TEST(StateTest, CopiedStateDoesntChangeTheOriginal) {
