@@ -64,16 +64,14 @@ class MiniMax {
 
   explicit MiniMax(
     const State<N, D>& state,
-    const BoardData<N, D>& data,
-    default_random_engine& generator)
-    :  state(state), data(data), generator(generator),
+    const BoardData<N, D>& data)
+    :  state(state), data(data),
        nodes_visited(0),
        solution(board_size) {
     rank.reserve(board_size);
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
-  default_random_engine& generator;
   int nodes_visited;
   vector<int> rank;
   SolutionTree solution;
