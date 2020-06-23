@@ -92,6 +92,7 @@ class MiniMax {
   optional<BoardValue> play(
       State<N, D>& current_state, Mark mark, BoardValue parent,
       SolutionTree::Node *node) {
+    report_progress();
     if (nodes_visited > max_nodes) {
       return save_node(node, current_state, 0, BoardValue::UNKNOWN);
     }
@@ -100,7 +101,6 @@ class MiniMax {
       return save_node(node, current_state, 0, has_zobrist->second);
     }
     auto open_positions = current_state.get_open_positions(mark);
-    report_progress(open_positions);
     if (open_positions.none()) {
       return save_node(node, current_state, 0, BoardValue::DRAW);
     }
@@ -197,10 +197,9 @@ class MiniMax {
     sort(rbegin(paired), rend(paired));
   }
 
-  template<typename B>
-  void report_progress(const B& open_positions) {
+  void report_progress() {
     if ((nodes_visited % 1000) == 0) {
-      cout << "id " << nodes_visited << " " << open_positions.count() << endl;
+      cout << "id " << nodes_visited << endl;
       cout << "rank ";
       for (int i : rank) {
         cout << i <<  " ";
