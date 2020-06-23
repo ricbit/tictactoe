@@ -2,20 +2,21 @@
 TEST_BASE=${GOOGLE_TEST}/googletest
 HEADERS = boarddata.hh semantic.hh strategies.hh minimax.hh state.hh elevator.hh \
           solutiontree.hh
+OPT = -O1
 
 all : tictactoe heatmap test minimax
 
 tictactoe : tictactoe.cc ${HEADERS}
-	g++-10 -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+	g++-10 -std=c++2a tictactoe.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 minimax : minimax.cc ${HEADERS}
-	g++-10 -std=c++2a minimax.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+	g++-10 -std=c++2a minimax.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 minimaxc : minimax.cc ${HEADERS}
-	clang-10 -std=c++2a minimax.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+	clang-10 -std=c++2a minimax.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 phasediag : phasediag.cc ${HEADERS}
-	g++-10 -std=c++2a phasediag.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+	g++-10 -std=c++2a phasediag.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 draw : phasediag
 	./phasediag > phasediag.txt
@@ -23,24 +24,24 @@ draw : phasediag
 	| gnuplot -persist
 
 heatmap : heatmap.cc ${HEADERS}
-	g++-10 -std=c++2a heatmap.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+	g++-10 -std=c++2a heatmap.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 heatmapc : heatmap.cc ${HEADERS}
-	clang++-10 -std=c++2a heatmap.cc -o $@ -O3 -Wall -g -march=native -ltbb -lpthread
+	clang++-10 -std=c++2a heatmap.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 clang : tictactoe.cc ${HEADERS}
-	clang++-10 -std=c++2a tictactoe.cc -o $@ -O3 -Wall -g -march=native -ltbb
+	clang++-10 -std=c++2a tictactoe.cc -o $@ ${OPT} -Wall -g -march=native -ltbb
 
 test : test.cc ${HEADERS}
-	g++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ -O3 -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
+	g++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
 	./test
 
 singletest : test.cc ${HEADERS}
-	g++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ -O3 -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
+	g++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
 	./singletest --gtest_filter=StateTest.Defens* > sym.txt
 
 testc : test.cc ${HEADERS}
-	clang++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ -O3 -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
+	clang++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
 	./test
 
 asm :
@@ -56,7 +57,7 @@ cppcheck :
 	cppcheck --enable=style,warning tictactoe.cc heatmap.cc minimax.cc test.cc
 
 solution.txt : minimax
-	./minimax
+	./minimax solution.txt
 
 html : solution.txt dumper.py
 	python3 dumper.py > solution.html

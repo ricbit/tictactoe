@@ -78,7 +78,7 @@ enum class BoardValue {
 
 ostream& operator<<(ostream& oss, const BoardValue& value) {
   if (value == BoardValue::X_WIN) {
-    oss <<  "X wins";
+    oss << "X wins";
   } else if (value == BoardValue::O_WIN) {
     oss << "O wins";
   } else if (value == BoardValue::DRAW) {

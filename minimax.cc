@@ -11,9 +11,9 @@
 #include <list>
 #include "minimax.hh"
 
-int main() {
-  constexpr int N = 5;
-  constexpr int D = 3;
+int main(int argc, char **argv) {
+  constexpr int N = 4;
+  constexpr int D = 2;
   BoardData<N, D> data;
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);
@@ -21,6 +21,8 @@ int main() {
   auto minimax = MiniMax<N, D, 1000000>(state, data, generator);
   auto result = minimax.play(state, Mark::X);
   cout << *result << "\n";
-  minimax.get_solution().dump(data, "solution.txt");
+  if (argc >= 2) {
+    minimax.get_solution().dump(data, argv[1]);
+  }
   return 0;
 }
