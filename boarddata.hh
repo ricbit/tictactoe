@@ -76,6 +76,19 @@ enum class BoardValue {
   UNKNOWN = 3
 };
 
+ostream& operator<<(ostream& oss, const BoardValue& value) {
+  if (value == BoardValue::X_WIN) {
+    oss <<  "X wins";
+  } else if (value == BoardValue::O_WIN) {
+    oss << "O wins";
+  } else if (value == BoardValue::DRAW) {
+    oss << "Draw";
+  } else {
+    oss << "Unknown";
+  }
+  return oss;
+}
+
 Mark flip(Mark mark) {
   return static_cast<Mark>(static_cast<int>(mark) ^ 3);
 }
