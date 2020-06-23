@@ -13,7 +13,7 @@
 
 int main(int argc, char **argv) {
   constexpr int N = 4;
-  constexpr int D = 2;
+  constexpr int D = 3;
   BoardData<N, D> data;
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   default_random_engine generator(seed);

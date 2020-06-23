@@ -49,6 +49,13 @@ constexpr Outcome known_outcome<4, 3>() {
   return Outcome::X_WINS;
 }
 
+class IdentityHash {
+ public:
+  size_t operator()(const Zobrist& zobrist) const noexcept {
+    return zobrist;
+  }
+};
+
 template<int N, int D, int max_nodes = 1000000,
     Outcome outcome = known_outcome<N, D>()>
 class MiniMax {
@@ -70,7 +77,7 @@ class MiniMax {
   int nodes_visited;
   vector<int> rank;
   SolutionTree solution;
-  unordered_map<Zobrist, BoardValue> zobrist;
+  unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
     auto ans = play(current_state, mark,
