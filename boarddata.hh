@@ -83,14 +83,19 @@ auto operator<=>(const BoardValue& a, const BoardValue& b) {
 }
 
 ostream& operator<<(ostream& oss, const BoardValue& value) {
-  if (value == BoardValue::X_WIN) {
-    oss << "X wins";
-  } else if (value == BoardValue::O_WIN) {
-    oss << "O wins";
-  } else if (value == BoardValue::DRAW) {
-    oss << "Draw";
-  } else {
-    oss << "Unknown";
+  switch (value) {
+    case BoardValue::X_WIN:
+      oss << "X wins";
+      break;
+    case BoardValue::O_WIN:
+      oss << "O wins";
+      break;
+    case BoardValue::DRAW:
+      oss << "Draw";
+      break;
+    case BoardValue::UNKNOWN:
+      oss << "Unknown";
+      break;
   }
   return oss;
 }
