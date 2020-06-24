@@ -28,6 +28,12 @@ TEST(GeometryTest, EncodeDecode) {
   EXPECT_EQ(expected, data.decode(data.encode(expected)));
 }
 
+TEST(BoardValueTest, StarshipComparison) {
+  EXPECT_LT(BoardValue::X_WIN, BoardValue::O_WIN);
+  EXPECT_EQ(BoardValue::DRAW, BoardValue::DRAW);
+  EXPECT_GT(BoardValue::O_WIN, BoardValue::DRAW);
+}
+
 TEST(SymmetryTest, CorrectNumberOfSymmetries) {
   Geometry<5, 3> geom53;
   EXPECT_EQ(192u, Symmetry(geom53).symmetries().size());

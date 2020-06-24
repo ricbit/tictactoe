@@ -71,10 +71,16 @@ enum class Mark {
 
 enum class BoardValue {
   X_WIN = 0,
-  O_WIN = 1,
-  DRAW = 2,
+  DRAW = 1,
+  O_WIN = 2,
   UNKNOWN = 3
 };
+
+auto operator<=>(const BoardValue& a, const BoardValue& b) {
+  auto aa = static_cast<int>(a);
+  auto bb = static_cast<int>(b);
+  return aa - bb;
+}
 
 ostream& operator<<(ostream& oss, const BoardValue& value) {
   if (value == BoardValue::X_WIN) {
