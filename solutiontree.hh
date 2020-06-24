@@ -66,18 +66,17 @@ class SolutionTree {
     });
   }
  private:
+  constexpr static auto compare_children = [](const auto& child1, const auto& child2) {
+    return child1.second->value < child2.second->value;
+  };
   BoardValue min_child(Node *node) const {
     auto min = min_element(begin(node->children), end(node->children),
-        [](const auto& child1, const auto& child2) {
-          return child1.second->value < child2.second->value;
-        });
+        compare_children);
     return min->second->value;
   }
   BoardValue max_child(Node *node) const {
     auto max = max_element(begin(node->children), end(node->children),
-        [](const auto& child1, const auto& child2) {
-          return child1.second->value < child2.second->value;
-        });
+        compare_children);
     return max->second->value;
   }
   void dump_node(ofstream& ofs, const Node* node) const {
