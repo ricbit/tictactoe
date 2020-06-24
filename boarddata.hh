@@ -434,23 +434,13 @@ class Bitfield {
     Position operator*() const {
       return pos;
     }
-    Iterator& operator++() {      
-      for (++pos; pos < board_size; ++pos) {
-        if (instance.bitfield[pos]) {
-          return *this;
-        }
-      }
+    Iterator& operator++() {
+      pos = instance.get_next_bit(Position{pos + 1});
       return *this;
     }
   };
   Iterator begin() const {
-    Position pos = 0_pos;
-    for (; pos < board_size; ++pos) {
-      if (bitfield[pos]) {
-        return Iterator{*this, pos};
-      }
-    }
-    return Iterator{*this, pos};
+    return Iterator{*this, get_next_bit(0_pos)};
   }
   Iterator end() const {
     return Iterator{*this, board_size};
@@ -476,6 +466,14 @@ class Bitfield {
   }
 
  private:
+  Position get_next_bit(Position pos) const {
+    for (; pos < board_size; ++pos) {
+      if (bitfield[pos]) {
+        return pos;
+      }
+    }
+    return pos;
+  }
   constexpr static Position board_size = Geometry<N, D>::board_size;
   Bitfield<N, D>(const bitset<board_size>& bits) : bitfield(bits) {
   }
