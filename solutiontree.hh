@@ -66,7 +66,8 @@ class SolutionTree {
     });
   }
  private:
-  constexpr static auto compare_children = [](const auto& child1, const auto& child2) {
+  constexpr static auto compare_children =
+      [](const auto& child1, const auto& child2) {
     return child1.second->value < child2.second->value;
   };
   BoardValue min_child(Node *node) const {

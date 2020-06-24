@@ -76,12 +76,6 @@ enum class BoardValue {
   UNKNOWN = 3
 };
 
-auto operator<=>(const BoardValue& a, const BoardValue& b) {
-  auto aa = static_cast<int>(a);
-  auto bb = static_cast<int>(b);
-  return aa - bb;
-}
-
 ostream& operator<<(ostream& oss, const BoardValue& value) {
   switch (value) {
     case BoardValue::X_WIN:
