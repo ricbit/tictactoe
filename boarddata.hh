@@ -421,11 +421,46 @@ class Bitfield {
   bool none() const {
     return bitfield.none();
   }
+  class Iterator {
+    const Bitfield<N, D>& instance;
+    Position pos;
+   public:
+    Iterator(const Bitfield<N, D>& instance, Position pos)
+        : instance(instance), pos(pos) {
+    }
+    bool operator!=(const Iterator& that) const {
+      return pos != that.pos;
+    }
+    Position operator*() const {
+      return pos;
+    }
+    Iterator& operator++() {      
+      for (++pos; pos < board_size; ++pos) {
+        if (instance.bitfield[pos]) {
+          return *this;
+        }
+      }
+      return *this;
+    }
+  };
+  Iterator begin() const {
+    Position pos = 0_pos;
+    for (; pos < board_size; ++pos) {
+      if (bitfield[pos]) {
+        return Iterator{*this, pos};
+      }
+    }
+    return Iterator{*this, pos};
+  }
+  Iterator end() const {
+    return Iterator{*this, board_size};
+  }
   auto all() const {
-    return
+    return *this;
+    /*return
         views::iota(0, static_cast<int>(board_size)) |
         views::filter([&](auto pos) { return bitfield[pos]; }) |
-        views::transform([](auto pos) { return Position{pos}; });
+        views::transform([](auto pos) { return Position{pos}; });*/
   }
   vector<Position> get_vector() const {
     auto positions = all();
