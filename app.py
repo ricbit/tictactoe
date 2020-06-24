@@ -30,10 +30,17 @@ def print_table(n, d, board, node, x_set, o_set, current, encode, depth):
     s.append("</table><br><br>")
     return s
 
+def current_player(depth):
+  if depth % 2 == 0:
+    return "X"
+  else:
+    return "O"
+
 def print_board(n, d, board, current, node, depth):
   x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
   o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
-  s = ['<a name="%s"><p>Result: %s</p></a>' % (depth, encode_result(node.result))]
+  s = ['<a name="%s"><p>Result: %s, current player: %s</p></a>' % (
+      depth, encode_result(node.result), current_player(depth))]
   if d == 2:
     s.extend(print_table(n, d, board, node, x_set, o_set,
       current, lambda i, j: j * n + i, depth))
