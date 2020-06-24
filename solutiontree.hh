@@ -48,9 +48,7 @@ class SolutionTree {
     if (mark == Mark::X) {
       switch (node->value) {
         case BoardValue::X_WIN:
-          if (find_if(begin(node->children), end(node->children), [&](auto& child) {
-            return child.second->value == BoardValue::X_WIN;
-          }) == end(node->children)) {
+          if (!at_least_one(node, BoardValue::X_WIN)) {
             return false;
           }
           if (node->children.size() != 1) {
@@ -58,14 +56,10 @@ class SolutionTree {
           }
           break;
         case BoardValue::DRAW:
-          if (find_if(begin(node->children), end(node->children), [&](auto& child) {
-            return child.second->value == BoardValue::X_WIN;
-          }) != end(node->children)) {
+          if (!at_least_one(node, BoardValue::DRAW)) {
             return false;
           }
-          if (find_if(begin(node->children), end(node->children), [&](auto& child) {
-            return child.second->value == BoardValue::DRAW;
-          }) == end(node->children)) {
+          if (at_least_one(node, BoardValue::X_WIN)) {
             return false;
           }
           break;
@@ -95,6 +89,11 @@ class SolutionTree {
     });
   }
  private:
+  bool at_least_one(Node *node, BoardValue value) const {
+    return find_if(begin(node->children), end(node->children), [&](auto& child) {
+      return child.second->value == value;
+    }) != end(node->children);
+  }
   void dump_node(ofstream& ofs, const Node* node) const {
     ofs << static_cast<int>(node->value) << " ";
     ofs << node->count << " " << node->children.size() << " : ";
