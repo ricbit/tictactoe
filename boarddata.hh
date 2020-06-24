@@ -79,16 +79,16 @@ enum class BoardValue {
 ostream& operator<<(ostream& oss, const BoardValue& value) {
   switch (value) {
     case BoardValue::X_WIN:
-      oss << "X wins";
+      oss << "X wins"s;
       break;
     case BoardValue::O_WIN:
-      oss << "O wins";
+      oss << "O wins"s;
       break;
     case BoardValue::DRAW:
-      oss << "Draw";
+      oss << "Draw"s;
       break;
     case BoardValue::UNKNOWN:
-      oss << "Unknown";
+      oss << "Unknown"s;
       break;
   }
   return oss;
@@ -453,8 +453,12 @@ class Bitfield {
         views::transform([](auto pos) { return Position{pos}; });*/
   }
   vector<Position> get_vector() const {
-    auto positions = all();
-    return vector<Position>(begin(positions), end(positions));
+    vector<Position> ans;
+    ans.reserve(board_size);
+    for (Position pos : *this) {
+      ans.push_back(pos);
+    }
+    return ans;
   }
   bool operator==(const Bitfield<N, D>& that) const {
     return bitfield == that.bitfield;

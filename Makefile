@@ -2,7 +2,7 @@
 TEST_BASE=${GOOGLE_TEST}/googletest
 HEADERS = boarddata.hh semantic.hh strategies.hh minimax.hh state.hh elevator.hh \
           solutiontree.hh
-OPT = -O1
+OPT = -O3
 
 all : tictactoe heatmap test minimax
 
@@ -13,7 +13,7 @@ minimax : minimax.cc ${HEADERS}
 	g++-10 -std=c++2a minimax.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 minimaxc : minimax.cc ${HEADERS}
-	clang-10 -std=c++2a minimax.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
+	clang++-10 -std=c++2a minimax.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 phasediag : phasediag.cc ${HEADERS}
 	g++-10 -std=c++2a phasediag.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread

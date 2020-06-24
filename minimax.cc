@@ -12,15 +12,15 @@
 #include "minimax.hh"
 
 int main(int argc, char **argv) {
-  constexpr int N = 3;
-  constexpr int D = 2;
+  constexpr int N = 4;
+  constexpr int D = 3;
   BoardData<N, D> data;
   State state(data);
-  auto minimax = MiniMax<N, D, 10000>(state, data);
+  auto minimax = MiniMax<N, D, 1000000>(state, data);
   auto result = minimax.play(state, Mark::X);
   cout << *result << "\n";
   if (!minimax.get_solution().validate()) {
-    cout << "oops\n";
+    cout << "oops\n"s;
   }
   if (argc >= 2) {
     minimax.get_solution().dump(data, argv[1]);
