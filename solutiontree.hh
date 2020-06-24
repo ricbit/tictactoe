@@ -7,12 +7,21 @@
 
 class SolutionTree {
  public:
+  enum class Reason {
+    X_LINE,
+    O_LINE,
+    DRAW,
+    X_CHAINING,
+    O_CHAINING,
+    UNKNOWN
+  };
   struct Node {
     explicit Node(int children_size) : value(BoardValue::UNKNOWN), count(1) {
       children.reserve(children_size);
     }
     BoardValue value;
     int count;
+    Reason reason;
     vector<pair<Position, unique_ptr<Node>>> children;
     Node *get_last_child() const {
       return children.rbegin()->second.get();
@@ -28,6 +37,62 @@ class SolutionTree {
     ofstream ofs(filename);
     ofs << N << " " << D << "\n";
     dump_node(ofs, root.get());
+  }
+  bool validate() const {
+    return validate(root.get(), Mark::X);
+  }
+  bool validate(Node *node, Mark mark) const {
+    if (node->children.empty()) {
+      return true;
+    }
+    if (mark == Mark::X) {
+      switch (node->value) {
+        case BoardValue::X_WIN:
+          if (find_if(begin(node->children), end(node->children), [&](auto& child) {
+            return child.second->value == BoardValue::X_WIN;
+          }) == end(node->children)) {
+            return false;
+          }
+          if (node->children.size() != 1) {
+            return false;
+          }
+          break;
+        case BoardValue::DRAW:
+          if (find_if(begin(node->children), end(node->children), [&](auto& child) {
+            return child.second->value == BoardValue::X_WIN;
+          }) != end(node->children)) {
+            return false;
+          }
+          if (find_if(begin(node->children), end(node->children), [&](auto& child) {
+            return child.second->value == BoardValue::DRAW;
+          }) == end(node->children)) {
+            return false;
+          }
+          break;
+        case BoardValue::O_WIN:
+          if (any_of(begin(node->children), end(node->children), [&](auto& child) {
+            return child.second->value != BoardValue::O_WIN;
+          })) {
+            return false;
+          }
+          break;
+        case BoardValue::UNKNOWN:
+          if (find_if(begin(node->children), end(node->children), [&](auto& child) {
+            return child.second->value == BoardValue::UNKNOWN;
+          }) == end(node->children)) {
+            return false;
+          }
+          if (find_if(begin(node->children), end(node->children), [&](auto& child) {
+            return child.second->value == BoardValue::X_WIN;
+          }) != end(node->children)) {
+            return false;
+          }
+          break;
+      }
+    }
+    return all_of(begin(node->children), end(node->children), [&](auto& child) {
+      return validate(child.second.get(), flip(mark));
+    });
   }
  private:
   void dump_node(ofstream& ofs, const Node* node) const {

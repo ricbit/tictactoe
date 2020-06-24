@@ -454,6 +454,7 @@ TEST(MiniMaxTest, Check32) {
   auto minimax = MiniMax(state, data);
   auto result = minimax.play(state, Mark::X);
   EXPECT_EQ(BoardValue::DRAW, *result);
+  EXPECT_TRUE(minimax.get_solution().validate());
 }
 
 TEST(MiniMaxTest, Check33) {
@@ -462,6 +463,7 @@ TEST(MiniMaxTest, Check33) {
   auto minimax = MiniMax(state, data);
   auto result = minimax.play(state, Mark::X);
   EXPECT_EQ(BoardValue::X_WIN, *result);
+  EXPECT_TRUE(minimax.get_solution().validate());
 }
 
 }
