@@ -19,3 +19,4 @@ velha
 callgrind.*
 *.html
 __pycache__
+singletest
