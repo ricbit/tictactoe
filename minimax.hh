@@ -82,6 +82,9 @@ class MiniMax {
         winner(flip(mark)), solution.get_root());
     cout << "Total nodes visited: " << nodes_visited << "\n";
     cout << "Nodes in solution tree: " << solution.get_root()->count << "\n";
+    solution.prune();
+    cout << "Nodes in solution tree after pruning: "
+         << solution.real_count() << "\n";
     return ans;
   }
 
