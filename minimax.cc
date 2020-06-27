@@ -13,10 +13,10 @@
 
 int main(int argc, char **argv) {
   constexpr int N = 4;
-  constexpr int D = 3;
+  constexpr int D = 2;
   BoardData<N, D> data;
   State state(data);
-  auto minimax = MiniMax<N, D, 1000000>(state, data);
+  auto minimax = MiniMax<N, D, 100000000>(state, data);
   auto result = minimax.play(state, Mark::X);
   cout << *result << "\n";
   if (!minimax.get_solution().validate()) {

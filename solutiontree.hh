@@ -8,12 +8,13 @@
 class SolutionTree {
  public:
   enum class Reason {
-    X_LINE,
-    O_LINE,
+    OUT_OF_NODES,
+    ZOBRIST,
     DRAW,
-    X_CHAINING,
-    O_CHAINING,
-    UNKNOWN
+    FORCING_MOVE,
+    WIN,
+    PRUNING,
+    MINIMAX
   };
   struct Node {
     explicit Node(int children_size) : value(BoardValue::UNKNOWN), count(1) {

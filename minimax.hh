@@ -12,6 +12,7 @@
 #include <bitset>
 #include <execution>
 #include <list>
+#include <sparsehash/sparse_hash_map>
 #include "semantic.hh"
 #include "boarddata.hh"
 #include "state.hh"
@@ -75,7 +76,7 @@ class MiniMax {
   int nodes_visited;
   vector<int> rank;
   SolutionTree solution;
-  unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
+  google::sparse_hash_map<Zobrist, BoardValue, IdentityHash> zobrist;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
     auto ans = play(current_state, mark,
@@ -91,38 +92,39 @@ class MiniMax {
   const SolutionTree& get_solution() const {
     return solution;
   }
-
+    
   optional<BoardValue> play(
       State<N, D>& current_state, Mark mark, BoardValue parent,
       SolutionTree::Node *node) {
     report_progress();
     if (nodes_visited > max_nodes) {
-      return save_node(node, current_state, 0, BoardValue::UNKNOWN);
+      return save_node(node, current_state, 0, BoardValue::UNKNOWN,
+          SolutionTree::Reason::OUT_OF_NODES);
     }
     auto has_zobrist = zobrist.find(current_state.get_zobrist());
     if (has_zobrist != zobrist.end()) {
-      return save_node(node, current_state, 0, has_zobrist->second);
+      return save_node(node, current_state, 0, has_zobrist->second,
+           SolutionTree::Reason::ZOBRIST);
     }
     auto open_positions = current_state.get_open_positions(mark);
     if (open_positions.none()) {
-      return save_node(node, current_state, 0, BoardValue::DRAW);
+      return save_node(node, current_state, 0, BoardValue::DRAW, SolutionTree::Reason::DRAW);
     }
     if (auto forced = check_forced_move(
            current_state, mark, parent, open_positions, node);
         forced.has_value()) {
-      return save_node(node, current_state, 0, *forced);
+      return save_node(node, current_state, 0, *forced, SolutionTree::Reason::FORCING_MOVE);
     }
     vector<pair<int, Position>> sorted =
         get_sorted_positions(current_state, open_positions, mark);
     BoardValue current_best = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
-      node->children.emplace_back(
-          pos, make_unique<SolutionTree::Node>(open_positions.count()));
+      node->children.emplace_back(pos, make_unique<SolutionTree::Node>(open_positions.count()));
       auto *child_node = node->get_last_child();
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
       if (result) {
-        return save_node(node, current_state, count_children(node), winner(mark));
+        return save_node(node, current_state, count_children(node), winner(mark), SolutionTree::Reason::WIN);
       } else {
         Mark flipped = flip(mark);
         rank.push_back(rank_value);
@@ -132,18 +134,19 @@ class MiniMax {
         auto final_result = process_result(
             new_result, mark, parent, current_best);
         if (final_result.has_value()) {
-          return save_node(node, current_state, count_children(node), *final_result);
+          return save_node(node, current_state, count_children(node), *final_result, SolutionTree::Reason::PRUNING);
         }
       }
       rank_value++;
     }
-    return save_node(node, current_state, count_children(node), current_best);
+    return save_node(node, current_state, count_children(node), current_best, SolutionTree::Reason::MINIMAX);
   }
 
   BoardValue save_node(SolutionTree::Node *node, State<N, D>& state,
-      int children_count, BoardValue value) {
+      int children_count, BoardValue value, SolutionTree::Reason reason) {
     zobrist[state.get_zobrist()] = value;
     node->count += children_count;
+    node->reason = reason;
     return node->value = value;
   }
 
