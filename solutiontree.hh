@@ -17,18 +17,19 @@ class SolutionTree {
     MINIMAX
   };
   struct Node {
-    explicit Node(int children_size) : value(BoardValue::UNKNOWN), count(1) {
+    explicit Node(Node *parent, int children_size) : value(BoardValue::UNKNOWN), count(1), parent(parent) {
       children.reserve(children_size);
     }
     BoardValue value;
     int count;
     Reason reason;
     vector<pair<Position, unique_ptr<Node>>> children;
+    Node *parent;
     Node *get_last_child() const {
       return children.rbegin()->second.get();
     }
   };
-  explicit SolutionTree(int board_size) : root(make_unique<Node>(board_size)) {
+  explicit SolutionTree(int board_size) : root(make_unique<Node>(nullptr, board_size)) {
   }
   Node *get_root() {
     return root.get();
@@ -94,6 +95,7 @@ class SolutionTree {
       prune(child.second.get(), flip(mark));
     });
   }
+
   void prune_children(Node *node, BoardValue goal) {
     remove_if(begin(node->children), end(node->children), [&](const auto& child) {
       return child.second->value != goal;
@@ -104,20 +106,21 @@ class SolutionTree {
       node->children.erase(it, end(node->children));
     }
   }
-  constexpr static auto compare_children =
-      [](const auto& child1, const auto& child2) {
+
+  constexpr static auto compare_children = [](const auto& child1, const auto& child2) {
     return child1.second->value < child2.second->value;
   };
+
   BoardValue min_child(Node *node) const {
-    auto min = min_element(begin(node->children), end(node->children),
-        compare_children);
+    auto min = min_element(begin(node->children), end(node->children), compare_children);
     return min->second->value;
   }
+
   BoardValue max_child(Node *node) const {
-    auto max = max_element(begin(node->children), end(node->children),
-        compare_children);
+    auto max = max_element(begin(node->children), end(node->children), compare_children);
     return max->second->value;
   }
+
   void dump_node(ofstream& ofs, const Node* node) const {
     ofs << static_cast<int>(node->value) << " ";
     ofs << node->count << " " << node->children.size() << " : ";

@@ -119,7 +119,7 @@ class MiniMax {
         get_sorted_positions(current_state, open_positions, mark);
     BoardValue current_best = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
-      node->children.emplace_back(pos, make_unique<SolutionTree::Node>(open_positions.count()));
+      node->children.emplace_back(pos, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto *child_node = node->get_last_child();
       State<N, D> cloned(current_state);
       bool result = cloned.play(pos, mark);
@@ -240,7 +240,7 @@ class MiniMax {
       assert(!game_ended);
       rank.push_back(-1);
       node->children.emplace_back(*forcing.first,
-          make_unique<SolutionTree::Node>(1));
+          make_unique<SolutionTree::Node>(node, 1));
       auto *child_node = node->get_last_child();
       auto result = play(cloned, flip(mark), winner(flip(mark)), child_node);
       node->count += count_children(node);
