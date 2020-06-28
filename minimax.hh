@@ -117,7 +117,7 @@ class MiniMax {
     }
     vector<pair<int, Position>> sorted =
         get_sorted_positions(current_state, open_positions, mark);
-    BoardValue current_best = winner(flip(mark));
+    node->value = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto *child_node = node->get_last_child();
@@ -128,18 +128,16 @@ class MiniMax {
       } else {
         Mark flipped = flip(mark);
         rank.push_back(rank_value);
-        optional<BoardValue> new_result =
-            play(cloned, flipped, current_best, child_node);
+        optional<BoardValue> new_result = play(cloned, flipped, node->value, child_node);
         rank.pop_back();
-        auto final_result = process_result(
-            new_result, mark, parent, current_best);
+        auto final_result = process_result(new_result, mark, parent, node->value, node);
         if (final_result.has_value()) {
           return save_node(node, current_state, count_children(node), *final_result, SolutionTree::Reason::PRUNING);
         }
       }
       rank_value++;
     }
-    return save_node(node, current_state, count_children(node), current_best, SolutionTree::Reason::MINIMAX);
+    return save_node(node, current_state, count_children(node), node->value, SolutionTree::Reason::MINIMAX);
   }
 
   BoardValue save_node(SolutionTree::Node *node, State<N, D>& state,
@@ -163,7 +161,7 @@ class MiniMax {
 
   optional<BoardValue> process_result(
       optional<BoardValue> new_result, Mark mark,
-      BoardValue parent, BoardValue& current_best) {
+      BoardValue parent, BoardValue& current_best, SolutionTree::Node *node) {
     if (new_result.has_value()) {
       if (*new_result == winner(mark)) {
         return new_result;
@@ -175,7 +173,7 @@ class MiniMax {
         if (parent == BoardValue::DRAW) {
           return parent;
         } else {
-          current_best = *new_result;
+          node->value = *new_result;  
         }
       } else if (*new_result == BoardValue::UNKNOWN) {
         return new_result;
