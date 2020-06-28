@@ -62,6 +62,12 @@ class MiniMax {
  public:
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
+  struct BoardNode {
+    State<N, D>& current_state;
+    Mark mark;
+    SolutionTree::Node *node;
+  };
+
   explicit MiniMax(
     const State<N, D>& state,
     const BoardData<N, D>& data)
@@ -75,10 +81,11 @@ class MiniMax {
   int nodes_visited;
   vector<int> rank;
   SolutionTree solution;
+  queue<BoardNode> next;
   unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
-    auto ans = play(current_state, mark, solution.get_root());
+    auto ans = queue_play(BoardNode{current_state, mark, solution.get_root()});
     cout << "Total nodes visited: " << nodes_visited << "\n";
     cout << "Nodes in solution tree: " << solution.get_root()->count << "\n";
     solution.prune();
@@ -91,6 +98,10 @@ class MiniMax {
     return solution;
   }
     
+  optional<BoardValue> queue_play(BoardNode root) {
+    return play(root.current_state, root.mark, root.node);
+  }
+
   optional<BoardValue> play(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
     report_progress();
     if (nodes_visited > max_nodes) {
@@ -111,8 +122,7 @@ class MiniMax {
         forced.has_value()) {
       return save_node(node, current_state, 0, *forced, SolutionTree::Reason::FORCING_MOVE);
     }
-    vector<pair<int, Position>> sorted =
-        get_sorted_positions(current_state, open_positions, mark);
+    vector<pair<int, Position>> sorted = get_sorted_positions(current_state, open_positions, mark);
     node->value = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>(node, open_positions.count()));
