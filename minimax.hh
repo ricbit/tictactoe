@@ -12,7 +12,6 @@
 #include <bitset>
 #include <execution>
 #include <list>
-#include <sparsehash/sparse_hash_map>
 #include "semantic.hh"
 #include "boarddata.hh"
 #include "state.hh"
@@ -76,7 +75,7 @@ class MiniMax {
   int nodes_visited;
   vector<int> rank;
   SolutionTree solution;
-  google::sparse_hash_map<Zobrist, BoardValue, IdentityHash> zobrist;
+  unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
     auto ans = play(current_state, mark, solution.get_root());
