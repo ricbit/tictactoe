@@ -79,7 +79,7 @@ class MiniMax {
   google::sparse_hash_map<Zobrist, BoardValue, IdentityHash> zobrist;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
-    auto ans = play(current_state, mark, winner(flip(mark)), solution.get_root());
+    auto ans = play(current_state, mark, solution.get_root());
     cout << "Total nodes visited: " << nodes_visited << "\n";
     cout << "Nodes in solution tree: " << solution.get_root()->count << "\n";
     solution.prune();
@@ -92,9 +92,7 @@ class MiniMax {
     return solution;
   }
     
-  optional<BoardValue> play(
-      State<N, D>& current_state, Mark mark, BoardValue parent,
-      SolutionTree::Node *node) {
+  optional<BoardValue> play(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
     report_progress();
     if (nodes_visited > max_nodes) {
       return save_node(node, current_state, 0, BoardValue::UNKNOWN,
@@ -127,9 +125,9 @@ class MiniMax {
       } else {
         Mark flipped = flip(mark);
         rank.push_back(rank_value);
-        optional<BoardValue> new_result = play(cloned, flipped, node->value, child_node);
+        optional<BoardValue> new_result = play(cloned, flipped, child_node);
         rank.pop_back();
-        auto final_result = process_result(new_result, mark, parent, node->value, node);
+        auto final_result = process_result(new_result, mark, node->value, node);
         if (final_result.has_value()) {
           return save_node(node, current_state, count_children(node), *final_result, SolutionTree::Reason::PRUNING);
         }
@@ -160,7 +158,7 @@ class MiniMax {
 
   optional<BoardValue> process_result(
       optional<BoardValue> new_result, Mark mark,
-      BoardValue parent, BoardValue& current_best, SolutionTree::Node *node) {
+      BoardValue& current_best, SolutionTree::Node *node) {
     if (new_result.has_value()) {
       if (*new_result == winner(mark)) {
         return new_result;
@@ -236,10 +234,10 @@ class MiniMax {
       bool game_ended = cloned.play(*forcing.first, mark);
       assert(!game_ended);
       rank.push_back(-1);
-      node->children.emplace_back(*forcing.first,
-          make_unique<SolutionTree::Node>(node, 1));
+      node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>(node, 1));
       auto *child_node = node->get_last_child();
-      auto result = play(cloned, flip(mark), winner(flip(mark)), child_node);
+      node->value = winner(flip(mark));
+      auto result = play(cloned, flip(mark), child_node);
       node->count += count_children(node);
       node->value = *result;
       rank.pop_back();
