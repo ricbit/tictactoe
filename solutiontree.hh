@@ -34,6 +34,9 @@ class SolutionTree {
   Node *get_root() {
     return root.get();
   }
+  const Node *get_root() const {
+    return root.get();
+  }
   template<int N, int D>
   void dump(const BoardData<N, D>& data, string filename) const {
     ofstream ofs(filename);

@@ -472,4 +472,25 @@ TEST(MiniMaxTest, Check33) {
   EXPECT_TRUE(minimax.get_solution().validate());
 }
 
+bool validate_all_parents(const SolutionTree::Node *node) {
+  for (const auto& child_pair : node->children) {
+    const auto child_node = child_pair.second.get();
+    if (child_node->parent != node) {
+      return false;
+    }
+  }
+  return all_of(begin(node->children), end(node->children), [](const auto& child_pair) {
+    return validate_all_parents(child_pair.second.get());
+  });
+}
+
+TEST(SolutionTreeTest, ValidateParents) {
+  BoardData<3, 2> data;
+  State state(data);
+  auto minimax = MiniMax(state, data);
+  minimax.play(state, Mark::X);
+  auto root = minimax.get_solution().get_root();
+  EXPECT_TRUE(validate_all_parents(root));
+}
+
 }
