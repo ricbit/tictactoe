@@ -79,8 +79,7 @@ class MiniMax {
   google::sparse_hash_map<Zobrist, BoardValue, IdentityHash> zobrist;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
-    auto ans = play(current_state, mark,
-        winner(flip(mark)), solution.get_root());
+    auto ans = play(current_state, mark, winner(flip(mark)), solution.get_root());
     cout << "Total nodes visited: " << nodes_visited << "\n";
     cout << "Nodes in solution tree: " << solution.get_root()->count << "\n";
     solution.prune();
@@ -170,8 +169,8 @@ class MiniMax {
         if (mark == Mark::O) {
           return new_result;
         }
-        if (parent == BoardValue::DRAW) {
-          return parent;
+        if (node->get_parent_value() == BoardValue::DRAW) {
+          return node->get_parent_value();
         } else {
           node->value = *new_result;  
         }

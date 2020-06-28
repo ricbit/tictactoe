@@ -28,6 +28,9 @@ class SolutionTree {
     Node *get_last_child() const {
       return children.rbegin()->second.get();
     }
+    const BoardValue get_parent_value() const {
+      return parent == nullptr ? BoardValue::O_WIN : parent->value;
+    }
   };
   explicit SolutionTree(int board_size) : root(make_unique<Node>(nullptr, board_size)) {
   }
