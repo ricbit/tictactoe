@@ -111,7 +111,7 @@ class MiniMax {
       return save_node(node, current_state, 0, BoardValue::DRAW, SolutionTree::Reason::DRAW);
     }
     if (auto forced = check_forced_move(
-           current_state, mark, parent, open_positions, node);
+           current_state, mark, open_positions, node);
         forced.has_value()) {
       return save_node(node, current_state, 0, *forced, SolutionTree::Reason::FORCING_MOVE);
     }
@@ -217,7 +217,7 @@ class MiniMax {
 
   template<typename B>
   optional<BoardValue> check_forced_move(
-      State<N, D>& current_state, Mark mark, BoardValue parent,
+      State<N, D>& current_state, Mark mark,
       const B& open_positions, SolutionTree::Node *node) {
     auto c = ChainingStrategy(current_state);
     auto pos = c.search(mark);
