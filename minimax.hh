@@ -115,6 +115,10 @@ class MiniMax {
       return save_node(node, current_state.get_zobrist(), 0, BoardValue::UNKNOWN,
           SolutionTree::Reason::OUT_OF_NODES);
     }
+    if (current_state.get_win_state()) {
+      return save_node(
+          node, current_state.get_zobrist(), count_children(node), winner(mark), SolutionTree::Reason::WIN);
+    }
     auto has_zobrist = zobrist.find(current_state.get_zobrist());
     if (has_zobrist != zobrist.end()) {
       return save_node(node, current_state.get_zobrist(), 0, has_zobrist->second,
@@ -146,17 +150,13 @@ class MiniMax {
       auto *child_node = node->get_last_child();
       State<N, D> cloned(current_state);
       cloned.play(pos, mark);
-      if (cloned.get_win_state()) {
-        return save_node(node, current_state.get_zobrist(), count_children(node), winner(mark), SolutionTree::Reason::WIN);
-      } else {
-        Mark flipped = flip(mark);
-        rank.push_back(rank_value);
-        optional<BoardValue> new_result = play(cloned, flipped, child_node);
-        rank.pop_back();
-        auto final_result = process_result(new_result, mark, node->value, node);
-        if (final_result.has_value()) {
-          return save_node(node, current_state.get_zobrist(), count_children(node), *final_result, SolutionTree::Reason::PRUNING);
-        }
+      Mark flipped = flip(mark);
+      rank.push_back(rank_value);
+      optional<BoardValue> new_result = play(cloned, flipped, child_node);
+      rank.pop_back();
+      auto final_result = process_result(new_result, mark, node->value, node);
+      if (final_result.has_value()) {
+        return save_node(node, current_state.get_zobrist(), count_children(node), *final_result, SolutionTree::Reason::PRUNING);
       }
       rank_value++;
     }
