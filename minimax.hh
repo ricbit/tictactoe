@@ -112,23 +112,23 @@ class MiniMax {
   optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
     report_progress();
     if (nodes_visited > max_nodes) {
-      return save_node(node, current_state, 0, BoardValue::UNKNOWN,
+      return save_node(node, current_state.get_zobrist(), 0, BoardValue::UNKNOWN,
           SolutionTree::Reason::OUT_OF_NODES);
     }
     auto has_zobrist = zobrist.find(current_state.get_zobrist());
     if (has_zobrist != zobrist.end()) {
-      return save_node(node, current_state, 0, has_zobrist->second,
+      return save_node(node, current_state.get_zobrist(), 0, has_zobrist->second,
            SolutionTree::Reason::ZOBRIST);
     }
     auto open_positions = current_state.get_open_positions(mark);
     if (open_positions.none()) {
-      return save_node(node, current_state, 0, BoardValue::DRAW, SolutionTree::Reason::DRAW);
+      return save_node(node, current_state.get_zobrist(), 0, BoardValue::DRAW, SolutionTree::Reason::DRAW);
     }
     if (auto forced = check_chaining_strategy(current_state, mark, open_positions, node); forced.has_value()) {
-      return save_node(node, current_state, 0, *forced, SolutionTree::Reason::CHAINING);
+      return save_node(node, current_state.get_zobrist(), 0, *forced, SolutionTree::Reason::CHAINING);
     }
     if (auto forced = check_forced_move(current_state, mark, open_positions, node); forced.has_value()) {
-      return save_node(node, current_state, 0, *forced, SolutionTree::Reason::FORCING_MOVE);
+      return save_node(node, current_state.get_zobrist(), 0, *forced, SolutionTree::Reason::FORCING_MOVE);
     }
     return {};
   }
@@ -147,7 +147,7 @@ class MiniMax {
       State<N, D> cloned(current_state);
       cloned.play(pos, mark);
       if (cloned.get_win_state()) {
-        return save_node(node, current_state, count_children(node), winner(mark), SolutionTree::Reason::WIN);
+        return save_node(node, current_state.get_zobrist(), count_children(node), winner(mark), SolutionTree::Reason::WIN);
       } else {
         Mark flipped = flip(mark);
         rank.push_back(rank_value);
@@ -155,17 +155,17 @@ class MiniMax {
         rank.pop_back();
         auto final_result = process_result(new_result, mark, node->value, node);
         if (final_result.has_value()) {
-          return save_node(node, current_state, count_children(node), *final_result, SolutionTree::Reason::PRUNING);
+          return save_node(node, current_state.get_zobrist(), count_children(node), *final_result, SolutionTree::Reason::PRUNING);
         }
       }
       rank_value++;
     }
-    return save_node(node, current_state, count_children(node), node->value, SolutionTree::Reason::MINIMAX);
+    return save_node(node, current_state.get_zobrist(), count_children(node), node->value, SolutionTree::Reason::MINIMAX);
   }
 
-  BoardValue save_node(SolutionTree::Node *node, State<N, D>& state,
+  BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
       int children_count, BoardValue value, SolutionTree::Reason reason) {
-    zobrist[state.get_zobrist()] = value;
+    zobrist[node_zobrist] = value;
     node->count += children_count;
     node->reason = reason;
     return node->value = value;
