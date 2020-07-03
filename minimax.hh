@@ -145,8 +145,8 @@ class MiniMax {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto *child_node = node->get_last_child();
       State<N, D> cloned(current_state);
-      bool result = cloned.play(pos, mark);
-      if (result) {
+      cloned.play(pos, mark);
+      if (cloned.get_win_state()) {
         return save_node(node, current_state, count_children(node), winner(mark), SolutionTree::Reason::WIN);
       } else {
         Mark flipped = flip(mark);

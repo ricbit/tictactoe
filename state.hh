@@ -26,11 +26,16 @@ class State {
       xor_table(data.xor_table()),
       current_accumulation(data.accumulation_points()),
       trie_node(0_node),
-      zobrist(0) {
+      zobrist(0),
+      win(false) {
   }
 
   constexpr static Position board_size = BoardData<N, D>::board_size;
   constexpr static Line line_size = BoardData<N, D>::line_size;
+
+  bool get_win_state() const {
+    return win;
+  }
 
   Bitfield<N, D> get_open_positions(Mark mark) const {
     Bitfield<N, D> open_positions;
@@ -110,7 +115,7 @@ class State {
       MarkCount count = (line_marks[line] += mark);
       Mark new_mark = line_marks.get_mark(line);
       if (count == N && new_mark != Mark::both) {
-        return true;
+        return win = true;
       }
       if (old_mark != new_mark && new_mark == Mark::both) {
         for (Position neigh : data.winning_lines()[line]) {
@@ -185,6 +190,7 @@ class State {
   TrackingList<N, D> empty_cells;
   Elevator<N, D> line_marks;
   Zobrist zobrist;
+  bool win;
 
   char encode_position(Mark pos) const {
     return pos == Mark::X ? 'X'
