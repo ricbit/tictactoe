@@ -100,9 +100,26 @@ class MiniMax {
     
   optional<BoardValue> queue_play(BoardNode root) {
     return play(root.current_state, root.mark, root.node);
+    /*assert(next.empty());i
+    next.push(root);
+    while (!next.empty()) {
+      BoardNode board_node = next.front();
+      next.pop();
+      play(board_node.current_state, board_node.mark, board_node.node);
+    }*/
   }
 
-  optional<BoardValue> play(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
+  /*
+   * f() {
+   *   esse no é terminal? -> valor
+   *   list = child(node)
+   *   foreach (child) {
+   *     o child é terminal? -> valor;
+   *   }
+   * }
+   */
+
+  optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
     report_progress();
     if (nodes_visited > max_nodes) {
       return save_node(node, current_state, 0, BoardValue::UNKNOWN,
@@ -117,11 +134,18 @@ class MiniMax {
     if (open_positions.none()) {
       return save_node(node, current_state, 0, BoardValue::DRAW, SolutionTree::Reason::DRAW);
     }
-    if (auto forced = check_forced_move(
-           current_state, mark, open_positions, node);
-        forced.has_value()) {
+    if (auto forced = check_forced_move(current_state, mark, open_positions, node); forced.has_value()) {
       return save_node(node, current_state, 0, *forced, SolutionTree::Reason::FORCING_MOVE);
     }
+    return {};
+  }
+
+  optional<BoardValue> play(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
+    auto terminal_node = check_terminal_node(current_state, mark, node);
+    if (terminal_node.has_value()) {
+      return terminal_node;
+    }
+    auto open_positions = current_state.get_open_positions(mark);
     vector<pair<int, Position>> sorted = get_sorted_positions(current_state, open_positions, mark);
     node->value = winner(flip(mark));
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
