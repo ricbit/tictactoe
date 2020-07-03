@@ -150,17 +150,20 @@ class MiniMax {
       auto *child_node = node->get_last_child();
       State<N, D> cloned(current_state);
       cloned.play(pos, mark);
+      child_node->zobrist = cloned.get_zobrist();
       Mark flipped = flip(mark);
       rank.push_back(rank_value);
       optional<BoardValue> new_result = play(cloned, flipped, child_node);
       rank.pop_back();
       auto final_result = process_result(new_result, mark, node->value, node);
       if (final_result.has_value()) {
-        return save_node(node, current_state.get_zobrist(), count_children(node), *final_result, SolutionTree::Reason::PRUNING);
+        return save_node(node, current_state.get_zobrist(),
+            count_children(node), *final_result, SolutionTree::Reason::PRUNING);
       }
       rank_value++;
     }
-    return save_node(node, current_state.get_zobrist(), count_children(node), node->value, SolutionTree::Reason::MINIMAX);
+    return save_node(node, current_state.get_zobrist(),
+        count_children(node), node->value, SolutionTree::Reason::MINIMAX);
   }
 
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
@@ -265,7 +268,7 @@ class MiniMax {
       bool game_ended = cloned.play(*forcing.first, mark);
       assert(!game_ended);
       rank.push_back(-1);
-      node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>(node, 1));
+      node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>(node, 1, cloned.get_zobrist()));
       auto *child_node = node->get_last_child();
       node->value = winner(flip(mark));
       auto result = play(cloned, flip(mark), child_node);

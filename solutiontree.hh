@@ -18,7 +18,12 @@ class SolutionTree {
     CHAINING
   };
   struct Node {
-    explicit Node(Node *parent, int children_size) : value(BoardValue::UNKNOWN), count(1), parent(parent) {
+    Node(Node *parent, int children_size, Zobrist zobrist)
+        : value(BoardValue::UNKNOWN), count(1), parent(parent), zobrist(zobrist) {
+      children.reserve(children_size);
+    }
+    Node(Node *parent, int children_size)
+        : value(BoardValue::UNKNOWN), count(1), parent(parent), zobrist(Zobrist{0}) {
       children.reserve(children_size);
     }
     BoardValue value;
@@ -26,6 +31,7 @@ class SolutionTree {
     Reason reason;
     vector<pair<Position, unique_ptr<Node>>> children;
     Node *parent;
+    Zobrist zobrist;
     Node *get_last_child() const {
       return children.rbegin()->second.get();
     }
@@ -33,7 +39,7 @@ class SolutionTree {
       return parent == nullptr ? BoardValue::O_WIN : parent->value;
     }
   };
-  explicit SolutionTree(int board_size) : root(make_unique<Node>(nullptr, board_size)) {
+  explicit SolutionTree(int board_size) : root(make_unique<Node>(nullptr, board_size, Zobrist{0})) {
   }
   Node *get_root() {
     return root.get();
