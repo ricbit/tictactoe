@@ -109,16 +109,6 @@ class MiniMax {
     }*/
   }
 
-  /*
-   * f() {
-   *   esse no é terminal? -> valor
-   *   list = child(node)
-   *   foreach (child) {
-   *     o child é terminal? -> valor;
-   *   }
-   * }
-   */
-
   optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
     report_progress();
     if (nodes_visited > max_nodes) {
@@ -133,6 +123,9 @@ class MiniMax {
     auto open_positions = current_state.get_open_positions(mark);
     if (open_positions.none()) {
       return save_node(node, current_state, 0, BoardValue::DRAW, SolutionTree::Reason::DRAW);
+    }
+    if (auto forced = check_chaining_strategy(current_state, mark, open_positions, node); forced.has_value()) {
+      return save_node(node, current_state, 0, *forced, SolutionTree::Reason::CHAINING);
     }
     if (auto forced = check_forced_move(current_state, mark, open_positions, node); forced.has_value()) {
       return save_node(node, current_state, 0, *forced, SolutionTree::Reason::FORCING_MOVE);
@@ -244,9 +237,8 @@ class MiniMax {
   }
 
   template<typename B>
-  optional<BoardValue> check_forced_move(
-      State<N, D>& current_state, Mark mark,
-      const B& open_positions, SolutionTree::Node *node) {
+  optional<BoardValue> check_chaining_strategy(
+      State<N, D>& current_state, Mark mark, const B& open_positions, SolutionTree::Node *node) {
     auto c = ChainingStrategy(current_state);
     auto pos = c.search(mark);
     static int max_visited = 0;
@@ -257,6 +249,12 @@ class MiniMax {
     if (pos.has_value()) {
       return winner(mark);
     }
+    return {};
+  }
+
+  template<typename B>
+  optional<BoardValue> check_forced_move(
+      State<N, D>& current_state, Mark mark, const B& open_positions, SolutionTree::Node *node) {
     auto s = ForcingMove<N, D>(current_state);
     auto forcing = s.check(mark, open_positions);
     if (forcing.first.has_value()) {

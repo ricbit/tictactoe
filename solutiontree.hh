@@ -14,7 +14,8 @@ class SolutionTree {
     FORCING_MOVE,
     WIN,
     PRUNING,
-    MINIMAX
+    MINIMAX,
+    CHAINING
   };
   struct Node {
     explicit Node(Node *parent, int children_size) : value(BoardValue::UNKNOWN), count(1), parent(parent) {
