@@ -23,7 +23,9 @@ int main(int argc, char **argv) {
     cout << "oops\n"s;
   }
   if (argc >= 2) {
-    minimax.get_solution().dump(data, argv[1]);
+    SolutionTree& solution = minimax.get_solution();
+    solution.update_count();
+    solution.dump(data, argv[1]);
   }
   return 0;
 }

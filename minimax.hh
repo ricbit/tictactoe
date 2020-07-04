@@ -87,14 +87,17 @@ class MiniMax {
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
     auto ans = queue_play(BoardNode{current_state, mark, solution.get_root()});
     cout << "Total nodes visited: " << nodes_visited << "\n";
-    cout << "Nodes in solution tree: " << solution.get_root()->count << "\n";
+    cout << "Nodes in solution tree: " << solution.real_count() << "\n";
     solution.prune();
-    cout << "Nodes in solution tree after pruning: "
-         << solution.real_count() << "\n";
+    cout << "Nodes in solution tree after pruning: " << solution.real_count() << "\n";
     return ans;
   }
 
   const SolutionTree& get_solution() const {
+    return solution;
+  }
+
+  SolutionTree& get_solution() {
     return solution;
   }
 
@@ -194,7 +197,6 @@ class MiniMax {
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
       int children_count, BoardValue value, SolutionTree::Reason reason) {
     zobrist[node_zobrist] = value;
-    node->count += children_count;
     node->reason = reason;
     return node->value = value;
   }

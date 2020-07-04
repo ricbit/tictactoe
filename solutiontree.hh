@@ -55,7 +55,16 @@ class SolutionTree {
   int real_count() const {
     return real_count(root.get());
   }
+  void update_count() {
+    update_count(root.get());
+  }
  private:
+  int update_count(Node *node) {
+    return node->count = accumulate(begin(node->children), end(node->children), 1,
+        [&](auto acc, const auto& child) {
+      return acc + update_count(child.second.get());
+    });
+  }
   int real_count(Node *node) const {
     return accumulate(begin(node->children), end(node->children), 1,
         [&](auto acc, const auto& child) {
