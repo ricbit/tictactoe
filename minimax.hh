@@ -158,12 +158,12 @@ class MiniMax {
       auto final_result = process_result(new_result, mark, node->value, node);
       if (final_result.has_value()) {
         return save_node(node, current_state.get_zobrist(),
-            count_children(node), *final_result, SolutionTree::Reason::PRUNING);
+            count_children(node), *final_result, SolutionTree::Reason::MINIMAX_EARLY);
       }
       rank_value++;
     }
     return save_node(node, current_state.get_zobrist(),
-        count_children(node), node->value, SolutionTree::Reason::MINIMAX);
+        count_children(node), node->value, SolutionTree::Reason::MINIMAX_COMPLETE);
   }
 
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
