@@ -129,8 +129,8 @@ class MiniMax {
     if (auto forced = check_chaining_strategy(current_state, mark, open_positions, node); forced.has_value()) {
       return save_node(node, zob, 0, *forced, SolutionTree::Reason::CHAINING);
     }
-    if (auto forced = check_forced_move(current_state, mark, open_positions, node); forced.has_value()) {
-      return save_node(node, zob, 0, *forced, SolutionTree::Reason::FORCING_MOVE);
+    if (auto forced = check_forced_win(current_state, mark, open_positions, node); forced.has_value()) {
+      return save_node(node, zob, 0, *forced, SolutionTree::Reason::FORCED_WIN);
     }
     return {};
   }
@@ -145,6 +145,17 @@ class MiniMax {
     node->value = winner(flip(mark));
     bag<State<N, D>> child_state;
     child_state.reserve(sorted.size());    
+
+    /*auto s = ForcingMove<N, D>(current_state);
+    auto forcing = s.check(mark, open_positions);
+    if (forcing.first.has_value()) {
+      if (forcing.second == mark) {
+        return winner(mark);
+      }
+      State<N, D> cloned(current_state);
+      bool game_ended = cloned.play(*forcing.first, mark);
+      assert(!game_ended);*/
+
     for (const auto& [score, pos] : sorted) {
       child_state.emplace_back(current_state);
       child_state.rbegin()->play(pos, mark);
@@ -254,6 +265,19 @@ class MiniMax {
     }
     if (pos.has_value()) {
       return winner(mark);
+    }
+    return {};
+  }
+
+  template<typename B>
+  optional<BoardValue> check_forced_win(
+      State<N, D>& current_state, Mark mark, const B& open_positions, SolutionTree::Node *node) {
+    auto s = ForcingMove<N, D>(current_state);
+    auto forcing = s.check(mark, open_positions);
+    if (forcing.first.has_value()) {
+      if (forcing.second == mark) {
+        return winner(mark);
+      }
     }
     return {};
   }
