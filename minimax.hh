@@ -143,11 +143,16 @@ class MiniMax {
     auto open_positions = current_state.get_open_positions(mark);
     vector<pair<int, Position>> sorted = get_sorted_positions(current_state, open_positions, mark);
     node->value = winner(flip(mark));
+    bag<State<N, D>> child_state;
+    child_state.reserve(sorted.size());    
+    for (const auto& [score, pos] : sorted) {
+      child_state.emplace_back(current_state);
+      child_state.rbegin()->play(pos, mark);
+    }
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto *child_node = node->get_last_child();
-      State<N, D> cloned(current_state);
-      cloned.play(pos, mark);
+      State<N, D>& cloned = child_state[rank_value];
       child_node->zobrist = cloned.get_zobrist();
       Mark flipped = flip(mark);
       rank.push_back(rank_value);
