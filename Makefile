@@ -68,3 +68,6 @@ flask : app.py solution.txt
 callminimax : minimax
 	valgrind --tool=callgrind --dump-instr=yes  ./minimax
 	kcachegrind `ls callgrind* -t | head -n 1`
+
+cpd :
+	/home/ricbit/src/pmd-bin-6.25.0/bin/run.sh cpd --exclude test.cc --files . --language cpp --minimum-tokens 10
