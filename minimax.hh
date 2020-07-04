@@ -141,28 +141,9 @@ class MiniMax {
       return terminal_node;
     }
     auto open_positions = current_state.get_open_positions(mark);
-    vector<pair<int, Position>> sorted;
     node->value = winner(flip(mark));
-    bag<State<N, D>> child_state;
-    child_state.reserve(open_positions.count());
 
-    auto s = ForcingMove<N, D>(current_state);
-    auto forcing = s.check(mark, open_positions);
-    if (forcing.first.has_value()) {
-      assert(forcing.second != mark);
-      State<N, D> cloned(current_state);
-      bool game_ended = cloned.play(*forcing.first, mark);
-      assert(!game_ended);
-      int dummy_score = 1;
-      sorted = {{dummy_score, *forcing.first}};
-      child_state.push_back(cloned);
-    } else {
-      sorted = get_sorted_positions(current_state, open_positions, mark);
-      for (const auto& [score, pos] : sorted) {
-        child_state.emplace_back(current_state);
-        child_state.rbegin()->play(pos, mark);
-      }
-    }
+    auto [sorted, child_state] = get_children(current_state, mark, open_positions);
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto *child_node = node->get_last_child();
@@ -181,6 +162,33 @@ class MiniMax {
     }
     return save_node(node, current_state.get_zobrist(),
         count_children(node), node->value, SolutionTree::Reason::MINIMAX_COMPLETE);
+  }
+
+  template<typename B>
+  pair<vector<pair<int, Position>>, bag<State<N, D>>> get_children(
+      const State<N, D>& current_state, Mark mark, B open_positions) {
+    vector<pair<int, Position>> sorted;
+    bag<State<N, D>> child_state;
+
+    auto s = ForcingMove<N, D>(current_state);
+    auto forcing = s.check(mark, open_positions);
+    if (forcing.first.has_value()) {
+      assert(forcing.second != mark);
+      State<N, D> cloned(current_state);
+      bool game_ended = cloned.play(*forcing.first, mark);
+      assert(!game_ended);
+      int dummy_score = 1;
+      sorted = {{dummy_score, *forcing.first}};
+      child_state.push_back(cloned);
+    } else {
+      child_state.reserve(open_positions.count());
+      sorted = get_sorted_positions(current_state, open_positions, mark);
+      for (const auto& [score, pos] : sorted) {
+        child_state.emplace_back(current_state);
+        child_state.rbegin()->play(pos, mark);
+      }
+    }
+    return {sorted, child_state};
   }
 
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,

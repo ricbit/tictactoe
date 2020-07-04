@@ -1,7 +1,6 @@
     OUT_OF_NODES,
     ZOBRIST,
     DRAW,
-    FORCED_MOVE,
     FORCED_WIN,
     WIN,
     PRUNING,
