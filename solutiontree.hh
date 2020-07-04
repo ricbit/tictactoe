@@ -8,14 +8,7 @@
 class SolutionTree {
  public:
   enum class Reason {
-    OUT_OF_NODES,
-    ZOBRIST,
-    DRAW,
-    FORCING_MOVE,
-    WIN,
-    PRUNING,
-    MINIMAX,
-    CHAINING
+    #include "reason.hh"
   };
   struct Node {
     Node(Node *parent, int children_size, Zobrist zobrist)
@@ -136,7 +129,8 @@ class SolutionTree {
 
   void dump_node(ofstream& ofs, const Node* node) const {
     ofs << static_cast<int>(node->value) << " ";
-    ofs << node->count << " " << node->children.size() << " : ";
+    ofs << node->count << " " << node->children.size() << " ";
+    ofs << static_cast<int>(node->reason) << " : ";
     for (const auto& [pos, p] : node->children) {
       ofs << pos << "  ";
     }
