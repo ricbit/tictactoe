@@ -111,28 +111,26 @@ class MiniMax {
 
   optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
     report_progress();
+    Zobrist zob = current_state.get_zobrist();
     if (nodes_visited > max_nodes) {
-      return save_node(node, current_state.get_zobrist(), 0, BoardValue::UNKNOWN,
-          SolutionTree::Reason::OUT_OF_NODES);
+      return save_node(node, zob, 0, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES);
     }
     if (current_state.get_win_state()) {
-      return save_node(
-          node, current_state.get_zobrist(), count_children(node), winner(mark), SolutionTree::Reason::WIN);
+      return save_node(node, zob, count_children(node), winner(mark), SolutionTree::Reason::WIN);
     }
-    auto has_zobrist = zobrist.find(current_state.get_zobrist());
+    auto has_zobrist = zobrist.find(zob);
     if (has_zobrist != zobrist.end()) {
-      return save_node(node, current_state.get_zobrist(), 0, has_zobrist->second,
-           SolutionTree::Reason::ZOBRIST);
+      return save_node(node, zob, 0, has_zobrist->second, SolutionTree::Reason::ZOBRIST);
     }
     auto open_positions = current_state.get_open_positions(mark);
     if (open_positions.none()) {
-      return save_node(node, current_state.get_zobrist(), 0, BoardValue::DRAW, SolutionTree::Reason::DRAW);
+      return save_node(node, zob, 0, BoardValue::DRAW, SolutionTree::Reason::DRAW);
     }
     if (auto forced = check_chaining_strategy(current_state, mark, open_positions, node); forced.has_value()) {
-      return save_node(node, current_state.get_zobrist(), 0, *forced, SolutionTree::Reason::CHAINING);
+      return save_node(node, zob, 0, *forced, SolutionTree::Reason::CHAINING);
     }
     if (auto forced = check_forced_move(current_state, mark, open_positions, node); forced.has_value()) {
-      return save_node(node, current_state.get_zobrist(), 0, *forced, SolutionTree::Reason::FORCING_MOVE);
+      return save_node(node, zob, 0, *forced, SolutionTree::Reason::FORCING_MOVE);
     }
     return {};
   }
