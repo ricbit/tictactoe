@@ -97,7 +97,7 @@ class MiniMax {
   const SolutionTree& get_solution() const {
     return solution;
   }
-    
+
   optional<BoardValue> queue_play(BoardNode root) {
     return play(root.current_state, root.mark, root.node);
     /*assert(next.empty());i
@@ -141,24 +141,27 @@ class MiniMax {
       return terminal_node;
     }
     auto open_positions = current_state.get_open_positions(mark);
-    vector<pair<int, Position>> sorted = get_sorted_positions(current_state, open_positions, mark);
+    vector<pair<int, Position>> sorted;
     node->value = winner(flip(mark));
     bag<State<N, D>> child_state;
-    child_state.reserve(sorted.size());    
+    child_state.reserve(open_positions.count());
 
-    /*auto s = ForcingMove<N, D>(current_state);
+    auto s = ForcingMove<N, D>(current_state);
     auto forcing = s.check(mark, open_positions);
     if (forcing.first.has_value()) {
-      if (forcing.second == mark) {
-        return winner(mark);
-      }
+      assert(forcing.second != mark);
       State<N, D> cloned(current_state);
       bool game_ended = cloned.play(*forcing.first, mark);
-      assert(!game_ended);*/
-
-    for (const auto& [score, pos] : sorted) {
-      child_state.emplace_back(current_state);
-      child_state.rbegin()->play(pos, mark);
+      assert(!game_ended);
+      int dummy_score = 1;
+      sorted = {{dummy_score, *forcing.first}};
+      child_state.push_back(cloned);
+    } else {
+      sorted = get_sorted_positions(current_state, open_positions, mark);
+      for (const auto& [score, pos] : sorted) {
+        child_state.emplace_back(current_state);
+        child_state.rbegin()->play(pos, mark);
+      }
     }
     for (int rank_value = 0; const auto& [score, pos] : sorted) {
       node->children.emplace_back(pos, make_unique<SolutionTree::Node>(node, open_positions.count()));
@@ -213,7 +216,7 @@ class MiniMax {
         if (node->get_parent_value() == BoardValue::DRAW) {
           return node->get_parent_value();
         } else {
-          node->value = *new_result;  
+          node->value = *new_result;
         }
       } else if (*new_result == BoardValue::UNKNOWN) {
         return new_result;
@@ -282,30 +285,6 @@ class MiniMax {
     return {};
   }
 
-  template<typename B>
-  optional<BoardValue> check_forced_move(
-      State<N, D>& current_state, Mark mark, const B& open_positions, SolutionTree::Node *node) {
-    auto s = ForcingMove<N, D>(current_state);
-    auto forcing = s.check(mark, open_positions);
-    if (forcing.first.has_value()) {
-      if (forcing.second == mark) {
-        return winner(mark);
-      }
-      State<N, D> cloned(current_state);
-      bool game_ended = cloned.play(*forcing.first, mark);
-      assert(!game_ended);
-      rank.push_back(-1);
-      node->children.emplace_back(*forcing.first, make_unique<SolutionTree::Node>(node, 1, cloned.get_zobrist()));
-      auto *child_node = node->get_last_child();
-      node->value = winner(flip(mark));
-      auto result = play(cloned, flip(mark), child_node);
-      node->count += count_children(node);
-      node->value = *result;
-      rank.pop_back();
-      return node->value;
-    }
-    return {};
-  }
 };
 
 #endif
