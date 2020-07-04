@@ -174,12 +174,12 @@ class MiniMax {
     auto forcing = s.check(mark, open_positions);
     if (forcing.first.has_value()) {
       assert(forcing.second != mark);
-      State<N, D> cloned(current_state);
+      child_state.emplace_back(current_state);
+      State<N, D>& cloned = *child_state.begin();
       bool game_ended = cloned.play(*forcing.first, mark);
       assert(!game_ended);
       int dummy_score = 1;
       sorted = {{dummy_score, *forcing.first}};
-      child_state.push_back(cloned);
     } else {
       child_state.reserve(open_positions.count());
       sorted = get_sorted_positions(current_state, open_positions, mark);
