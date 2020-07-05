@@ -156,10 +156,13 @@ class MiniMax {
       rank.push_back(rank_value);
       optional<BoardValue> new_result = play(cloned, flipped, child_node);
       rank.pop_back();
-      auto final_result = get_updated_parent_value(new_result, mark, node);
-      if (final_result.has_value()) {
-        return save_node(node, current_state.get_zobrist(),
-            *final_result, SolutionTree::Reason::MINIMAX_EARLY);
+      auto [new_parent_value, is_final] = get_updated_parent_value(new_result, mark, node);
+      if (new_parent_value.has_value()) {
+        save_node(node, current_state.get_zobrist(),
+            *new_parent_value, SolutionTree::Reason::MINIMAX_EARLY);
+        if (is_final) {
+          return *new_parent_value;
+        }
       }
       rank_value++;
     }
@@ -205,27 +208,27 @@ class MiniMax {
     return mark == Mark::X ? BoardValue::X_WIN : BoardValue::O_WIN;
   }
 
-  optional<BoardValue> get_updated_parent_value(
+  pair<optional<BoardValue>, bool> get_updated_parent_value(
       optional<BoardValue> child_value, Mark mark,
       SolutionTree::Node *node) {
     if (child_value.has_value()) {
       if (*child_value == winner(mark)) {
-        return child_value;
+        return {child_value, true};
       }
       if (*child_value == BoardValue::DRAW) {
         if (mark == Mark::O) {
-          return child_value;
+          return {child_value, true};
         }
         if (node->get_parent_value() == BoardValue::DRAW) {
-          return node->get_parent_value();
+          return {node->get_parent_value(), true};
         } else {
-          node->value = *child_value;
+          return {*child_value, false};
         }
       } else if (*child_value == BoardValue::UNKNOWN) {
-        return child_value;
+        return {child_value, true};
       }
     }
-    return {};
+    return {{}, false};
   }
 
   template<typename B>
