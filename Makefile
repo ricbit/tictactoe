@@ -2,7 +2,7 @@
 TEST_BASE=${GOOGLE_TEST}/googletest
 HEADERS = boarddata.hh semantic.hh strategies.hh minimax.hh state.hh elevator.hh \
           solutiontree.hh
-OPT = -O3
+OPT = -O1
 
 all : tictactoe heatmap test minimax
 
