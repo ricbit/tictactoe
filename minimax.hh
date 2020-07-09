@@ -12,6 +12,7 @@
 #include <bitset>
 #include <execution>
 #include <list>
+#include <stack>
 #include "semantic.hh"
 #include "boarddata.hh"
 #include "state.hh"
@@ -63,7 +64,7 @@ class MiniMax {
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
   struct BoardNode {
-    State<N, D>& current_state;
+    State<N, D> current_state;
     Mark mark;
     SolutionTree::Node *node;
   };
@@ -81,7 +82,7 @@ class MiniMax {
   int nodes_visited;
   vector<int> rank;
   SolutionTree solution;
-  queue<BoardNode> next;
+  stack<BoardNode> next;
   unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
@@ -102,14 +103,31 @@ class MiniMax {
   }
 
   optional<BoardValue> queue_play(BoardNode root) {
-    return play(root.current_state, root.mark, root.node);
-    /*assert(next.empty());i
-    next.push(root);
+    assert(next.empty());
+    next.push(root);  
     while (!next.empty()) {
-      BoardNode board_node = next.front();
+      auto [current_state, mark, node] = next.top();
+      current_state.print();
       next.pop();
-      play(board_node.current_state, board_node.mark, board_node.node);
-    }*/
+      auto terminal_node = check_terminal_node(current_state, mark, node);
+      if (terminal_node.has_value()) {
+        cout << "value : " << *terminal_node << "\n";
+        continue;
+      }
+
+      auto open_positions = current_state.get_open_positions(mark);
+      auto [sorted, child_state] = get_children(current_state, mark, open_positions);
+      int size = sorted.size();
+      for (int i = size - 1; i >= 0; i--) {
+        const auto& child = child_state[i];
+        node->children.emplace_back(sorted[i].second, make_unique<SolutionTree::Node>(node, open_positions.count()));
+        auto child_node = node->children.rbegin()->second.get();
+        auto child_board_node = BoardNode{child, flip(mark), child_node};
+        next.push(child_board_node);
+      }
+
+    }
+    return {};
   }
 
   optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
