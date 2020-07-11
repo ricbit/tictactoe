@@ -108,6 +108,7 @@ class MiniMax {
     while (!next.empty()) {
       auto [current_state, mark, node] = next.top();
       next.pop();
+      report_progress();
       if (node->is_parent_final()) {
         node->reason = SolutionTree::Reason::PRUNING;
         continue;
@@ -135,7 +136,6 @@ class MiniMax {
   }
 
   optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
-    report_progress();
     Zobrist zob = current_state.get_zobrist();
     if (nodes_visited > max_nodes) {
       return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES, mark);
