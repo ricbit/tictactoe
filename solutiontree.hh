@@ -12,17 +12,15 @@ class SolutionTree {
     #include "reason.hh"
   };
   struct Node {
-    Node(Node *parent, int children_size, Zobrist zobrist)
-        : value(BoardValue::UNKNOWN), count(1), parent(parent), zobrist(zobrist) {
+    Node(Node *parent, int children_size, Zobrist zobrist) : parent(parent), zobrist(zobrist) {
       children.reserve(children_size);
     }
-    Node(Node *parent, int children_size)
-        : value(BoardValue::UNKNOWN), count(1), parent(parent), zobrist(Zobrist{0}) {
+    Node(Node *parent, int children_size) : parent(parent), zobrist(Zobrist{0}) {
       children.reserve(children_size);
     }
-    BoardValue value;
-    int count;
-    Reason reason;
+    BoardValue value = BoardValue::UNKNOWN;
+    int count = 1;
+    Reason reason = Reason::UNKNOWN;
     vector<pair<Position, unique_ptr<Node>>> children;
     Node *parent;
     Zobrist zobrist;

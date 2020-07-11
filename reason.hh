@@ -6,4 +6,5 @@
     FORCED_WIN,
     WIN,
     PRUNING,
-    CHAINING
+    CHAINING,
+    UNKNOWN
