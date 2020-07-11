@@ -32,7 +32,7 @@ class SolutionTree {
       return parent == nullptr ? BoardValue::O_WIN : parent->value;
     }
     bool is_parent_final() const {
-      return parent == nullptr ? false : (reason != Reason::MINIMAX_COMPLETE);
+      return parent == nullptr ? false : (reason != Reason::MINIMAX_COMPLETE && reason != Reason::UNKNOWN);
     }
   };
   explicit SolutionTree(int board_size) : root(make_unique<Node>(nullptr, board_size, Zobrist{0})) {
@@ -129,14 +129,24 @@ class SolutionTree {
     return child1.second->value < child2.second->value;
   };
 
+  vector<BoardValue> filter_unknown(const vector<pair<Position, unique_ptr<Node>>>& children) const {
+    vector<BoardValue> filtered;
+    for (const auto& child : children) {
+      if (child.second->value != BoardValue::UNKNOWN) {
+        filtered.push_back(child.second->value);
+      }
+    }
+    return filtered;
+  }
+
   BoardValue min_child(Node *node) const {
-    auto min = min_element(begin(node->children), end(node->children), compare_children);
-    return min->second->value;
+    auto filtered = filter_unknown(node->children);
+    return *min_element(begin(filtered), end(filtered));
   }
 
   BoardValue max_child(Node *node) const {
-    auto max = max_element(begin(node->children), end(node->children), compare_children);
-    return max->second->value;
+    auto filtered = filter_unknown(node->children);
+    return *max_element(begin(filtered), end(filtered));
   }
 
   void dump_node(ofstream& ofs, const Node* node) const {

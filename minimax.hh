@@ -132,7 +132,7 @@ class MiniMax {
       }
 
     }
-    return {};
+    return root.node->value;
   }
 
   optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
