@@ -78,6 +78,10 @@ class SolutionTree {
     if (node->children.empty()) {
       return true;
     }
+    auto filtered = filter_unknown(node->children);
+    if (filtered.empty()) {
+      return node->value == BoardValue::UNKNOWN;
+    }
     if (mark == Mark::X) {
       if (min_child(node) != node->value) {
         return false;
