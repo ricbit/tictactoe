@@ -4,6 +4,7 @@
 #include <variant>
 #include <fstream>
 #include "boarddata.hh"
+#include "state.hh"
 
 class SolutionTree {
  public:
@@ -25,11 +26,15 @@ class SolutionTree {
     vector<pair<Position, unique_ptr<Node>>> children;
     Node *parent;
     Zobrist zobrist;
+    unique_ptr<Printer> state;
     Node *get_last_child() const {
       return children.rbegin()->second.get();
     }
     const BoardValue get_parent_value() const {
       return parent == nullptr ? BoardValue::O_WIN : parent->value;
+    }
+    bool is_parent_final() const {
+      return parent == nullptr ? false : (reason != Reason::MINIMAX_COMPLETE);
     }
   };
   explicit SolutionTree(int board_size) : root(make_unique<Node>(nullptr, board_size, Zobrist{0})) {

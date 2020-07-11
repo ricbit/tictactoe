@@ -104,14 +104,18 @@ class MiniMax {
 
   optional<BoardValue> queue_play(BoardNode root) {
     assert(next.empty());
-    next.push(root);  
+    next.push(root);
     while (!next.empty()) {
       auto [current_state, mark, node] = next.top();
-      current_state.print();
       next.pop();
+      if (node->is_parent_final()) {
+        node->reason = SolutionTree::Reason::PRUNING;
+        continue;
+      }
+      node->state = make_unique<State<N, D>>(current_state);
       auto terminal_node = check_terminal_node(current_state, mark, node);
       if (terminal_node.has_value()) {
-        cout << "value : " << *terminal_node << "\n";
+        //cout << "value outside of recursion: " << *terminal_node << "\n";
         continue;
       }
 
@@ -134,24 +138,24 @@ class MiniMax {
     report_progress();
     Zobrist zob = current_state.get_zobrist();
     if (nodes_visited > max_nodes) {
-      return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES);
+      return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES, mark);
     }
     if (current_state.get_win_state()) {
-      return save_node(node, zob, winner(mark), SolutionTree::Reason::WIN);
+      return save_node(node, zob, winner(mark), SolutionTree::Reason::WIN, mark);
     }
     auto has_zobrist = zobrist.find(zob);
     if (has_zobrist != zobrist.end()) {
-      return save_node(node, zob, has_zobrist->second, SolutionTree::Reason::ZOBRIST);
+      return save_node(node, zob, has_zobrist->second, SolutionTree::Reason::ZOBRIST, mark);
     }
     auto open_positions = current_state.get_open_positions(mark);
     if (open_positions.none()) {
-      return save_node(node, zob, BoardValue::DRAW, SolutionTree::Reason::DRAW);
+      return save_node(node, zob, BoardValue::DRAW, SolutionTree::Reason::DRAW, mark);
     }
     if (auto forced = check_chaining_strategy(current_state, mark, open_positions, node); forced.has_value()) {
-      return save_node(node, zob, *forced, SolutionTree::Reason::CHAINING);
+      return save_node(node, zob, *forced, SolutionTree::Reason::CHAINING, mark);
     }
     if (auto forced = check_forced_win(current_state, mark, open_positions, node); forced.has_value()) {
-      return save_node(node, zob, *forced, SolutionTree::Reason::FORCED_WIN);
+      return save_node(node, zob, *forced, SolutionTree::Reason::FORCED_WIN, mark);
     }
     return {};
   }
@@ -216,10 +220,22 @@ class MiniMax {
   }
 
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
-      BoardValue value, SolutionTree::Reason reason) {
+      BoardValue value, SolutionTree::Reason reason, Mark mark) {
     zobrist[node_zobrist] = value;
     node->reason = reason;
-    return node->value = value;
+    node->value = value;
+    cout << "value: " << value << " reason " << static_cast<int>(reason) << "\n";
+    node->state->print();
+
+    if (node->parent != nullptr) {
+      auto [new_parent_value, is_final] = get_updated_parent_value(value, flip(mark), node->parent);
+      if (new_parent_value.has_value() && new_parent_value != node->parent->value) {
+        auto reason = is_final ? SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
+        save_node(node->parent, node->parent->zobrist, *new_parent_value, reason, flip(mark));
+      }
+    }
+
+    return value;
   }
 
   BoardValue winner(Mark mark) {

@@ -17,8 +17,15 @@
 #include "tracking.hh"
 #include "elevator.hh"
 
+class Printer {
+ public:
+  virtual void print() const {
+    cout << "base print\n";
+  }
+};
+
 template<int N, int D>
-class State {
+class State : public Printer {
  public:
   explicit State(const BoardData<N, D>& data) :
       data(data),
@@ -49,7 +56,7 @@ class State {
     return open_positions;
   }
 
-  void print() const {
+  virtual void print() const override {
     data.print(data.board_size, [&](Position k) {
       return data.decode(k);
     }, [&](Position k) {
