@@ -31,8 +31,11 @@ class SolutionTree {
     const BoardValue get_parent_value() const {
       return parent == nullptr ? BoardValue::O_WIN : parent->value;
     }
+    bool is_final() const {
+      return reason != Reason::MINIMAX_COMPLETE && reason != Reason::UNKNOWN;
+    }
     bool is_parent_final() const {
-      return parent == nullptr ? false : (reason != Reason::MINIMAX_COMPLETE && reason != Reason::UNKNOWN);
+      return parent == nullptr ? false : parent->is_final();
     }
   };
   explicit SolutionTree(int board_size) : root(make_unique<Node>(nullptr, board_size, Zobrist{0})) {

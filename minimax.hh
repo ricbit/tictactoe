@@ -221,9 +221,11 @@ class MiniMax {
 
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
       BoardValue value, SolutionTree::Reason reason, Mark mark) {
-    zobrist[node_zobrist] = value;
     node->reason = reason;
     node->value = value;
+    if (node->is_final()) {
+      zobrist[node_zobrist] = value;
+    }
     cout << "value: " << value << " reason " << static_cast<int>(reason) << "\n";
     node->state->print();
 
