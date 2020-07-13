@@ -394,6 +394,16 @@ TEST(ChainingStrategyTest, CrossOfX) {
       strat(Mark::O, state.get_open_positions(Mark::O)).has_value());
 }
 
+TEST(ChainingStrategyTest, DiagonalXO) {
+  BoardData<3, 2> data;
+  State state(data);
+  state.play({0_side, 0_side}, Mark::X);
+  state.play({2_side, 2_side}, Mark::O);
+  ChainingStrategy strat(state);
+  EXPECT_TRUE(
+      strat(Mark::X, state.get_open_positions(Mark::X)).has_value());
+}
+
 TEST(ChainingStrategyTest, BlockedCrossOfX) {
   BoardData<4, 2> data;
   State state(data);
