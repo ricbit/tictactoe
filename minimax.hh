@@ -13,6 +13,7 @@
 #include <execution>
 #include <list>
 #include <stack>
+#include <mutex>
 #include "semantic.hh"
 #include "boarddata.hh"
 #include "state.hh"
@@ -83,6 +84,7 @@ class MiniMax {
   vector<int> rank;
   SolutionTree solution;
   stack<BoardNode> next;
+  mutex next_m;
   unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
@@ -105,37 +107,43 @@ class MiniMax {
   optional<BoardValue> queue_play(BoardNode root) {
     assert(next.empty());
     next.push(root);
+    constexpr int slice = 2;
     while (!next.empty()) {
-      auto [current_state, mark, node] = next.top();
-      next.pop();
-      cout << "----\n";
-      current_state.print();
-      cout << ":\n";
-      node->rebuild_state(data).print();
-      report_progress();
-      if (node->is_parent_final()) {
-        node->reason = SolutionTree::Reason::PRUNING;
-        cout << "pruned\n";
-        continue;
+      vector<BoardNode> nodes;
+      nodes.reserve(slice);
+      for (int i = 0; i < slice && !next.empty(); i++) {
+        nodes.emplace_back(next.top());
+        next.pop();
       }
-      auto terminal_node = check_terminal_node(current_state, mark, node);
-      if (terminal_node.has_value()) {
-        cout << "terminal, value: " << *terminal_node << "\n";
-        continue;
-      }
-
-      auto open_positions = current_state.get_open_positions(mark);
-      auto [sorted, child_state] = get_children(current_state, mark, open_positions);
-      int size = sorted.size();
-      for (int i = size - 1; i >= 0; i--) {
-        const auto& child = child_state[i];
-        node->children.emplace_back(sorted[i].second, make_unique<SolutionTree::Node>(node, open_positions.count()));
-        auto child_node = node->children.rbegin()->second.get();
-        auto child_board_node = BoardNode{child, flip(mark), child_node};
-        next.push(child_board_node);
-      }
+      for_each(begin(nodes), end(nodes), [&](auto& node) {
+        process_node(node);
+      });
     }
     return root.node->value;
+  }
+
+  void process_node(BoardNode& board_node) {
+    auto& [current_state, mark, node] = board_node;
+    report_progress();
+    if (node->is_parent_final()) {
+      node->reason = SolutionTree::Reason::PRUNING;
+      return;
+    }
+    auto terminal_node = check_terminal_node(current_state, mark, node);
+    if (terminal_node.has_value()) {
+      return;
+    }
+
+    auto open_positions = current_state.get_open_positions(mark);
+    auto [sorted, child_state] = get_children(current_state, mark, open_positions);
+    int size = sorted.size();
+    for (int i = size - 1; i >= 0; i--) {
+      const auto& child = child_state[i];
+      node->children.emplace_back(sorted[i].second, make_unique<SolutionTree::Node>(node, open_positions.count()));
+      auto child_node = node->children.rbegin()->second.get();
+      auto child_board_node = BoardNode{child, flip(mark), child_node};
+      next.push(child_board_node);
+    }
   }
 
   optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
