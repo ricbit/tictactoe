@@ -226,8 +226,6 @@ class MiniMax {
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }
-    cout << "value: " << value << " reason " << static_cast<int>(reason) << "\n";
-    node->state->print();
 
     if (node->parent != nullptr) {
       auto [new_parent_value, is_final] = get_updated_parent_value(value, flip(mark), node->parent);
@@ -258,10 +256,11 @@ class MiniMax {
         if (node->get_parent_value() == BoardValue::DRAW) {
           return {node->get_parent_value(), true};
         } else {
-          return {*child_value, false};
+          return {child_value, false};
         }
-      } else if (*child_value == BoardValue::UNKNOWN) {
-        return {child_value, true};
+      }
+      if (node->get_parent_value() == BoardValue::UNKNOWN) {
+        return {child_value, false};
       }
     }
     return {{}, false};
