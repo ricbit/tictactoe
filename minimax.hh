@@ -116,7 +116,6 @@ class MiniMax {
       node->state = make_unique<State<N, D>>(current_state);
       auto terminal_node = check_terminal_node(current_state, mark, node);
       if (terminal_node.has_value()) {
-        //cout << "value outside of recursion: " << *terminal_node << "\n";
         continue;
       }
 
@@ -130,7 +129,6 @@ class MiniMax {
         auto child_board_node = BoardNode{child, flip(mark), child_node};
         next.push(child_board_node);
       }
-
     }
     return root.node->value;
   }
@@ -158,38 +156,6 @@ class MiniMax {
       return save_node(node, zob, *forced, SolutionTree::Reason::FORCED_WIN, mark);
     }
     return {};
-  }
-
-  optional<BoardValue> play(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
-    auto terminal_node = check_terminal_node(current_state, mark, node);
-    if (terminal_node.has_value()) {
-      return terminal_node;
-    }
-    auto open_positions = current_state.get_open_positions(mark);
-    node->value = winner(flip(mark));
-
-    auto [sorted, child_state] = get_children(current_state, mark, open_positions);
-    for (int rank_value = 0; const auto& [score, pos] : sorted) {
-      node->children.emplace_back(pos, make_unique<SolutionTree::Node>(node, open_positions.count()));
-      auto *child_node = node->get_last_child();
-      State<N, D>& cloned = child_state[rank_value];
-      child_node->zobrist = cloned.get_zobrist();
-      Mark flipped = flip(mark);
-      rank.push_back(rank_value);
-      optional<BoardValue> new_result = play(cloned, flipped, child_node);
-      rank.pop_back();
-      auto [new_parent_value, is_final] = get_updated_parent_value(new_result, mark, node);
-      if (new_parent_value.has_value()) {
-        save_node(node, current_state.get_zobrist(),
-            *new_parent_value, SolutionTree::Reason::MINIMAX_EARLY);
-        if (is_final) {
-          return *new_parent_value;
-        }
-      }
-      rank_value++;
-    }
-    return save_node(node, current_state.get_zobrist(),
-        node->value, SolutionTree::Reason::MINIMAX_COMPLETE);
   }
 
   template<typename B>
