@@ -112,17 +112,25 @@ class MiniMax {
       vector<BoardNode> nodes;
       nodes.reserve(slice);
       for (int i = 0; i < slice && !next.empty(); i++) {
+        //next.top().current_state.print();
         nodes.emplace_back(next.top());
         next.pop();
       }
-      for_each(begin(nodes), end(nodes), [&](auto& node) {
+      //cout << "--\n";
+      for_each(begin(nodes), end(nodes), [&](auto node) {
         process_node(node);
+        if (!solution.validate()) {
+          cout << "reason: " << static_cast<int>(node.node->reason) << "\n";
+          cout << "value: " << node.node->value << "\n";
+          node.current_state.print();
+          cout << "\n";
+        }
       });
     }
     return root.node->value;
   }
 
-  void process_node(BoardNode& board_node) {
+  void process_node(BoardNode board_node) {
     auto& [current_state, mark, node] = board_node;
     report_progress();
     if (node->is_parent_final()) {
