@@ -24,7 +24,6 @@ class SolutionTree {
     vector<pair<Position, unique_ptr<Node>>> children;
     Node *parent;
     Zobrist zobrist;
-    unique_ptr<Printer> state;
     Node *get_last_child() const {
       return children.rbegin()->second.get();
     }

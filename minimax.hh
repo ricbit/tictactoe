@@ -113,7 +113,6 @@ class MiniMax {
         node->reason = SolutionTree::Reason::PRUNING;
         continue;
       }
-      node->state = make_unique<State<N, D>>(current_state);
       auto terminal_node = check_terminal_node(current_state, mark, node);
       if (terminal_node.has_value()) {
         continue;
