@@ -119,12 +119,10 @@ class MiniMax {
       //cout << "--\n";
       for_each(begin(nodes), end(nodes), [&](auto node) {
         process_node(node);
-        if (!solution.validate()) {
-          cout << "reason: " << static_cast<int>(node.node->reason) << "\n";
-          cout << "value: " << node.node->value << "\n";
-          node.current_state.print();
-          cout << "\n";
-        }
+        cout << "reason: " << static_cast<int>(node.node->reason) << "\n";
+        cout << "value: " << node.node->value << "\n";
+        node.current_state.print();
+        cout << "\n";
       });
     }
     return root.node->value;
@@ -212,15 +210,8 @@ class MiniMax {
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }
-    cout << "! save_node\n";
-    node->rebuild_state(data).print();
-
-    if (node->has_parent()) {
-      auto old_parent_value = node->get_parent_value();
-      auto [new_parent_value, is_final] = get_updated_parent_value(value, node->parent, flip(to_turn(mark)));
-      cout << "child value " << value << " : parent value " << old_parent_value;
-      cout << " : parent mark " << flip(to_turn(mark)) << "\n";
-      cout << "new p value " << new_parent_value << " is final " << is_final << "\n";
+    if (node->parent != nullptr) {
+      auto [new_parent_value, is_final] = get_updated_parent_value(value, flip(mark), node->parent);
       if (new_parent_value.has_value()) {
         auto parent_reason = is_final ? SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
         save_node(node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark));
