@@ -193,7 +193,8 @@ class MiniMax {
     }
 
     if (node->parent != nullptr) {
-      auto [new_parent_value, is_final] = get_updated_parent_value(value, flip(mark), node->parent);
+      auto old_parent_value = node->get_parent_value();
+      auto [new_parent_value, is_final] = get_updated_parent_value(value, old_parent_value, flip(mark));
       if (new_parent_value.has_value() && new_parent_value != node->parent->value) {
         auto parent_reason = is_final ? SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
         save_node(node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark));
@@ -208,8 +209,7 @@ class MiniMax {
   }
 
   pair<optional<BoardValue>, bool> get_updated_parent_value(
-      optional<BoardValue> child_value, Mark mark,
-      SolutionTree::Node *node) {
+      optional<BoardValue> child_value, BoardValue parent_value, Mark mark) {
     if (child_value.has_value()) {
       if (*child_value == winner(mark)) {
         return {child_value, true};
@@ -218,13 +218,13 @@ class MiniMax {
         if (mark == Mark::O) {
           return {child_value, true};
         }
-        if (node->get_parent_value() == BoardValue::DRAW) {
-          return {node->get_parent_value(), true};
+        if (parent_value == BoardValue::DRAW) {
+          return {child_value, true};
         } else {
           return {child_value, false};
         }
       }
-      if (node->get_parent_value() == BoardValue::UNKNOWN) {
+      if (parent_value == BoardValue::UNKNOWN) {
         return {child_value, false};
       }
     }
