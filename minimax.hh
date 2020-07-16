@@ -89,7 +89,7 @@ class MiniMax {
     auto ans = queue_play(BoardNode{current_state, mark, solution.get_root()});
     cout << "Total nodes visited: " << nodes_visited << "\n";
     cout << "Nodes in solution tree: " << solution.real_count() << "\n";
-    solution.prune();
+    //solution.prune();
     cout << "Nodes in solution tree after pruning: " << solution.real_count() << "\n";
     return ans;
   }
@@ -140,8 +140,7 @@ class MiniMax {
     if (current_state.get_win_state()) {
       return save_node(node, zob, winner(mark), SolutionTree::Reason::WIN, mark);
     }
-    auto has_zobrist = zobrist.find(zob);
-    if (has_zobrist != zobrist.end()) {
+    if (auto has_zobrist = zobrist.find(zob); has_zobrist != zobrist.end()) {
       return save_node(node, zob, has_zobrist->second, SolutionTree::Reason::ZOBRIST, mark);
     }
     auto open_positions = current_state.get_open_positions(mark);
@@ -192,10 +191,10 @@ class MiniMax {
       zobrist[node_zobrist] = value;
     }
 
-    if (node->parent != nullptr) {
+    if (node->has_parent()) {
       auto old_parent_value = node->get_parent_value();
       auto [new_parent_value, is_final] = get_updated_parent_value(value, old_parent_value, flip(mark));
-      if (new_parent_value.has_value() && new_parent_value != node->parent->value) {
+      if (new_parent_value.has_value()) {
         auto parent_reason = is_final ? SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
         save_node(node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark));
       }

@@ -27,8 +27,11 @@ class SolutionTree {
     Node *get_last_child() const {
       return children.rbegin()->second.get();
     }
+    bool has_parent() const {
+      return parent == nullptr;
+    }
     const BoardValue get_parent_value() const {
-      return parent == nullptr ? BoardValue::O_WIN : parent->value;
+      return has_parent() ? BoardValue::O_WIN : parent->value;
     }
     bool is_final() const {
       return reason != Reason::MINIMAX_COMPLETE && reason != Reason::UNKNOWN;

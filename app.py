@@ -1,5 +1,6 @@
 from flask import Flask
 import reader
+import reason
 
 def encode_result(value):
   d = {0: "X wins", 1: "O wins", 2: "draw", 3: "unknown"}
@@ -39,8 +40,8 @@ def current_player(depth):
 def print_board(n, d, board, current, node, depth):
   x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
   o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
-  s = ['<a name="%s"><p>Result: %s, current player: %s</p></a>' % (
-      depth, encode_result(node.result), current_player(depth))]
+  s = ['<a name="%s"><p>Result: %s, current player: %s, reason: %s</p></a>' % (
+      depth, encode_result(node.result), current_player(depth), reasonmap[node.reason])]
   if d == 2:
     s.extend(print_table(n, d, board, node, x_set, o_set,
       current, lambda i, j: j * n + i, depth))
@@ -97,6 +98,7 @@ def print_tree(tree, node, board, max_depth, depth, current, path):
   return s
 
 tree = reader.read_file("solution.txt")
+reasonmap = reason.read_reason()
 app = Flask(__name__)
 @app.route("/game/<path:subpath>")
 def root(subpath):
