@@ -464,6 +464,26 @@ TEST(ForcingMoveTest, CheckDefensiveMoveIn33) {
   EXPECT_EQ(Mark::X, pos.second);
 }
 
+struct GetParentValueTestValues {
+  BoardValue child;
+  BoardValue parent;
+  Mark mark;
+  pair<optional<BoardValue>, bool> result;
+};
+
+TEST(MiniMaxTest, GetParentValue) {
+  BoardData<3, 2> data;
+  State state(data);
+  auto minimax = MiniMax(state, data);
+  vector<GetParentValueTestValues> test_values = {
+    {BoardValue::X_WIN, BoardValue::UNKNOWN, Mark::X, {BoardValue::X_WIN, true}},
+    {BoardValue::X_WIN, BoardValue::UNKNOWN, Mark::O, {BoardValue::X_WIN, false}}
+  };
+  for_each(begin(test_values), end(test_values), [&](auto& value) {
+    EXPECT_EQ(value.result, minimax.get_updated_parent_value(value.child, value.parent, value.mark));
+  });
+}
+
 TEST(MiniMaxTest, Check32) {
   BoardData<3, 2> data;
   State state(data);

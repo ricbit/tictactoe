@@ -209,13 +209,14 @@ class MiniMax {
   }
 
   pair<optional<BoardValue>, bool> get_updated_parent_value(
-      optional<BoardValue> child_value, BoardValue parent_value, Mark mark) {
+      optional<BoardValue> child_value, BoardValue parent_value, Mark parent_mark) {
+    assert(child_value != BoardValue::UNKNOWN);
     if (child_value.has_value()) {
-      if (*child_value == winner(mark)) {
+      if (*child_value == winner(parent_mark)) {
         return {child_value, true};
       }
       if (*child_value == BoardValue::DRAW) {
-        if (mark == Mark::O) {
+        if (parent_mark == Mark::O) {
           return {child_value, true};
         }
         if (parent_value == BoardValue::DRAW) {
