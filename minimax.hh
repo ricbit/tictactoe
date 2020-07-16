@@ -208,16 +208,47 @@ class MiniMax {
     return mark == Mark::X ? BoardValue::X_WIN : BoardValue::O_WIN;
   }
 
+  bool is_final(BoardValue value, Mark mark) const {
+    if (mark == Mark::X) {
+      return value == BoardValue::X_WIN;
+    } else {
+      return value == BoardValue::DRAW || value == BoardValue::O_WIN;
+    }
+  }
+
   pair<optional<BoardValue>, bool> get_updated_parent_value(
       optional<BoardValue> child_value, BoardValue parent_value, Mark parent_mark) {
     assert(child_value != BoardValue::UNKNOWN);
     if (child_value.has_value()) {
       if (*child_value == winner(parent_mark)) {
-        return {child_value, true};
+        if (parent_value == *child_value) {
+          return {{}, true};
+        } else {
+          return {child_value, true};
+        }
       }
       if (*child_value == BoardValue::DRAW) {
         if (parent_mark == Mark::O) {
-          return {child_value, true};
+          switch (parent_value) {
+            case BoardValue::X_WIN:
+            case BoardValue::UNKNOWN:
+              return {child_value, true};
+            case BoardValue::O_WIN:
+            case BoardValue::DRAW:
+              return {{}, true};
+          }
+        } else if (parent_mark == Mark::X) {
+          switch (parent_value) {
+            case BoardValue::O_WIN:
+            case BoardValue::UNKNOWN:
+              return {child_value, false};
+            case BoardValue::X_WIN:
+              return {{}, true};
+            case BoardValue::DRAW:
+              return {{}, false};
+          }
+        } else {
+          assert(false);
         }
         if (parent_value == BoardValue::DRAW) {
           return {child_value, true};
@@ -228,6 +259,9 @@ class MiniMax {
       if (parent_value == BoardValue::UNKNOWN) {
         return {child_value, false};
       }
+    }
+    if (is_final(parent_value, parent_mark)) {
+      return {{}, true};
     }
     return {{}, false};
   }

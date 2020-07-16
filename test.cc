@@ -477,10 +477,38 @@ TEST(MiniMaxTest, GetParentValue) {
   auto minimax = MiniMax(state, data);
   vector<GetParentValueTestValues> test_values = {
     {BoardValue::X_WIN, BoardValue::UNKNOWN, Mark::X, {BoardValue::X_WIN, true}},
-    {BoardValue::X_WIN, BoardValue::UNKNOWN, Mark::O, {BoardValue::X_WIN, false}}
+    {BoardValue::O_WIN, BoardValue::UNKNOWN, Mark::X, {BoardValue::O_WIN, false}},
+    {BoardValue::DRAW,  BoardValue::UNKNOWN, Mark::X, {BoardValue::DRAW,  false}},
+    {BoardValue::X_WIN, BoardValue::X_WIN,   Mark::X, {{}, true}},
+    {BoardValue::O_WIN, BoardValue::X_WIN,   Mark::X, {{}, true}},
+    {BoardValue::DRAW,  BoardValue::X_WIN,   Mark::X, {{}, true}},
+    {BoardValue::X_WIN, BoardValue::O_WIN,   Mark::X, {BoardValue::X_WIN, true}},
+    {BoardValue::O_WIN, BoardValue::O_WIN,   Mark::X, {{}, false}},
+    {BoardValue::DRAW,  BoardValue::O_WIN,   Mark::X, {BoardValue::DRAW, false}},
+    {BoardValue::X_WIN, BoardValue::DRAW,    Mark::X, {BoardValue::X_WIN, true}},
+    {BoardValue::O_WIN, BoardValue::DRAW,    Mark::X, {{}, false}},
+    {BoardValue::DRAW,  BoardValue::DRAW,    Mark::X, {{}, false}},
+    {BoardValue::X_WIN, BoardValue::UNKNOWN, Mark::O, {BoardValue::X_WIN, false}},
+    {BoardValue::O_WIN, BoardValue::UNKNOWN, Mark::O, {BoardValue::O_WIN, true}},
+    {BoardValue::DRAW,  BoardValue::UNKNOWN, Mark::O, {BoardValue::DRAW,  true}},
+    {BoardValue::X_WIN, BoardValue::X_WIN,   Mark::O, {{}, false}},
+    {BoardValue::O_WIN, BoardValue::X_WIN,   Mark::O, {BoardValue::O_WIN, true}},
+    {BoardValue::DRAW,  BoardValue::X_WIN,   Mark::O, {BoardValue::DRAW, true}},
+    {BoardValue::X_WIN, BoardValue::O_WIN,   Mark::O, {{}, true}},
+    {BoardValue::O_WIN, BoardValue::O_WIN,   Mark::O, {{}, true}},
+    {BoardValue::DRAW,  BoardValue::O_WIN,   Mark::O, {{}, true}},
+    {BoardValue::X_WIN, BoardValue::DRAW,    Mark::O, {{}, true}},
+    {BoardValue::O_WIN, BoardValue::DRAW,    Mark::O, {BoardValue::O_WIN, true}},
+    {BoardValue::DRAW,  BoardValue::DRAW,    Mark::O, {{}, true}},
   };
   for_each(begin(test_values), end(test_values), [&](auto& value) {
-    EXPECT_EQ(value.result, minimax.get_updated_parent_value(value.child, value.parent, value.mark));
+    auto actual =  minimax.get_updated_parent_value(value.child, value.parent, value.mark);
+    if (value.result != actual) {
+      cout << "child: " << value.child << " ";
+      cout << "parent: " << value.parent << " ";
+      cout << "parent_mark: " << value.mark << "\n";
+    }
+    EXPECT_EQ(value.result, actual);
   });
 }
 

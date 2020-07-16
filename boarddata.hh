@@ -69,6 +69,24 @@ enum class Mark {
   both = 3
 };
 
+ostream& operator<<(ostream& oss, const Mark& value) {
+  switch (value) {
+    case Mark::empty:
+      oss << "empty";
+      break;
+    case Mark::X:
+      oss << "X";
+      break;
+    case Mark::O:
+      oss << "O";
+      break;
+    case Mark::both:
+      oss << "both";
+      break;
+  }
+  return oss;
+}
+
 enum class BoardValue {
   X_WIN = 0,
   DRAW = 1,
@@ -90,6 +108,16 @@ ostream& operator<<(ostream& oss, const BoardValue& value) {
     case BoardValue::UNKNOWN:
       oss << "Unknown"s;
       break;
+  }
+  return oss;
+}
+
+template<typename T>
+ostream& operator<<(ostream& oss, const optional<T>& value) {
+  if (value.has_value()) {
+    oss << *value;
+  } else {
+    oss << "{}"s;
   }
   return oss;
 }
