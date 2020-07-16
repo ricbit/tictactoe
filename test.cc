@@ -471,6 +471,13 @@ struct GetParentValueTestValues {
   pair<optional<BoardValue>, bool> result;
 };
 
+template<typename T>
+auto get_parent_checker(T& minimax) {
+  return [&](BoardValue child, BoardValue parent, Mark mark, pair<optional<BoardValue>, bool> result) {
+    return result == minimax.get_updated_parent_value(child, parent, mark);
+  };
+}
+
 TEST(MiniMaxTest, GetParentValue) {
   BoardData<3, 2> data;
   State state(data);
@@ -484,7 +491,7 @@ TEST(MiniMaxTest, GetParentValue) {
     {BoardValue::DRAW,  BoardValue::X_WIN,   Mark::X, {{}, true}},
     {BoardValue::X_WIN, BoardValue::O_WIN,   Mark::X, {BoardValue::X_WIN, true}},
     {BoardValue::O_WIN, BoardValue::O_WIN,   Mark::X, {{}, false}},
-    {BoardValue::DRAW,  BoardValue::O_WIN,   Mark::X, {BoardValue::DRAW, false}},
+    {BoardValue::DRAW,  BoardValue::O_WIN,   Mark::X, {BoardValue::DRAW,  false}},
     {BoardValue::X_WIN, BoardValue::DRAW,    Mark::X, {BoardValue::X_WIN, true}},
     {BoardValue::O_WIN, BoardValue::DRAW,    Mark::X, {{}, false}},
     {BoardValue::DRAW,  BoardValue::DRAW,    Mark::X, {{}, false}},
@@ -493,7 +500,7 @@ TEST(MiniMaxTest, GetParentValue) {
     {BoardValue::DRAW,  BoardValue::UNKNOWN, Mark::O, {BoardValue::DRAW,  true}},
     {BoardValue::X_WIN, BoardValue::X_WIN,   Mark::O, {{}, false}},
     {BoardValue::O_WIN, BoardValue::X_WIN,   Mark::O, {BoardValue::O_WIN, true}},
-    {BoardValue::DRAW,  BoardValue::X_WIN,   Mark::O, {BoardValue::DRAW, true}},
+    {BoardValue::DRAW,  BoardValue::X_WIN,   Mark::O, {BoardValue::DRAW,  true}},
     {BoardValue::X_WIN, BoardValue::O_WIN,   Mark::O, {{}, true}},
     {BoardValue::O_WIN, BoardValue::O_WIN,   Mark::O, {{}, true}},
     {BoardValue::DRAW,  BoardValue::O_WIN,   Mark::O, {{}, true}},
@@ -502,13 +509,7 @@ TEST(MiniMaxTest, GetParentValue) {
     {BoardValue::DRAW,  BoardValue::DRAW,    Mark::O, {{}, true}},
   };
   for_each(begin(test_values), end(test_values), [&](auto& value) {
-    auto actual =  minimax.get_updated_parent_value(value.child, value.parent, value.mark);
-    if (value.result != actual) {
-      cout << "child: " << value.child << " ";
-      cout << "parent: " << value.parent << " ";
-      cout << "parent_mark: " << value.mark << "\n";
-    }
-    EXPECT_EQ(value.result, actual);
+    EXPECT_PRED4(get_parent_checker(minimax), value.child, value.parent, value.mark, value.result);
   });
 }
 
