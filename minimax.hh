@@ -193,7 +193,7 @@ class MiniMax {
 
     if (node->has_parent()) {
       auto old_parent_value = node->get_parent_value();
-      auto [new_parent_value, is_final] = get_updated_parent_value(value, old_parent_value, flip(mark));
+      auto [new_parent_value, is_final] = get_updated_parent_value(value, old_parent_value, flip(to_turn(mark)));
       if (new_parent_value.has_value()) {
         auto parent_reason = is_final ? SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
         save_node(node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark));
@@ -207,8 +207,12 @@ class MiniMax {
     return mark == Mark::X ? BoardValue::X_WIN : BoardValue::O_WIN;
   }
 
-  bool is_final(BoardValue value, Mark mark) const {
-    if (mark == Mark::X) {
+  BoardValue winner(Turn turn) {
+    return turn == Turn::X ? BoardValue::X_WIN : BoardValue::O_WIN;
+  }
+
+  bool is_final(BoardValue value, Turn turn) const {
+    if (turn == Turn::X) {
       return value == BoardValue::X_WIN;
     } else {
       return value == BoardValue::DRAW || value == BoardValue::O_WIN;
@@ -216,10 +220,10 @@ class MiniMax {
   }
 
   pair<optional<BoardValue>, bool> get_updated_parent_value(
-      optional<BoardValue> child_value, BoardValue parent_value, Mark parent_mark) {
+      optional<BoardValue> child_value, BoardValue parent_value, Turn parent_turn) {
     assert(child_value != BoardValue::UNKNOWN);
     if (child_value.has_value()) {
-      if (*child_value == winner(parent_mark)) {
+      if (*child_value == winner(parent_turn)) {
         if (parent_value == *child_value) {
           return {{}, true};
         } else {
@@ -227,7 +231,7 @@ class MiniMax {
         }
       }
       if (*child_value == BoardValue::DRAW) {
-        if (parent_mark == Mark::O) {
+        if (parent_turn == Turn::O) {
           switch (parent_value) {
             case BoardValue::X_WIN:
             case BoardValue::UNKNOWN:
@@ -236,7 +240,7 @@ class MiniMax {
             case BoardValue::DRAW:
               return {{}, true};
           }
-        } else if (parent_mark == Mark::X) {
+        } else if (parent_turn == Turn::X) {
           switch (parent_value) {
             case BoardValue::O_WIN:
             case BoardValue::UNKNOWN:
@@ -246,8 +250,6 @@ class MiniMax {
             case BoardValue::DRAW:
               return {{}, false};
           }
-        } else {
-          assert(false);
         }
         if (parent_value == BoardValue::DRAW) {
           return {child_value, true};
@@ -259,7 +261,7 @@ class MiniMax {
         return {child_value, false};
       }
     }
-    if (is_final(parent_value, parent_mark)) {
+    if (is_final(parent_value, parent_turn)) {
       return {{}, true};
     }
     return {{}, false};

@@ -467,14 +467,14 @@ TEST(ForcingMoveTest, CheckDefensiveMoveIn33) {
 struct GetParentValueTestValues {
   BoardValue child;
   BoardValue parent;
-  Mark mark;
+  Turn turn;
   pair<optional<BoardValue>, bool> result;
 };
 
 template<typename T>
 auto get_parent_checker(T& minimax) {
-  return [&](BoardValue child, BoardValue parent, Mark mark, pair<optional<BoardValue>, bool> result) {
-    return result == minimax.get_updated_parent_value(child, parent, mark);
+  return [&](BoardValue child, BoardValue parent, Turn turn, pair<optional<BoardValue>, bool> result) {
+    return result == minimax.get_updated_parent_value(child, parent, turn);
   };
 }
 
@@ -483,33 +483,33 @@ TEST(MiniMaxTest, GetParentValue) {
   State state(data);
   auto minimax = MiniMax(state, data);
   vector<GetParentValueTestValues> test_values = {
-    {BoardValue::X_WIN, BoardValue::UNKNOWN, Mark::X, {BoardValue::X_WIN, true}},
-    {BoardValue::O_WIN, BoardValue::UNKNOWN, Mark::X, {BoardValue::O_WIN, false}},
-    {BoardValue::DRAW,  BoardValue::UNKNOWN, Mark::X, {BoardValue::DRAW,  false}},
-    {BoardValue::X_WIN, BoardValue::X_WIN,   Mark::X, {{}, true}},
-    {BoardValue::O_WIN, BoardValue::X_WIN,   Mark::X, {{}, true}},
-    {BoardValue::DRAW,  BoardValue::X_WIN,   Mark::X, {{}, true}},
-    {BoardValue::X_WIN, BoardValue::O_WIN,   Mark::X, {BoardValue::X_WIN, true}},
-    {BoardValue::O_WIN, BoardValue::O_WIN,   Mark::X, {{}, false}},
-    {BoardValue::DRAW,  BoardValue::O_WIN,   Mark::X, {BoardValue::DRAW,  false}},
-    {BoardValue::X_WIN, BoardValue::DRAW,    Mark::X, {BoardValue::X_WIN, true}},
-    {BoardValue::O_WIN, BoardValue::DRAW,    Mark::X, {{}, false}},
-    {BoardValue::DRAW,  BoardValue::DRAW,    Mark::X, {{}, false}},
-    {BoardValue::X_WIN, BoardValue::UNKNOWN, Mark::O, {BoardValue::X_WIN, false}},
-    {BoardValue::O_WIN, BoardValue::UNKNOWN, Mark::O, {BoardValue::O_WIN, true}},
-    {BoardValue::DRAW,  BoardValue::UNKNOWN, Mark::O, {BoardValue::DRAW,  true}},
-    {BoardValue::X_WIN, BoardValue::X_WIN,   Mark::O, {{}, false}},
-    {BoardValue::O_WIN, BoardValue::X_WIN,   Mark::O, {BoardValue::O_WIN, true}},
-    {BoardValue::DRAW,  BoardValue::X_WIN,   Mark::O, {BoardValue::DRAW,  true}},
-    {BoardValue::X_WIN, BoardValue::O_WIN,   Mark::O, {{}, true}},
-    {BoardValue::O_WIN, BoardValue::O_WIN,   Mark::O, {{}, true}},
-    {BoardValue::DRAW,  BoardValue::O_WIN,   Mark::O, {{}, true}},
-    {BoardValue::X_WIN, BoardValue::DRAW,    Mark::O, {{}, true}},
-    {BoardValue::O_WIN, BoardValue::DRAW,    Mark::O, {BoardValue::O_WIN, true}},
-    {BoardValue::DRAW,  BoardValue::DRAW,    Mark::O, {{}, true}},
+    {BoardValue::X_WIN, BoardValue::UNKNOWN, Turn::X, {BoardValue::X_WIN, true}},
+    {BoardValue::O_WIN, BoardValue::UNKNOWN, Turn::X, {BoardValue::O_WIN, false}},
+    {BoardValue::DRAW,  BoardValue::UNKNOWN, Turn::X, {BoardValue::DRAW,  false}},
+    {BoardValue::X_WIN, BoardValue::X_WIN,   Turn::X, {{}, true}},
+    {BoardValue::O_WIN, BoardValue::X_WIN,   Turn::X, {{}, true}},
+    {BoardValue::DRAW,  BoardValue::X_WIN,   Turn::X, {{}, true}},
+    {BoardValue::X_WIN, BoardValue::O_WIN,   Turn::X, {BoardValue::X_WIN, true}},
+    {BoardValue::O_WIN, BoardValue::O_WIN,   Turn::X, {{}, false}},
+    {BoardValue::DRAW,  BoardValue::O_WIN,   Turn::X, {BoardValue::DRAW,  false}},
+    {BoardValue::X_WIN, BoardValue::DRAW,    Turn::X, {BoardValue::X_WIN, true}},
+    {BoardValue::O_WIN, BoardValue::DRAW,    Turn::X, {{}, false}},
+    {BoardValue::DRAW,  BoardValue::DRAW,    Turn::X, {{}, false}},
+    {BoardValue::X_WIN, BoardValue::UNKNOWN, Turn::O, {BoardValue::X_WIN, false}},
+    {BoardValue::O_WIN, BoardValue::UNKNOWN, Turn::O, {BoardValue::O_WIN, true}},
+    {BoardValue::DRAW,  BoardValue::UNKNOWN, Turn::O, {BoardValue::DRAW,  true}},
+    {BoardValue::X_WIN, BoardValue::X_WIN,   Turn::O, {{}, false}},
+    {BoardValue::O_WIN, BoardValue::X_WIN,   Turn::O, {BoardValue::O_WIN, true}},
+    {BoardValue::DRAW,  BoardValue::X_WIN,   Turn::O, {BoardValue::DRAW,  true}},
+    {BoardValue::X_WIN, BoardValue::O_WIN,   Turn::O, {{}, true}},
+    {BoardValue::O_WIN, BoardValue::O_WIN,   Turn::O, {{}, true}},
+    {BoardValue::DRAW,  BoardValue::O_WIN,   Turn::O, {{}, true}},
+    {BoardValue::X_WIN, BoardValue::DRAW,    Turn::O, {{}, true}},
+    {BoardValue::O_WIN, BoardValue::DRAW,    Turn::O, {BoardValue::O_WIN, true}},
+    {BoardValue::DRAW,  BoardValue::DRAW,    Turn::O, {{}, true}},
   };
   for_each(begin(test_values), end(test_values), [&](auto& value) {
-    EXPECT_PRED4(get_parent_checker(minimax), value.child, value.parent, value.mark, value.result);
+    EXPECT_PRED4(get_parent_checker(minimax), value.child, value.parent, value.turn, value.result);
   });
 }
 

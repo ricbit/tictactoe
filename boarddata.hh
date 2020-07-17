@@ -105,7 +105,11 @@ ostream& operator<<(ostream& oss, const Turn& value) {
 }
 
 Mark to_mark(Turn turn) {
-  return static_cast<Mark>(static_cast<int>(turn) - 1);
+  return static_cast<Mark>(static_cast<int>(turn) + 1);
+}
+
+Turn to_turn(Mark mark) {
+  return static_cast<Turn>(static_cast<int>(mark) - 1);
 }
 
 enum class BoardValue {
