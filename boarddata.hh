@@ -72,19 +72,40 @@ enum class Mark {
 ostream& operator<<(ostream& oss, const Mark& value) {
   switch (value) {
     case Mark::empty:
-      oss << "empty";
+      oss << "empty"s;
       break;
     case Mark::X:
-      oss << "X";
+      oss << "X"s;
       break;
     case Mark::O:
-      oss << "O";
+      oss << "O"s;
       break;
     case Mark::both:
-      oss << "both";
+      oss << "both"s;
       break;
   }
   return oss;
+}
+
+enum class Turn {
+  X = 0,
+  O = 1
+};
+
+ostream& operator<<(ostream& oss, const Turn& value) {
+  switch (value) {
+    case Turn::X:
+      oss << "X"s;
+      break;
+    case Turn::O:
+      oss << "O"s;
+      break;
+  }
+  return oss;
+}
+
+Mark to_mark(Turn turn) {
+  return static_cast<Mark>(static_cast<int>(turn) - 1);
 }
 
 enum class BoardValue {
@@ -124,6 +145,10 @@ ostream& operator<<(ostream& oss, const optional<T>& value) {
 
 Mark flip(Mark mark) {
   return static_cast<Mark>(static_cast<int>(mark) ^ 3);
+}
+
+Turn flip(Turn turn) {
+  return static_cast<Turn>(static_cast<int>(turn) ^ 1);
 }
 
 using Zobrist = uint64_t;
