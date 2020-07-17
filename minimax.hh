@@ -251,20 +251,13 @@ class MiniMax {
               return {{}, false};
           }
         }
-        if (parent_value == BoardValue::DRAW) {
-          return {child_value, true};
-        } else {
-          return {child_value, false};
-        }
+        return {child_value, parent_value == BoardValue::DRAW};
       }
       if (parent_value == BoardValue::UNKNOWN) {
         return {child_value, false};
       }
     }
-    if (is_final(parent_value, parent_turn)) {
-      return {{}, true};
-    }
-    return {{}, false};
+    return {{}, is_final(parent_value, parent_turn)};
   }
 
   template<typename B>
