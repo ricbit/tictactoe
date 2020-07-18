@@ -202,6 +202,8 @@ class MiniMax {
     if (node->has_parent()) {
       auto old_parent_value = node->get_parent_value();
       auto [new_parent_value, is_final] = get_updated_parent_value(value, old_parent_value, flip(to_turn(mark)));
+      cout << "child value " << value << " : parent value " << old_parent_value;
+      cout << " : parent mark " << flip(to_turn(mark)) << "\n";
       cout << "new p value " << new_parent_value << " is final " << is_final << "\n";
       if (new_parent_value.has_value()) {
         auto parent_reason = is_final ? SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;

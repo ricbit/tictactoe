@@ -31,7 +31,7 @@ class SolutionTree {
       return parent != nullptr;
     }
     const BoardValue get_parent_value() const {
-      return has_parent() ? BoardValue::O_WIN : parent->value;
+      return has_parent() ? parent->value : BoardValue::UNKNOWN;
     }
     bool is_final() const {
       return reason != Reason::MINIMAX_COMPLETE && reason != Reason::UNKNOWN;
