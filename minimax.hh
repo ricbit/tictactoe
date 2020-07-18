@@ -108,13 +108,19 @@ class MiniMax {
     while (!next.empty()) {
       auto [current_state, mark, node] = next.top();
       next.pop();
+      cout << "----\n";
+      current_state.print();
+      cout << ":\n";
+      node->rebuild_state(data).print();
       report_progress();
       if (node->is_parent_final()) {
         node->reason = SolutionTree::Reason::PRUNING;
+        cout << "pruned\n";
         continue;
       }
       auto terminal_node = check_terminal_node(current_state, mark, node);
       if (terminal_node.has_value()) {
+        cout << "terminal, value: " << *terminal_node << "\n";
         continue;
       }
 
@@ -190,10 +196,13 @@ class MiniMax {
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }
+    cout << "! save_node\n";
+    node->rebuild_state(data).print();
 
     if (node->has_parent()) {
       auto old_parent_value = node->get_parent_value();
       auto [new_parent_value, is_final] = get_updated_parent_value(value, old_parent_value, flip(to_turn(mark)));
+      cout << "new p value " << new_parent_value << " is final " << is_final << "\n";
       if (new_parent_value.has_value()) {
         auto parent_reason = is_final ? SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
         save_node(node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark));

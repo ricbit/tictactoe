@@ -28,7 +28,7 @@ class SolutionTree {
       return children.rbegin()->second.get();
     }
     bool has_parent() const {
-      return parent == nullptr;
+      return parent != nullptr;
     }
     const BoardValue get_parent_value() const {
       return has_parent() ? BoardValue::O_WIN : parent->value;
