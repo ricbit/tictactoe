@@ -52,13 +52,13 @@ class SolutionTree {
       for (const Node *p = this; p != nullptr; p = p->parent) {
         len++;
       }
-      return len % 2 == 0 ? Turn::O : Turn::X;
+      return len % 2 == 1 ? Turn::O : Turn::X;
     }
     template<int N, int D>
     State<N, D> rebuild_state(const BoardData<N, D>& data) const {
       Turn turn = get_turn();
       State<N, D> state(data);
-      for (Node *p = this; p != nullptr; p = p->parent) {
+      for (const Node *p = this; p->parent != nullptr; p = p->parent) {
         state.play(p->get_position(), to_mark(turn));
         turn = flip(turn);
       }
