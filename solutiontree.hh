@@ -39,6 +39,31 @@ class SolutionTree {
     bool is_parent_final() const {
       return parent == nullptr ? false : parent->is_final();
     }
+    Position get_position() const {
+      for (const auto& [pos, child] : parent->children) {
+        if (child.get() == this) {
+          return pos;
+        }
+      }
+      assert(false);
+    }
+    Turn get_turn() const {
+      int len = 0;
+      for (const Node *p = this; p != nullptr; p = p->parent) {
+        len++;
+      }
+      return len % 2 == 0 ? Turn::O : Turn::X;
+    }
+    template<int N, int D>
+    State<N, D> rebuild_state(const BoardData<N, D>& data) const {
+      Turn turn = get_turn();
+      State<N, D> state(data);
+      for (Node *p = this; p != nullptr; p = p->parent) {
+        state.play(p->get_position(), to_mark(turn));
+        turn = flip(turn);
+      }
+      return state;
+    }
   };
   explicit SolutionTree(int board_size) : root(make_unique<Node>(nullptr, board_size, Zobrist{0})) {
   }
