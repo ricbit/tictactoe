@@ -117,25 +117,6 @@ class SolutionTree {
   void update_count() {
     update_count(root.get());
   }
-  vector<BoardValue> filter_unknown(const vector<pair<Position, unique_ptr<Node>>>& children) const {
-    vector<BoardValue> filtered;
-    for (const auto& child : children) {
-      if (child.second->value != BoardValue::UNKNOWN) {
-        filtered.push_back(child.second->value);
-      }
-    }
-    return filtered;
-  }
-  BoardValue min_child(const Node *node) const {
-    auto filtered = filter_unknown(node->children);
-    return *min_element(begin(filtered), end(filtered));
-  }
-
-  BoardValue max_child(const Node *node) const {
-    auto filtered = filter_unknown(node->children);
-    return *max_element(begin(filtered), end(filtered));
-  }
-
  private:
   int update_count(Node *node) {
     return node->count = accumulate(begin(node->children), end(node->children), 1,
@@ -153,19 +134,21 @@ class SolutionTree {
     if (node->children.empty()) {
       return true;
     }
-    auto filtered = filter_unknown(node->children);
-    if (filtered.empty()) {
+    auto is_unknown = [](const auto &child) {
+      return child.second->value == BoardValue::UNKNOWN;
+    };
+    if (any_of(begin(node->children), end(node->children), is_unknown)) {
       return node->value == BoardValue::UNKNOWN;
     }
     if (mark == Mark::X) {
-      if (min_child(node) != node->value) {
+      if (node->min_child() != node->value) {
         return false;
       }
       if (node->value == BoardValue::X_WIN && node->children.size() != 1) {
         return false;
       }
     } else if (mark == Mark::O) {
-      if (max_child(node) != node->value) {
+      if (node->max_child() != node->value) {
         return false;
       }
       if ((node->value == BoardValue::O_WIN || node->value == BoardValue::DRAW)
@@ -185,7 +168,7 @@ class SolutionTree {
     } else if (mark == Mark::O) {
       if ((node->value == BoardValue::O_WIN || node->value == BoardValue::DRAW)
           && node->children.size() > 1) {
-        prune_children(node, max_child(node));
+        prune_children(node, *node->max_child());
       }
     }
     for_each(begin(node->children), end(node->children), [&](auto& child) {
@@ -203,10 +186,6 @@ class SolutionTree {
       node->children.erase(it, end(node->children));
     }
   }
-
-  constexpr static auto compare_children = [](const auto& child1, const auto& child2) {
-    return child1.second->value < child2.second->value;
-  };
 
   void dump_node(ofstream& ofs, const Node* node) const {
     ofs << static_cast<int>(node->value) << " ";
