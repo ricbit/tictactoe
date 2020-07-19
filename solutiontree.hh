@@ -35,7 +35,7 @@ class SolutionTree {
       return has_parent() ? parent->value : BoardValue::UNKNOWN;
     }
     bool is_final() const {
-      return reason != Reason::MINIMAX_COMPLETE && reason != Reason::UNKNOWN;
+      return node_final;
     }
     bool is_parent_final() const {
       return parent == nullptr ? false : parent->is_final();
