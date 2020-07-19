@@ -65,6 +65,31 @@ class SolutionTree {
       }
       return state;
     }
+    optional<BoardValue> min_child() const {
+      return extreme_child([](const auto& a, const auto&b) {
+        return a < b;
+      });
+    }
+    optional<BoardValue> max_child() const {
+      return extreme_child([](const auto& a, const auto&b) {
+        return a > b;
+      });
+    }
+   private:
+    template<typename T>
+    optional<BoardValue> extreme_child(T comp) const {
+      optional<BoardValue> ans;
+      for (const auto& [pos, child] : children) {
+        if (child->value != BoardValue::UNKNOWN) {
+          if (ans.has_value()) {
+            ans = comp(*ans, child->value) ? *ans : child->value;
+          } else {
+            ans = child->value;
+          }
+        }
+      }
+      return ans;
+    }
   };
   explicit SolutionTree(int board_size) : root(make_unique<Node>(nullptr, board_size, Zobrist{0})) {
   }

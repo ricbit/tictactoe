@@ -266,7 +266,7 @@ class MiniMax {
       const SolutionTree::Node *parent,
       Turn parent_turn) {
     assert(child_value != BoardValue::UNKNOWN);
-    auto new_value = parent_turn == Turn::X ? solution.min_child(parent) : solution.max_child(parent);
+    auto new_value = parent_turn == Turn::X ? parent->min_child() : parent->max_child();
     if (new_value != parent->value) {
       return {new_value, false};
     } else {
