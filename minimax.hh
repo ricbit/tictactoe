@@ -211,7 +211,7 @@ class MiniMax {
       zobrist[node_zobrist] = value;
     }
     if (node->parent != nullptr) {
-      auto [new_parent_value, is_final] = get_updated_parent_value(value, flip(mark), node->parent);
+      auto [new_parent_value, is_final] = get_updated_parent_value(value, node->parent, flip(to_turn(mark)));
       if (new_parent_value.has_value()) {
         auto parent_reason = is_final ? SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
         save_node(node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark));
