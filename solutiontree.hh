@@ -40,6 +40,14 @@ class SolutionTree {
     bool is_parent_final() const {
       return parent == nullptr ? false : parent->is_final();
     }
+    bool some_parent_final() const {
+      for (Node *p = parent; p != nullptr; p = p->parent) {
+        if (p->is_final()) {
+          return true;
+        }
+      }
+      return false;
+    }
     Position get_position() const {
       for (const auto& [pos, child] : parent->children) {
         if (child.get() == this) {

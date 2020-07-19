@@ -123,10 +123,11 @@ class MiniMax {
   optional<BoardValue> queue_play(BoardNode root) {
     assert(next.empty());
     next.push(root);
-    constexpr int slice = 2;
+    constexpr int slice = 1;
+    vector<BoardNode> nodes;
+    nodes.reserve(slice);
     while (!next.empty()) {
-      vector<BoardNode> nodes;
-      nodes.reserve(slice);
+      nodes.clear();
       for (int i = 0; i < slice && !next.empty(); i++) {
         nodes.emplace_back(next.top());
         next.pop();
@@ -241,7 +242,6 @@ class MiniMax {
             node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark), parent_is_final);
       }
     }
-
     return value;
   }
 
