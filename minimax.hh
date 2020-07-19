@@ -85,6 +85,7 @@ class MiniMax {
   SolutionTree solution;
   stack<BoardNode> next;
   mutex next_m;
+  mutex node_m;
   unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
@@ -107,7 +108,7 @@ class MiniMax {
   optional<BoardValue> queue_play(BoardNode root) {
     assert(next.empty());
     next.push(root);
-    constexpr int slice = 1;
+    constexpr int slice = 3;
     while (!next.empty()) {
       vector<BoardNode> nodes;
       nodes.reserve(slice);
@@ -115,7 +116,7 @@ class MiniMax {
         nodes.emplace_back(next.top());
         next.pop();
       }
-      for_each(begin(nodes), end(nodes), [&](auto node) {
+      for_each(execution::par_unseq, begin(nodes), end(nodes), [&](auto node) {
         process_node(node);
       });
     }
@@ -142,6 +143,7 @@ class MiniMax {
       node->children.emplace_back(sorted[i].second, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto child_node = node->children.rbegin()->second.get();
       auto child_board_node = BoardNode{child, flip(mark), child_node};
+      lock_guard lock(next_m);
       next.push(child_board_node);
     }
   }
@@ -199,11 +201,14 @@ class MiniMax {
 
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
       BoardValue value, SolutionTree::Reason reason, Mark mark, bool is_final = true) {
-    node->reason = reason;
-    node->value = value;
-    node->node_final = is_final;
-    if (node->is_final()) {
-      zobrist[node_zobrist] = value;
+    { 
+      const lock_guard lock(node_m);
+      node->reason = reason;
+      node->value = value;
+      node->node_final = is_final;
+      if (node->is_final()) {
+        zobrist[node_zobrist] = value;
+      }
     }
     if (node->parent != nullptr) {
       auto parent_turn = flip(to_turn(mark));
