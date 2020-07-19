@@ -108,7 +108,7 @@ class MiniMax {
   optional<BoardValue> queue_play(BoardNode root) {
     assert(next.empty());
     next.push(root);
-    constexpr int slice = 3;
+    constexpr int slice = 2;
     while (!next.empty()) {
       vector<BoardNode> nodes;
       nodes.reserve(slice);
@@ -116,7 +116,7 @@ class MiniMax {
         nodes.emplace_back(next.top());
         next.pop();
       }
-      for_each(execution::par_unseq, begin(nodes), end(nodes), [&](auto node) {
+      for_each(execution::par, begin(nodes), end(nodes), [&](auto node) {
         process_node(node);
       });
     }
@@ -201,14 +201,17 @@ class MiniMax {
 
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
       BoardValue value, SolutionTree::Reason reason, Mark mark, bool is_final = true) {
-    { 
-      const lock_guard lock(node_m);
-      node->reason = reason;
-      node->value = value;
-      node->node_final = is_final;
-      if (node->is_final()) {
-        zobrist[node_zobrist] = value;
-      }
+    const lock_guard lock(node_m);
+    return unsafe_save_node(node, node_zobrist, value, reason, mark, is_final);
+  }
+
+  BoardValue unsafe_save_node(SolutionTree::Node *node, Zobrist node_zobrist,
+      BoardValue value, SolutionTree::Reason reason, Mark mark, bool is_final = true) {
+    node->reason = reason;
+    node->value = value;
+    node->node_final = is_final;
+    if (node->is_final()) {
+      zobrist[node_zobrist] = value;
     }
     if (node->parent != nullptr) {
       auto parent_turn = flip(to_turn(mark));
@@ -219,7 +222,8 @@ class MiniMax {
             (new_parent_value == BoardValue::O_WIN || new_parent_value == BoardValue::DRAW);
         auto parent_reason = parent_is_final ?
             SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
-        save_node(node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark), parent_is_final);
+        unsafe_save_node(
+            node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark), parent_is_final);
       }
     }
 
