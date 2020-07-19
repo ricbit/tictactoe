@@ -112,17 +112,11 @@ class MiniMax {
       vector<BoardNode> nodes;
       nodes.reserve(slice);
       for (int i = 0; i < slice && !next.empty(); i++) {
-        //next.top().current_state.print();
         nodes.emplace_back(next.top());
         next.pop();
       }
-      //cout << "--\n";
       for_each(begin(nodes), end(nodes), [&](auto node) {
         process_node(node);
-        cout << "reason: " << static_cast<int>(node.node->reason) << "\n";
-        cout << "value: " << node.node->value << "\n";
-        node.current_state.print();
-        cout << "\n";
       });
     }
     return root.node->value;
