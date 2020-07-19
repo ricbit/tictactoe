@@ -233,53 +233,15 @@ class MiniMax {
 
   pair<optional<BoardValue>, bool> get_updated_parent_value(
       optional<BoardValue> child_value, 
-      //BoardValue parent_value, 
       const SolutionTree::Node *parent,
       Turn parent_turn) {
     assert(child_value != BoardValue::UNKNOWN);
-    auto new_value = parent_turn == Turn::X ?
-        solution.min_child(parent) : solution.max_child(parent);
+    auto new_value = parent_turn == Turn::X ? solution.min_child(parent) : solution.max_child(parent);
     if (new_value != parent->value) {
       return {new_value, false};
     } else {
       return {{}, false};
     }
-    /*if (child_value.has_value()) {
-      if (*child_value == winner(parent_turn)) {
-        if (parent_value == *child_value) {
-          return {{}, true};
-        } else {
-          return {child_value, true};
-        }
-      }
-      if (*child_value == BoardValue::DRAW) {
-        if (parent_turn == Turn::O) {
-          switch (parent_value) {
-            case BoardValue::X_WIN:
-            case BoardValue::UNKNOWN:
-              return {child_value, true};
-            case BoardValue::O_WIN:
-            case BoardValue::DRAW:
-              return {{}, true};
-          }
-        } else if (parent_turn == Turn::X) {
-          switch (parent_value) {
-            case BoardValue::O_WIN:
-            case BoardValue::UNKNOWN:
-              return {child_value, false};
-            case BoardValue::X_WIN:
-              return {{}, true};
-            case BoardValue::DRAW:
-              return {{}, false};
-          }
-        }
-        return {child_value, parent_value == BoardValue::DRAW};
-      }
-      if (parent_value == BoardValue::UNKNOWN) {
-        return {child_value, false};
-      }
-    }
-    return {{}, is_final(parent_value, parent_turn)};*/
   }
 
   template<typename B>
