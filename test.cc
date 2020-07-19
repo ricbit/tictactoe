@@ -478,7 +478,7 @@ auto get_parent_checker(T& minimax) {
   };
 }
 
-TEST(MiniMaxTest, GetParentValue) {
+/*TEST(MiniMaxTest, GetParentValue) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
@@ -511,7 +511,7 @@ TEST(MiniMaxTest, GetParentValue) {
   for_each(begin(test_values), end(test_values), [&](auto& value) {
     EXPECT_PRED4(get_parent_checker(minimax), value.child, value.parent, value.turn, value.result);
   });
-}
+}*/
 
 TEST(MiniMaxTest, Check32) {
   BoardData<3, 2> data;

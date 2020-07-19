@@ -89,7 +89,7 @@ class MiniMax {
     auto ans = queue_play(BoardNode{current_state, mark, solution.get_root()});
     cout << "Total nodes visited: " << nodes_visited << "\n";
     cout << "Nodes in solution tree: " << solution.real_count() << "\n";
-    //solution.prune();
+    solution.prune();
     cout << "Nodes in solution tree after pruning: " << solution.real_count() << "\n";
     return ans;
   }
@@ -201,7 +201,7 @@ class MiniMax {
 
     if (node->has_parent()) {
       auto old_parent_value = node->get_parent_value();
-      auto [new_parent_value, is_final] = get_updated_parent_value(value, old_parent_value, flip(to_turn(mark)));
+      auto [new_parent_value, is_final] = get_updated_parent_value(value, node->parent, flip(to_turn(mark)));
       cout << "child value " << value << " : parent value " << old_parent_value;
       cout << " : parent mark " << flip(to_turn(mark)) << "\n";
       cout << "new p value " << new_parent_value << " is final " << is_final << "\n";
@@ -231,9 +231,19 @@ class MiniMax {
   }
 
   pair<optional<BoardValue>, bool> get_updated_parent_value(
-      optional<BoardValue> child_value, BoardValue parent_value, Turn parent_turn) {
+      optional<BoardValue> child_value, 
+      //BoardValue parent_value, 
+      const SolutionTree::Node *parent,
+      Turn parent_turn) {
     assert(child_value != BoardValue::UNKNOWN);
-    if (child_value.has_value()) {
+    auto new_value = parent_turn == Turn::X ?
+        solution.min_child(parent) : solution.max_child(parent);
+    if (new_value != parent->value) {
+      return {new_value, false};
+    } else {
+      return {{}, false};
+    }
+    /*if (child_value.has_value()) {
       if (*child_value == winner(parent_turn)) {
         if (parent_value == *child_value) {
           return {{}, true};
@@ -268,7 +278,7 @@ class MiniMax {
         return {child_value, false};
       }
     }
-    return {{}, is_final(parent_value, parent_turn)};
+    return {{}, is_final(parent_value, parent_turn)};*/
   }
 
   template<typename B>

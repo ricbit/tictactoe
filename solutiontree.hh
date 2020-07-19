@@ -91,6 +91,25 @@ class SolutionTree {
   void update_count() {
     update_count(root.get());
   }
+  vector<BoardValue> filter_unknown(const vector<pair<Position, unique_ptr<Node>>>& children) const {
+    vector<BoardValue> filtered;
+    for (const auto& child : children) {
+      if (child.second->value != BoardValue::UNKNOWN) {
+        filtered.push_back(child.second->value);
+      }
+    }
+    return filtered;
+  }
+  BoardValue min_child(const Node *node) const {
+    auto filtered = filter_unknown(node->children);
+    return *min_element(begin(filtered), end(filtered));
+  }
+
+  BoardValue max_child(const Node *node) const {
+    auto filtered = filter_unknown(node->children);
+    return *max_element(begin(filtered), end(filtered));
+  }
+
  private:
   int update_count(Node *node) {
     return node->count = accumulate(begin(node->children), end(node->children), 1,
@@ -162,26 +181,6 @@ class SolutionTree {
   constexpr static auto compare_children = [](const auto& child1, const auto& child2) {
     return child1.second->value < child2.second->value;
   };
-
-  vector<BoardValue> filter_unknown(const vector<pair<Position, unique_ptr<Node>>>& children) const {
-    vector<BoardValue> filtered;
-    for (const auto& child : children) {
-      if (child.second->value != BoardValue::UNKNOWN) {
-        filtered.push_back(child.second->value);
-      }
-    }
-    return filtered;
-  }
-
-  BoardValue min_child(Node *node) const {
-    auto filtered = filter_unknown(node->children);
-    return *min_element(begin(filtered), end(filtered));
-  }
-
-  BoardValue max_child(Node *node) const {
-    auto filtered = filter_unknown(node->children);
-    return *max_element(begin(filtered), end(filtered));
-  }
 
   void dump_node(ofstream& ofs, const Node* node) const {
     ofs << static_cast<int>(node->value) << " ";
