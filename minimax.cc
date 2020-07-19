@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
   };
   BoardData<N, D> data;
   State state(data);
-  auto minimax = MiniMax<N, D, DebugConfig>(state, data);
+  auto minimax = MiniMax<N, D, DFS<N, D>, DebugConfig>(state, data);
   auto result = minimax.play(state, Mark::X);
   cout << *result << "\n";
   if (!minimax.get_solution().validate()) {

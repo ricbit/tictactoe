@@ -75,16 +75,56 @@ struct DefaultConfig {
   DummyCout debug;
 };
 
-template<int N, int D, typename Config = DefaultConfig, Outcome outcome = known_outcome<N, D>()>
+template<int N, int D>
+struct BoardNode {
+  State<N, D> current_state;
+  Mark mark;
+  SolutionTree::Node *node;
+};
+
+template<int N, int D>
+class DFS {
+ public:
+  void push(BoardNode<N, D> node) {
+    next.push(node);
+  }
+  BoardNode<N, D> pop_best() {
+    BoardNode<N, D> node = next.top();
+    next.pop();
+    return node;
+  }
+  bool empty() const {
+    return next.empty();
+  }
+ private:
+  stack<BoardNode<N, D>> next;
+};
+
+template<int N, int D>
+class BFS {
+ public:
+  void push(BoardNode<N, D> node) {
+    next.push(node);
+  }
+  BoardNode<N, D> pop_best() {
+    BoardNode<N, D> node = next.front();
+    next.pop();
+    return node;
+  }
+  bool empty() const {
+    return next.empty();
+  }
+ private:
+  queue<BoardNode<N, D>> next;
+};
+
+template<int N, int D,
+    typename Traversal = DFS<N, D>,
+    typename Config = DefaultConfig,
+    Outcome outcome = known_outcome<N, D>()>
 class MiniMax {
  public:
   constexpr static Position board_size = BoardData<N, D>::board_size;
-
-  struct BoardNode {
-    State<N, D> current_state;
-    Mark mark;
-    SolutionTree::Node *node;
-  };
 
   explicit MiniMax(
     const State<N, D>& state,
@@ -97,7 +137,7 @@ class MiniMax {
   const BoardData<N, D>& data;
   int nodes_visited;
   SolutionTree solution;
-  stack<BoardNode> next;
+  Traversal traversal;
   mutex next_m;
   mutex node_m;
   unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
@@ -120,17 +160,16 @@ class MiniMax {
     return solution;
   }
 
-  optional<BoardValue> queue_play(BoardNode root) {
-    assert(next.empty());
-    next.push(root);
+  optional<BoardValue> queue_play(BoardNode<N, D> root) {
+    assert(traversal.empty());
+    traversal.push(root);
     constexpr int slice = 1;
-    vector<BoardNode> nodes;
+    vector<BoardNode<N, D>> nodes;
     nodes.reserve(slice);
-    while (!next.empty()) {
+    while (!traversal.empty()) {
       nodes.clear();
-      for (int i = 0; i < slice && !next.empty(); i++) {
-        nodes.emplace_back(next.top());
-        next.pop();
+      for (int i = 0; i < slice && !traversal.empty(); i++) {
+        nodes.emplace_back(traversal.pop_best());
       }
       for_each(begin(nodes), end(nodes), [&](auto node) {
         process_node(node);
@@ -139,7 +178,7 @@ class MiniMax {
     return root.node->value;
   }
 
-  void process_node(BoardNode board_node) {
+  void process_node(BoardNode<N, D> board_node) {
     auto& [current_state, mark, node] = board_node;
     report_progress();
     if (node->is_parent_final()) {
@@ -160,7 +199,7 @@ class MiniMax {
       auto child_node = node->children.rbegin()->second.get();
       auto child_board_node = BoardNode{child, flip(mark), child_node};
       lock_guard lock(next_m);
-      next.push(child_board_node);
+      traversal.push(child_board_node);
     }
   }
 
@@ -262,7 +301,7 @@ class MiniMax {
   }
 
   pair<optional<BoardValue>, bool> get_updated_parent_value(
-      optional<BoardValue> child_value, 
+      optional<BoardValue> child_value,
       const SolutionTree::Node *parent,
       Turn parent_turn) {
     assert(child_value != BoardValue::UNKNOWN);
