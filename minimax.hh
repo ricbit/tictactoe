@@ -107,7 +107,7 @@ class MiniMax {
   optional<BoardValue> queue_play(BoardNode root) {
     assert(next.empty());
     next.push(root);
-    constexpr int slice = 2;
+    constexpr int slice = 1;
     while (!next.empty()) {
       vector<BoardNode> nodes;
       nodes.reserve(slice);
@@ -198,17 +198,23 @@ class MiniMax {
   }
 
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
-      BoardValue value, SolutionTree::Reason reason, Mark mark) {
+      BoardValue value, SolutionTree::Reason reason, Mark mark, bool is_final = true) {
     node->reason = reason;
     node->value = value;
+    node->node_final = is_final;
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }
     if (node->parent != nullptr) {
-      auto [new_parent_value, is_final] = get_updated_parent_value(value, node->parent, flip(to_turn(mark)));
+      auto parent_turn = flip(to_turn(mark));
+      auto [new_parent_value, is_final] = get_updated_parent_value(value, node->parent, parent_turn);
       if (new_parent_value.has_value()) {
-        auto parent_reason = is_final ? SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
-        save_node(node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark));
+        bool parent_is_final = parent_turn == Turn::X ?
+            (new_parent_value == BoardValue::X_WIN) :
+            (new_parent_value == BoardValue::O_WIN || new_parent_value == BoardValue::DRAW);
+        auto parent_reason = parent_is_final ?
+            SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
+        save_node(node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark), parent_is_final);
       }
     }
 
