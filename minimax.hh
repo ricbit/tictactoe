@@ -58,21 +58,21 @@ class IdentityHash {
   }
 };
 
-class dummy_cout {
+class DummyCout {
  public:
   template<typename T>
-  const dummy_cout& operator<<(const T& x) const {
+  const DummyCout& operator<<(const T& x) const {
     return *this;
   }
   template<typename T>
-  const dummy_cout& operator<<(T& x) const {
+  const DummyCout& operator<<(T& x) const {
     return *this;
   }
 };
 
 struct DefaultConfig {
   int max_nodes = 1000000;
-  dummy_cout debug;
+  DummyCout debug;
 };
 
 template<int N, int D, typename Config = DefaultConfig, Outcome outcome = known_outcome<N, D>()>
