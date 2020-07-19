@@ -14,13 +14,17 @@
 int main(int argc, char **argv) {
   constexpr int N = 4;
   constexpr int D = 2;
+  struct DebugConfig {
+    int max_nodes = 100000000;
+    ostream& debug = cout;
+  };
   BoardData<N, D> data;
   State state(data);
-  auto minimax = MiniMax<N, D, 100000000>(state, data);
+  auto minimax = MiniMax<N, D, DebugConfig>(state, data);
   auto result = minimax.play(state, Mark::X);
   cout << *result << "\n";
   if (!minimax.get_solution().validate()) {
-    cout << "oops\n"s;
+    cout << "-- VALIDATION FAILED --\n"s;
   }
   if (argc >= 2) {
     SolutionTree& solution = minimax.get_solution();

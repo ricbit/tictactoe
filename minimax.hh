@@ -58,8 +58,24 @@ class IdentityHash {
   }
 };
 
-template<int N, int D, int max_nodes = 1000000,
-    Outcome outcome = known_outcome<N, D>()>
+class dummy_cout {
+ public:
+  template<typename T>
+  const dummy_cout& operator<<(const T& x) const {
+    return *this;
+  }
+  template<typename T>
+  const dummy_cout& operator<<(T& x) const {
+    return *this;
+  }
+};
+
+struct DefaultConfig {
+  int max_nodes = 1000000;
+  dummy_cout debug;
+};
+
+template<int N, int D, typename Config = DefaultConfig, Outcome outcome = known_outcome<N, D>()>
 class MiniMax {
  public:
   constexpr static Position board_size = BoardData<N, D>::board_size;
@@ -76,24 +92,23 @@ class MiniMax {
     :  state(state), data(data),
        nodes_visited(0),
        solution(board_size) {
-    rank.reserve(board_size);
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
   int nodes_visited;
-  vector<int> rank;
   SolutionTree solution;
   stack<BoardNode> next;
   mutex next_m;
   mutex node_m;
   unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
+  constexpr static Config config = Config();
 
   optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
     auto ans = queue_play(BoardNode{current_state, mark, solution.get_root()});
-    cout << "Total nodes visited: " << nodes_visited << "\n";
-    cout << "Nodes in solution tree: " << solution.real_count() << "\n";
+    config.debug << "Total nodes visited: "s << nodes_visited << "\n"s;
+    config.debug << "Nodes in solution tree: "s << solution.real_count() << "\n"s;
     solution.prune();
-    cout << "Nodes in solution tree after pruning: " << solution.real_count() << "\n";
+    config.debug << "Nodes in solution tree after pruning: "s << solution.real_count() << "\n"s;
     return ans;
   }
 
@@ -116,7 +131,7 @@ class MiniMax {
         nodes.emplace_back(next.top());
         next.pop();
       }
-      for_each(execution::par, begin(nodes), end(nodes), [&](auto node) {
+      for_each(begin(nodes), end(nodes), [&](auto node) {
         process_node(node);
       });
     }
@@ -150,7 +165,7 @@ class MiniMax {
 
   optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
     Zobrist zob = current_state.get_zobrist();
-    if (nodes_visited > max_nodes) {
+    if (nodes_visited > config.max_nodes) {
       return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES, mark);
     }
     if (current_state.get_win_state()) {
@@ -280,12 +295,7 @@ class MiniMax {
 
   void report_progress() {
     if ((nodes_visited % 1000) == 0) {
-      cout << "id " << nodes_visited << endl;
-      cout << "rank ";
-      for (int i : rank) {
-        cout << i <<  " ";
-      }
-      cout << "\n";
+      config.debug << "id "s << nodes_visited << "\n"s;
     }
     nodes_visited++;
   }
@@ -296,7 +306,7 @@ class MiniMax {
     static int max_visited = 0;
     if (c.visited > max_visited) {
       max_visited = c.visited;
-      cout << "new record " << max_visited << endl;
+      config.debug << "new record "s << max_visited << "\n"s;
     }
     if (pos.has_value()) {
       return winner(mark);
