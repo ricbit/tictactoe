@@ -100,7 +100,7 @@ def print_tree(tree, node, board, max_depth, depth, current, path):
 tree = reader.read_file("solution.txt")
 reasonmap = reason.read_reason()
 app = Flask(__name__)
-reason = reason_lib.read_reason()
+reason = reason.read_reason()
 @app.route("/game/<path:subpath>")
 def root(subpath):
   return render(subpath)
