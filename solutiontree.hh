@@ -91,7 +91,8 @@ class SolutionTree {
         return child.second->is_final();
       });
       double total_nodes = parent->children.size();
-      cout << "final " << final_nodes << " total_nodes " << total_nodes << "\n";
+      final_nodes = clamp(final_nodes + 1.0, 1.0, total_nodes);
+      //cout << "final " << final_nodes << " total_nodes " << total_nodes << "\n";
       return final_nodes / total_nodes * parent->estimate_work();
     }
    private:

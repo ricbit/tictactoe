@@ -338,8 +338,10 @@ class MiniMax {
   void report_progress(const BoardNode<N, D>& board_node) {
     if ((nodes_visited % 1000) == 0) {
       config.debug << "id "s << nodes_visited << "\n"s;
-      double value = board_node.node->estimate_work();
-      config.debug << "done : "s << value * 100.0 << "%\n"s;
+      double value = 100.0 * board_node.node->estimate_work();
+      ostringstream oss;
+      oss << setprecision(2) << value * 100.0;
+      config.debug << "done : "s << oss.str() << "%\n"s;
     }
     nodes_visited++;
   }
