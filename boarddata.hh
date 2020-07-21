@@ -113,10 +113,7 @@ Turn to_turn(Mark mark) {
 }
 
 enum class BoardValue {
-  X_WIN = 0,
-  DRAW = 1,
-  O_WIN = 2,
-  UNKNOWN = 3
+  #include "boardvalue.hh"
 };
 
 ostream& operator<<(ostream& oss, const BoardValue& value) {

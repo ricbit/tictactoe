@@ -2,9 +2,13 @@ from flask import Flask
 import reader
 import reason
 
-def encode_result(value):
-  d = {0: "X wins", 1: "O wins", 2: "draw", 3: "unknown"}
-  return d[value]
+def read_boardvalues():
+  values = [line.split() for line in open("boardvalue.hh", "rt")]
+  boardvalues = {int(line[2]):line[0] for line in values}
+  return boardvalues
+
+def encode_result(result):
+  return boardvalues[result]
 
 def print_table(n, d, board, node, x_set, o_set, current, encode, depth):
     s = []
@@ -99,6 +103,7 @@ def print_tree(tree, node, board, max_depth, depth, current, path):
 
 tree = reader.read_file("solution.txt")
 reasonmap = reason.read_reason()
+boardvalues = read_boardvalues()
 app = Flask(__name__)
 reason = reason.read_reason()
 @app.route("/game/<path:subpath>")
