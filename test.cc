@@ -473,12 +473,24 @@ struct GetParentValueTestValues {
 
 template<typename T>
 auto get_parent_checker(T& minimax) {
-  return [&](BoardValue child, BoardValue parent, Turn turn, pair<optional<BoardValue>, bool> result) {
-    return result == minimax.get_updated_parent_value(child, parent, turn);
+  return [&](BoardValue child_value, BoardValue parent_value, Turn turn, pair<optional<BoardValue>, bool> result) {
+    SolutionTree::Node parent(nullptr, 2);
+    parent.value = parent_value;
+    parent.node_final = false;
+    parent.children.emplace_back(0, make_unique<SolutionTree::Node>(&parent, 0));
+    auto& old_child = *parent.children[0].second.get();
+    old_child.value = parent_value;
+    old_child.node_final = true;
+    parent.children.emplace_back(0, make_unique<SolutionTree::Node>(&parent, 0));
+    auto& new_child = *parent.children[1].second.get();
+    new_child.value = child_value;
+    new_child.node_final = true;
+    auto x = minimax.get_updated_parent_value(child_value, &parent, turn);
+    return result == x;
   };
 }
 
-/*TEST(MiniMaxTest, GetParentValue) {
+TEST(MiniMaxTest, GetParentValue) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
@@ -511,7 +523,7 @@ auto get_parent_checker(T& minimax) {
   for_each(begin(test_values), end(test_values), [&](auto& value) {
     EXPECT_PRED4(get_parent_checker(minimax), value.child, value.parent, value.turn, value.result);
   });
-}*/
+}
 
 TEST(MiniMaxTest, Check32) {
   BoardData<3, 2> data;

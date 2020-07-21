@@ -270,15 +270,12 @@ class MiniMax {
     }
     if (node->parent != nullptr) {
       auto parent_turn = flip(to_turn(mark));
-      auto [new_parent_value, final_candidate] = get_updated_parent_value(value, node->parent, parent_turn);
+      auto [new_parent_value, is_final] = get_updated_parent_value(value, node->parent, parent_turn);
       if (new_parent_value.has_value()) {
-        bool parent_is_final = final_candidate && parent_turn == Turn::X ?
-            (new_parent_value == BoardValue::X_WIN) :
-            (new_parent_value == BoardValue::O_WIN || new_parent_value == BoardValue::DRAW);
-        auto parent_reason = parent_is_final ?
+        auto parent_reason = is_final ?
             SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
         unsafe_save_node(
-            node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark), parent_is_final);
+            node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark), is_final);
       }
     }
     return value;
@@ -306,13 +303,16 @@ class MiniMax {
       Turn parent_turn) {
     assert(child_value != BoardValue::UNKNOWN);
     auto new_value = parent_turn == Turn::X ? parent->min_child() : parent->max_child();
-    if (new_value != parent->value) {
-      bool final_candidate = find_if(begin(parent->children), end(parent->children), [&](const auto& child) {
+    bool final_candidate = find_if(begin(parent->children), end(parent->children), [&](const auto& child) {
         return child.second->value == new_value && child.second->is_final();
-      }) != end(parent->children);
-      return {new_value, final_candidate};
+    }) != end(parent->children);
+    bool parent_is_final = final_candidate && parent_turn == Turn::X ?
+      (new_value == BoardValue::X_WIN) :
+      (new_value == BoardValue::O_WIN || new_value == BoardValue::DRAW);
+    if (new_value != parent->value) {
+      return {new_value, parent_is_final};
     } else {
-      return {{}, false};
+      return {{}, parent_is_final};
     }
   }
 
