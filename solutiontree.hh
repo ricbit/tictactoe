@@ -200,7 +200,7 @@ class SolutionTree {
   }
 
   void prune_children(Node *node, BoardValue goal) {
-    remove_if(begin(node->children), end(node->children), [&](const auto& child) {
+    [[maybe_unused]] auto r = remove_if(begin(node->children), end(node->children), [&](const auto& child) {
       return child.second->value != goal;
     });
     auto it = begin(node->children);

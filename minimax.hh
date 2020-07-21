@@ -178,7 +178,7 @@ class MiniMax {
     return root.node->value;
   }
 
-  void process_node(BoardNode<N, D>& board_node) {
+  void process_node(const BoardNode<N, D>& board_node) {
     auto& [current_state, mark, node] = board_node;
     report_progress(board_node);
     if (node->is_parent_final()) {
@@ -203,7 +203,7 @@ class MiniMax {
     }
   }
 
-  optional<BoardValue> check_terminal_node(State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
+  optional<BoardValue> check_terminal_node(const State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
     Zobrist zob = current_state.get_zobrist();
     if (nodes_visited > config.max_nodes) {
       return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES, mark);
