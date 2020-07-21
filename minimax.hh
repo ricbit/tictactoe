@@ -271,11 +271,15 @@ class MiniMax {
     if (node->parent != nullptr) {
       auto parent_turn = flip(to_turn(mark));
       auto [new_parent_value, is_final] = get_updated_parent_value(value, node->parent, parent_turn);
-      if (new_parent_value.has_value()) {
-        auto parent_reason = is_final ?
+      bool old_is_final = node->parent->is_final();
+      bool should_update = new_parent_value.has_value() || is_final != old_is_final;
+      if (should_update) {
+        bool is_early = new_parent_value.has_value() && is_final && !old_is_final;
+        auto parent_reason = is_early ?
             SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
+        auto updated_parent_value = new_parent_value.value_or(node->parent->value);
         unsafe_save_node(
-            node->parent, node->parent->zobrist, *new_parent_value, parent_reason, flip(mark), is_final);
+            node->parent, node->parent->zobrist, updated_parent_value, parent_reason, flip(mark), is_final);
       }
     }
     return value;

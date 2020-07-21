@@ -528,6 +528,26 @@ TEST(MiniMaxTest, GetParentValue) {
   });
 }
 
+TEST(MiniMaxTest, GetParentValueKeepValueChangeIsFinal) {
+  BoardData<3, 2> data;
+  State state(data);
+  auto minimax = MiniMax(state, data);
+  SolutionTree::Node parent(nullptr, 2);
+  parent.value = BoardValue::DRAW;
+  parent.node_final = false;
+  parent.children.emplace_back(0, make_unique<SolutionTree::Node>(&parent, 0));
+  auto& first_child = *parent.children[0].second.get();
+  first_child.value = BoardValue::DRAW;
+  first_child.node_final = true;
+  parent.children.emplace_back(0, make_unique<SolutionTree::Node>(&parent, 0));
+  auto& second_child = *parent.children[1].second.get();
+  second_child.value = BoardValue::DRAW;
+  second_child.node_final = true;
+  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, &parent, Turn::X);
+  EXPECT_FALSE(new_value.has_value());
+  EXPECT_TRUE(is_final);
+}
+
 TEST(MiniMaxTest, GetParentValueOneDrawOneUnknown) {
   BoardData<3, 2> data;
   State state(data);
