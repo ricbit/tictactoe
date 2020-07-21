@@ -44,8 +44,9 @@ def current_player(depth):
 def print_board(n, d, board, current, node, depth):
   x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
   o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
-  s = ['<a name="%s"><p>Result: %s, current player: %s, reason: %s</p></a>' % (
-      depth, encode_result(node.result), current_player(depth), reasonmap[node.reason])]
+  s = ['<a name="%s"><p>Result: %s, current player: %s, reason: %s, is_final: %s</p></a>' % (
+      depth, encode_result(node.result), current_player(depth), reasonmap[node.reason],
+      node.final)]
   if d == 2:
     s.extend(print_table(n, d, board, node, x_set, o_set,
       current, lambda i, j: j * n + i, depth))
