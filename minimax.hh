@@ -304,11 +304,15 @@ class MiniMax {
     assert(child_value != BoardValue::UNKNOWN);
     auto new_value = parent_turn == Turn::X ? parent->min_child() : parent->max_child();
     bool final_candidate = find_if(begin(parent->children), end(parent->children), [&](const auto& child) {
-        return child.second->value == new_value && child.second->is_final();
+      return child.second->value == new_value && child.second->is_final();
     }) != end(parent->children);
-    bool parent_is_final = final_candidate && parent_turn == Turn::X ?
-      (new_value == BoardValue::X_WIN) :
-      (new_value == BoardValue::O_WIN || new_value == BoardValue::DRAW);
+    bool all_children_final = all_of(begin(parent->children), end(parent->children), [&](const auto& child) {
+      return child.second->is_final();
+    });
+    bool parent_is_final = all_children_final ||
+        (final_candidate && parent_turn == Turn::X ?
+            (new_value == BoardValue::X_WIN) :
+            (new_value == BoardValue::O_WIN || new_value == BoardValue::DRAW));
     if (new_value != parent->value) {
       return {new_value, parent_is_final};
     } else {
