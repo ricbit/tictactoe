@@ -151,6 +151,9 @@ class SolutionTree {
     });
   }
   bool validate(Node *node, Mark mark) const {
+    if (!node->is_final()) {
+      return false;
+    }
     if (node->children.empty()) {
       return true;
     }
