@@ -118,6 +118,38 @@ class BFS {
   queue<BoardNode<N, D>> next;
 };
 
+template<typename T>
+uint64_t shuffle_bits(T val) {
+  uint64_t a = reinterpret_cast<uint64_t>(val);
+  uint64_t ans = 0;
+  for (int i = 0; i < 64; i++) {
+    ans = (ans << 1) | (a & 1);
+    a >>= 1;
+  }
+  return ans;
+}
+
+auto CompareBoardNode = [](const auto& a, const auto& b) {
+  return shuffle_bits(a.node) < shuffle_bits(b.node);
+};
+
+template<int N, int D>
+class RandomTraversal {
+ public:
+  void push(BoardNode<N, D> node) {
+    next.insert(node);
+  }
+  BoardNode<N, D> pop_best() {
+    BoardNode<N, D> node = move(next.extract(next.begin()).value());
+    return node;
+  }
+  bool empty() const {
+    return next.empty();
+  }
+ private:
+  set<BoardNode<N, D>, decltype(CompareBoardNode)> next;
+};
+
 template<int N, int D,
     typename Traversal = DFS<N, D>,
     typename Config = DefaultConfig,
@@ -197,9 +229,8 @@ class MiniMax {
       const auto& child = child_state[i];
       node->children.emplace_back(sorted[i].second, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto child_node = node->children.rbegin()->second.get();
-      auto child_board_node = BoardNode{child, flip(mark), child_node};
       lock_guard lock(next_m);
-      traversal.push(child_board_node);
+      traversal.push(BoardNode{child, flip(mark), child_node});
     }
   }
 
