@@ -83,6 +83,17 @@ class SolutionTree {
         return a > b;
       });
     }
+    double estimate_work() const {
+      if (parent == nullptr) {
+        return 1.0;
+      }
+      double final_nodes = count_if(begin(parent->children), end(parent->children), [](const auto& child) {
+        return child.second->is_final();
+      });
+      double total_nodes = parent->children.size();
+      cout << "final " << final_nodes << " total_nodes " << total_nodes << "\n";
+      return final_nodes / total_nodes * parent->estimate_work();
+    }
    private:
     template<typename T>
     optional<BoardValue> extreme_child(T comp) const {

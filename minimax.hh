@@ -178,9 +178,9 @@ class MiniMax {
     return root.node->value;
   }
 
-  void process_node(BoardNode<N, D> board_node) {
+  void process_node(BoardNode<N, D>& board_node) {
     auto& [current_state, mark, node] = board_node;
-    report_progress();
+    report_progress(board_node);
     if (node->is_parent_final()) {
       node->reason = SolutionTree::Reason::PRUNING;
       return;
@@ -270,9 +270,9 @@ class MiniMax {
     }
     if (node->parent != nullptr) {
       auto parent_turn = flip(to_turn(mark));
-      auto [new_parent_value, is_final] = get_updated_parent_value(value, node->parent, parent_turn);
+      auto [new_parent_value, final_candidate] = get_updated_parent_value(value, node->parent, parent_turn);
       if (new_parent_value.has_value()) {
-        bool parent_is_final = parent_turn == Turn::X ?
+        bool parent_is_final = final_candidate && parent_turn == Turn::X ?
             (new_parent_value == BoardValue::X_WIN) :
             (new_parent_value == BoardValue::O_WIN || new_parent_value == BoardValue::DRAW);
         auto parent_reason = parent_is_final ?
@@ -307,7 +307,10 @@ class MiniMax {
     assert(child_value != BoardValue::UNKNOWN);
     auto new_value = parent_turn == Turn::X ? parent->min_child() : parent->max_child();
     if (new_value != parent->value) {
-      return {new_value, false};
+      bool final_candidate = find_if(begin(parent->children), end(parent->children), [&](const auto& child) {
+        return child.second->value == new_value && child.second->is_final();
+      }) != end(parent->children);
+      return {new_value, final_candidate};
     } else {
       return {{}, false};
     }
@@ -332,9 +335,11 @@ class MiniMax {
     sort(rbegin(paired), rend(paired));
   }
 
-  void report_progress() {
+  void report_progress(const BoardNode<N, D>& board_node) {
     if ((nodes_visited % 1000) == 0) {
       config.debug << "id "s << nodes_visited << "\n"s;
+      double value = board_node.node->estimate_work();
+      config.debug << "done : "s << value * 100.0 << "%\n"s;
     }
     nodes_visited++;
   }
