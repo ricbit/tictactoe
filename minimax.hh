@@ -202,7 +202,7 @@ class MiniMax {
   optional<BoardValue> queue_play(BoardNode<N, D> root) {
     assert(traversal.empty());
     traversal.push(root);
-    constexpr int slice = 3;
+    constexpr int slice = 1;
     vector<BoardNode<N, D>> nodes;
     nodes.reserve(slice);
     while (!traversal.empty()) {
