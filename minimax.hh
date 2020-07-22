@@ -85,7 +85,7 @@ struct BoardNode {
 template<int N, int D>
 class DFS {
  public:
-  DFS(SolutionTree::Node *root) : root(root) {
+  explicit DFS(SolutionTree::Node *root) : root(root) {
   }
   void push(BoardNode<N, D> node) {
     next.push(node);
@@ -106,7 +106,7 @@ class DFS {
 template<int N, int D>
 class BFS {
  public:
-  BFS(SolutionTree::Node *root) : root(root) {
+  explicit BFS(SolutionTree::Node *root) : root(root) {
   }
   void push(BoardNode<N, D> node) {
     next.push(node);
@@ -142,7 +142,7 @@ auto CompareBoardNode = [](const auto& a, const auto& b) {
 template<int N, int D>
 class RandomTraversal {
  public:
-  RandomTraversal(SolutionTree::Node *root) : root(root) {
+  explicit RandomTraversal(SolutionTree::Node *root) : root(root) {
   }
   void push(BoardNode<N, D> node) {
     next.insert(node);
@@ -205,7 +205,7 @@ class MiniMax {
     constexpr int slice = 1;
     vector<BoardNode<N, D>> nodes;
     nodes.reserve(slice);
-    while (!traversal.empty()) {
+    while (!traversal.empty() && nodes_visited < config.max_nodes) {
       nodes.clear();
       for (int i = 0; i < slice && !traversal.empty(); i++) {
         nodes.emplace_back(traversal.pop_best());

@@ -13,9 +13,9 @@
 
 int main(int argc, char **argv) {
   constexpr int N = 4;
-  constexpr int D = 3;
+  constexpr int D = 2;
   struct DebugConfig {
-    int max_nodes = 10000000;
+    int max_nodes = 10000;
     ostream& debug = cout;
   };
   BoardData<N, D> data;

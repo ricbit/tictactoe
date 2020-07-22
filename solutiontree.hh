@@ -86,6 +86,7 @@ class SolutionTree {
     double estimate_work() const {
       return estimate_work(0.0);
     }
+   private:
     double estimate_work(double child_value) const {
       if (parent == nullptr) {
         return child_value;
@@ -96,7 +97,6 @@ class SolutionTree {
       double total_nodes = parent->children.size();
       return parent->estimate_work((final_nodes + child_value) / total_nodes);
     }
-   private:
     template<typename T>
     optional<BoardValue> extreme_child(T comp) const {
       optional<BoardValue> ans;
