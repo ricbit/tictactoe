@@ -85,6 +85,8 @@ struct BoardNode {
 template<int N, int D>
 class DFS {
  public:
+  DFS(SolutionTree::Node *root) : root(root) {
+  }
   void push(BoardNode<N, D> node) {
     next.push(node);
   }
@@ -98,11 +100,14 @@ class DFS {
   }
  private:
   stack<BoardNode<N, D>> next;
+  SolutionTree::Node *root;
 };
 
 template<int N, int D>
 class BFS {
  public:
+  BFS(SolutionTree::Node *root) : root(root) {
+  }
   void push(BoardNode<N, D> node) {
     next.push(node);
   }
@@ -116,6 +121,7 @@ class BFS {
   }
  private:
   queue<BoardNode<N, D>> next;
+  SolutionTree::Node *root;
 };
 
 template<typename T>
@@ -136,6 +142,8 @@ auto CompareBoardNode = [](const auto& a, const auto& b) {
 template<int N, int D>
 class RandomTraversal {
  public:
+  RandomTraversal(SolutionTree::Node *root) : root(root) {
+  }
   void push(BoardNode<N, D> node) {
     next.insert(node);
   }
@@ -148,6 +156,7 @@ class RandomTraversal {
   }
  private:
   set<BoardNode<N, D>, decltype(CompareBoardNode)> next;
+  SolutionTree::Node *root;
 };
 
 template<int N, int D,
@@ -161,9 +170,7 @@ class MiniMax {
   explicit MiniMax(
     const State<N, D>& state,
     const BoardData<N, D>& data)
-    :  state(state), data(data),
-       nodes_visited(0),
-       solution(board_size) {
+    :  state(state), data(data), nodes_visited(0), solution(board_size), traversal(solution.get_root()) {
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
@@ -195,7 +202,7 @@ class MiniMax {
   optional<BoardValue> queue_play(BoardNode<N, D> root) {
     assert(traversal.empty());
     traversal.push(root);
-    constexpr int slice = 1;
+    constexpr int slice = 3;
     vector<BoardNode<N, D>> nodes;
     nodes.reserve(slice);
     while (!traversal.empty()) {
@@ -376,8 +383,8 @@ class MiniMax {
 
   void report_progress(const BoardNode<N, D>& board_node) {
     if ((nodes_visited % 1000) == 0) {
-      config.debug << "id "s << nodes_visited << "\n"s;
-      double value = 100.0 * board_node.node->estimate_work();
+      config.debug << "id "s << nodes_visited << "\t"s;
+      double value = board_node.node->estimate_work();
       ostringstream oss;
       oss << setprecision(2) << value * 100.0;
       config.debug << "done : "s << oss.str() << "%\n"s;

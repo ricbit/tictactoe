@@ -84,16 +84,17 @@ class SolutionTree {
       });
     }
     double estimate_work() const {
+      return estimate_work(0.0);
+    }
+    double estimate_work(double child_value) const {
       if (parent == nullptr) {
-        return 1.0;
+        return child_value;
       }
-      double final_nodes = count_if(begin(parent->children), end(parent->children), [](const auto& child) {
-        return child.second->is_final();
+      double final_nodes = count_if(begin(parent->children), end(parent->children), [&](const auto& child) {
+        return child.second->is_final() && child.second.get() != this;
       });
       double total_nodes = parent->children.size();
-      final_nodes = clamp(final_nodes + 1.0, 1.0, total_nodes);
-      //cout << "final " << final_nodes << " total_nodes " << total_nodes << "\n";
-      return final_nodes / total_nodes * parent->estimate_work();
+      return parent->estimate_work((final_nodes + child_value) / total_nodes);
     }
    private:
     template<typename T>
