@@ -220,7 +220,7 @@ class MiniMax {
   void process_node(const BoardNode<N, D>& board_node) {
     auto& [current_state, mark, node] = board_node;
     report_progress(board_node);
-    if (node->is_parent_final()) {
+    if (node->some_parent_final()) {
       node->reason = SolutionTree::Reason::PRUNING;
       return;
     }
