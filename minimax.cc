@@ -15,11 +15,12 @@ int main(int argc, char **argv) {
   constexpr int N = 4;
   constexpr int D = 2;
   struct DebugConfig {
-    int max_nodes = 10000;
+    int max_nodes = 10000000;
     ostream& debug = cout;
   };
   BoardData<N, D> data;
   State state(data);
+  cout << "sizeof(SolutionTree::Node) = " << sizeof(SolutionTree::Node) << "\n";
   auto minimax = MiniMax<N, D, DFS<N, D>, DebugConfig>(state, data);
   auto result = minimax.play(state, Mark::X);
   cout << *result << "\n";

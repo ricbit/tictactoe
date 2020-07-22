@@ -568,6 +568,26 @@ TEST(MiniMaxTest, GetParentValueOneDrawOneUnknown) {
   EXPECT_FALSE(is_final);
 }
 
+TEST(MiniMaxTest, GetParentValueOneDrawNotFinalOneUnknownTurnO) {
+  BoardData<3, 2> data;
+  State state(data);
+  auto minimax = MiniMax(state, data);
+  SolutionTree::Node parent(nullptr, 2);
+  parent.value = BoardValue::UNKNOWN;
+  parent.node_final = false;
+  parent.children.emplace_back(0, make_unique<SolutionTree::Node>(&parent, 0));
+  auto& first_child = *parent.children[0].second.get();
+  first_child.value = BoardValue::UNKNOWN;
+  first_child.node_final = false;
+  parent.children.emplace_back(0, make_unique<SolutionTree::Node>(&parent, 0));
+  auto& second_child = *parent.children[1].second.get();
+  second_child.value = BoardValue::DRAW;
+  second_child.node_final = false;
+  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, &parent, Turn::O);
+  EXPECT_EQ(BoardValue::DRAW, *new_value);
+  EXPECT_FALSE(is_final);
+}
+
 TEST(MiniMaxTest, GetParentValueMinimaxCompleteIsFinalByExaustion) {
   BoardData<3, 2> data;
   State state(data);
