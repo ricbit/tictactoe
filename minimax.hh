@@ -159,6 +159,26 @@ class RandomTraversal {
   SolutionTree::Node *root;
 };
 
+template<int N, int D>
+class PNSearch {
+ public:
+  explicit PNSearch(SolutionTree::Node *root) : root(root) {
+  }
+  void push(BoardNode<N, D> node) {
+    next.insert(node);
+  }
+  BoardNode<N, D> pop_best() {
+    BoardNode<N, D> node = move(next.extract(next.begin()).value());
+    return node;
+  }
+  bool empty() const {
+    return next.empty();
+  }
+ private:
+  set<BoardNode<N, D>, decltype(CompareBoardNode)> next;
+  SolutionTree::Node *root;
+};
+
 template<int N, int D,
     typename Traversal = DFS<N, D>,
     typename Config = DefaultConfig,
@@ -310,7 +330,7 @@ class MiniMax {
       auto parent_turn = flip(turn);
       auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, node->parent, parent_turn);
       bool old_is_final = node->parent->is_final();
-      bool should_update = new_parent_value.has_value() || parent_is_final != old_is_final;
+      bool should_update = true; // new_parent_value.has_value() || parent_is_final != old_is_final;
       if (should_update) {
         bool is_early = new_parent_value.has_value() && parent_is_final && !old_is_final;
         auto parent_reason = is_early ?

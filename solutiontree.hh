@@ -25,6 +25,8 @@ class SolutionTree {
     Node *parent;
     Zobrist zobrist;
     bool node_final = false;
+    int proof = 1;
+    int disproof = 1;
     Node *get_last_child() const {
       return children.rbegin()->second.get();
     }
