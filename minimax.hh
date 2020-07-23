@@ -98,6 +98,9 @@ class DFS {
   bool empty() const {
     return next.empty();
   }
+  void retire(const BoardNode<N, D>& node) {
+    // empty
+  }
  private:
   stack<BoardNode<N, D>> next;
   SolutionTree::Node *root;
@@ -118,6 +121,9 @@ class BFS {
   }
   bool empty() const {
     return next.empty();
+  }
+  void retire(const BoardNode<N, D>& node) {
+    // empty
   }
  private:
   queue<BoardNode<N, D>> next;
@@ -154,6 +160,9 @@ class RandomTraversal {
   bool empty() const {
     return next.empty();
   }
+  void retire(const BoardNode<N, D>& node) {
+    // empty
+  }
  private:
   set<BoardNode<N, D>, decltype(CompareBoardNode)> next;
   SolutionTree::Node *root;
@@ -173,6 +182,9 @@ class PNSearch {
   }
   bool empty() const {
     return next.empty();
+  }
+  void retire(const BoardNode<N, D>& node) {
+    // empty
   }
  private:
   set<BoardNode<N, D>, decltype(CompareBoardNode)> next;
@@ -232,6 +244,9 @@ class MiniMax {
       }
       for_each(begin(nodes), end(nodes), [&](auto node) {
         process_node(node);
+      });
+      for_each(begin(nodes), end(nodes), [&](auto node) {
+        traversal.retire(node);
       });
     }
     return root.node->value;
