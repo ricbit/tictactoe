@@ -612,7 +612,7 @@ TEST(MiniMaxTest, Check32) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto result = minimax.play(state, Mark::X);
+  auto result = minimax.play(state, Turn::X);
   EXPECT_EQ(BoardValue::DRAW, *result);
   EXPECT_TRUE(minimax.get_solution().validate());
 }
@@ -621,7 +621,7 @@ TEST(MiniMaxTest, Check33) {
   BoardData<3, 3> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto result = minimax.play(state, Mark::X);
+  auto result = minimax.play(state, Turn::X);
   EXPECT_EQ(BoardValue::X_WIN, *result);
   EXPECT_TRUE(minimax.get_solution().validate());
 }
@@ -642,7 +642,7 @@ TEST(SolutionTreeTest, ValidateParents) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  minimax.play(state, Mark::X);
+  minimax.play(state, Turn::X);
   auto root = minimax.get_solution().get_root();
   EXPECT_TRUE(validate_all_parents(root));
 }

@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
   State state(data);
   cout << "sizeof(SolutionTree::Node) = " << sizeof(SolutionTree::Node) << "\n";
   auto minimax = MiniMax<N, D, DFS<N, D>, DebugConfig>(state, data);
-  auto result = minimax.play(state, Mark::X);
+  auto result = minimax.play(state, Turn::X);
   cout << *result << "\n";
   if (!minimax.get_solution().validate()) {
     cout << "-- VALIDATION FAILED --\n"s;

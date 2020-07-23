@@ -78,7 +78,7 @@ struct DefaultConfig {
 template<int N, int D>
 struct BoardNode {
   State<N, D> current_state;
-  Mark mark;
+  Turn turn;
   SolutionTree::Node *node;
 };
 
@@ -182,8 +182,8 @@ class MiniMax {
   unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
   constexpr static Config config = Config();
 
-  optional<BoardValue> play(State<N, D>& current_state, Mark mark) {
-    auto ans = queue_play(BoardNode{current_state, mark, solution.get_root()});
+  optional<BoardValue> play(State<N, D>& current_state, Turn turn) {
+    auto ans = queue_play(BoardNode{current_state, turn, solution.get_root()});
     config.debug << "Total nodes visited: "s << nodes_visited << "\n"s;
     config.debug << "Nodes in solution tree: "s << solution.real_count() << "\n"s;
     solution.prune();
@@ -218,88 +218,88 @@ class MiniMax {
   }
 
   void process_node(const BoardNode<N, D>& board_node) {
-    auto& [current_state, mark, node] = board_node;
+    auto& [current_state, turn, node] = board_node;
     report_progress(board_node);
     if (node->some_parent_final()) {
       node->reason = SolutionTree::Reason::PRUNING;
       return;
     }
-    auto terminal_node = check_terminal_node(current_state, mark, node);
+    auto terminal_node = check_terminal_node(current_state, turn, node);
     if (terminal_node.has_value()) {
       return;
     }
 
-    auto open_positions = current_state.get_open_positions(mark);
-    auto [sorted, child_state] = get_children(current_state, mark, open_positions);
+    auto open_positions = current_state.get_open_positions(to_mark(turn));
+    auto [sorted, child_state] = get_children(current_state, turn, open_positions);
     int size = sorted.size();
     for (int i = size - 1; i >= 0; i--) {
       const auto& child = child_state[i];
       node->children.emplace_back(sorted[i].second, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto child_node = node->children.rbegin()->second.get();
       lock_guard lock(next_m);
-      traversal.push(BoardNode{child, flip(mark), child_node});
+      traversal.push(BoardNode{child, flip(turn), child_node});
     }
   }
 
-  optional<BoardValue> check_terminal_node(const State<N, D>& current_state, Mark mark, SolutionTree::Node *node) {
+  optional<BoardValue> check_terminal_node(const State<N, D>& current_state, Turn turn, SolutionTree::Node *node) {
     Zobrist zob = current_state.get_zobrist();
     if (nodes_visited > config.max_nodes) {
-      return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES, mark);
+      return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES, turn);
     }
     if (current_state.get_win_state()) {
-      return save_node(node, zob, winner(mark), SolutionTree::Reason::WIN, mark);
+      return save_node(node, zob, winner(turn), SolutionTree::Reason::WIN, turn);
     }
     if (auto has_zobrist = zobrist.find(zob); has_zobrist != zobrist.end()) {
-      return save_node(node, zob, has_zobrist->second, SolutionTree::Reason::ZOBRIST, mark);
+      return save_node(node, zob, has_zobrist->second, SolutionTree::Reason::ZOBRIST, turn);
     }
-    auto open_positions = current_state.get_open_positions(mark);
+    auto open_positions = current_state.get_open_positions(to_mark(turn));
     if (open_positions.none()) {
-      return save_node(node, zob, BoardValue::DRAW, SolutionTree::Reason::DRAW, mark);
+      return save_node(node, zob, BoardValue::DRAW, SolutionTree::Reason::DRAW, turn);
     }
-    if (auto forced = check_chaining_strategy(current_state, mark); forced.has_value()) {
-      return save_node(node, zob, *forced, SolutionTree::Reason::CHAINING, mark);
+    if (auto forced = check_chaining_strategy(current_state, turn); forced.has_value()) {
+      return save_node(node, zob, *forced, SolutionTree::Reason::CHAINING, turn);
     }
-    if (auto forced = check_forced_win(current_state, mark, open_positions); forced.has_value()) {
-      return save_node(node, zob, *forced, SolutionTree::Reason::FORCED_WIN, mark);
+    if (auto forced = check_forced_win(current_state, turn, open_positions); forced.has_value()) {
+      return save_node(node, zob, *forced, SolutionTree::Reason::FORCED_WIN, turn);
     }
     return {};
   }
 
   template<typename B>
   pair<vector<pair<int, Position>>, bag<State<N, D>>> get_children(
-      const State<N, D>& current_state, Mark mark, B open_positions) {
+      const State<N, D>& current_state, Turn turn, B open_positions) {
     vector<pair<int, Position>> sorted;
     bag<State<N, D>> child_state;
 
     auto s = ForcingMove<N, D>(current_state);
-    auto forcing = s.check(mark, open_positions);
+    auto forcing = s.check(to_mark(turn), open_positions);
     if (forcing.first.has_value()) {
-      assert(forcing.second != mark);
+      assert(forcing.second != to_mark(turn));
       child_state.emplace_back(current_state);
       State<N, D>& cloned = *child_state.begin();
-      bool game_ended = cloned.play(*forcing.first, mark);
+      bool game_ended = cloned.play(*forcing.first, to_mark(turn));
       assert(!game_ended);
       int dummy_score = 1;
       sorted = {{dummy_score, *forcing.first}};
     } else {
       child_state.reserve(open_positions.count());
-      sorted = get_sorted_positions(current_state, open_positions, mark);
+      sorted = get_sorted_positions(current_state, open_positions);
       for (const auto& [score, pos] : sorted) {
         child_state.emplace_back(current_state);
-        child_state.rbegin()->play(pos, mark);
+        child_state.rbegin()->play(pos, to_mark(turn));
       }
     }
     return {sorted, child_state};
   }
 
   BoardValue save_node(SolutionTree::Node *node, Zobrist node_zobrist,
-      BoardValue value, SolutionTree::Reason reason, Mark mark, bool is_final = true) {
+      BoardValue value, SolutionTree::Reason reason, Turn turn, bool is_final = true) {
     const lock_guard lock(node_m);
-    return unsafe_save_node(node, node_zobrist, value, reason, mark, is_final);
+    return unsafe_save_node(node, node_zobrist, value, reason, turn, is_final);
   }
 
   BoardValue unsafe_save_node(SolutionTree::Node *node, Zobrist node_zobrist,
-      BoardValue value, SolutionTree::Reason reason, Mark mark, bool is_final = true) {
+      BoardValue value, SolutionTree::Reason reason, Turn turn, bool is_final = true) {
     node->reason = reason;
     node->value = value;
     node->node_final = is_final;
@@ -307,7 +307,7 @@ class MiniMax {
       zobrist[node_zobrist] = value;
     }
     if (node->parent != nullptr) {
-      auto parent_turn = flip(to_turn(mark));
+      auto parent_turn = flip(turn);
       auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, node->parent, parent_turn);
       bool old_is_final = node->parent->is_final();
       bool should_update = new_parent_value.has_value() || parent_is_final != old_is_final;
@@ -317,7 +317,7 @@ class MiniMax {
             SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
         auto updated_parent_value = new_parent_value.value_or(node->parent->value);
         unsafe_save_node(
-            node->parent, node->parent->zobrist, updated_parent_value, parent_reason, flip(mark), parent_is_final);
+            node->parent, node->parent->zobrist, updated_parent_value, parent_reason, flip(turn), parent_is_final);
       }
     }
     return value;
@@ -361,8 +361,7 @@ class MiniMax {
   }
 
   template<typename B>
-  vector<pair<int, Position>> get_sorted_positions(
-      const State<N, D>& current_state, const B& open, Mark mark) {
+  vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state, const B& open) {
     vector<pair<int, Position>> paired;
     paired.reserve(open.count());
     uniform_positions(paired, open, current_state);
@@ -390,27 +389,27 @@ class MiniMax {
     nodes_visited++;
   }
 
-  optional<BoardValue> check_chaining_strategy(const State<N, D>& current_state, Mark mark) {
+  optional<BoardValue> check_chaining_strategy(const State<N, D>& current_state, Turn turn) {
     auto c = ChainingStrategy(current_state);
-    auto pos = c.search(mark);
+    auto pos = c.search(to_mark(turn));
     static int max_visited = 0;
     if (c.visited > max_visited) {
       max_visited = c.visited;
       config.debug << "new record "s << max_visited << "\n"s;
     }
     if (pos.has_value()) {
-      return winner(mark);
+      return winner(turn);
     }
     return {};
   }
 
   template<typename B>
-  optional<BoardValue> check_forced_win(const State<N, D>& current_state, Mark mark, const B& open_positions) {
+  optional<BoardValue> check_forced_win(const State<N, D>& current_state, Turn turn, const B& open_positions) {
     auto s = ForcingMove<N, D>(current_state);
-    auto forcing = s.check(mark, open_positions);
+    auto forcing = s.check(to_mark(turn), open_positions);
     if (forcing.first.has_value()) {
-      if (forcing.second == mark) {
-        return winner(mark);
+      if (forcing.second == to_mark(turn)) {
+        return winner(turn);
       }
     }
     return {};
