@@ -76,6 +76,7 @@ class DummyCout {
 struct DefaultConfig {
   int max_nodes = 1000000;
   DummyCout debug;
+  bool should_prune = true;
 };
 
 template<int N, int D>
@@ -88,7 +89,7 @@ struct BoardNode {
 template<int N, int D>
 class DFS {
  public:
-  explicit DFS(SolutionTree::Node *root) : root(root) {
+  explicit DFS(const BoardData<N, D>& data, SolutionTree::Node *root) : data(data), root(root) {
   }
   void push(BoardNode<N, D> node) {
     next.push(node);
@@ -106,13 +107,14 @@ class DFS {
   }
  private:
   stack<BoardNode<N, D>> next;
+  const BoardData<N, D>& data;
   SolutionTree::Node *root;
 };
 
 template<int N, int D>
 class BFS {
  public:
-  explicit BFS(SolutionTree::Node *root) : root(root) {
+  explicit BFS(const BoardData<N, D>& data, SolutionTree::Node *root) : data(data), root(root) {
   }
   void push(BoardNode<N, D> node) {
     next.push(node);
@@ -130,6 +132,7 @@ class BFS {
   }
  private:
   queue<BoardNode<N, D>> next;
+  const BoardData<N, D>& data;
   SolutionTree::Node *root;
 };
 
@@ -151,7 +154,7 @@ auto CompareBoardNode = [](const auto& a, const auto& b) {
 template<int N, int D>
 class RandomTraversal {
  public:
-  explicit RandomTraversal(SolutionTree::Node *root) : root(root) {
+  explicit RandomTraversal(const BoardData<N, D>& data, SolutionTree::Node *root) : data(data), root(root) {
   }
   void push(BoardNode<N, D> node) {
     next.insert(node);
@@ -168,6 +171,7 @@ class RandomTraversal {
   }
  private:
   set<BoardNode<N, D>, decltype(CompareBoardNode)> next;
+  const BoardData<N, D>& data;
   SolutionTree::Node *root;
 };
 
@@ -284,7 +288,9 @@ class MiniMax {
     auto ans = queue_play(BoardNode{current_state, turn, solution.get_root()});
     config.debug << "Total nodes visited: "s << nodes_visited << "\n"s;
     config.debug << "Nodes in solution tree: "s << solution.real_count() << "\n"s;
-    //solution.prune();
+    if constexpr (config.should_prune) {
+      solution.prune();
+    }
     config.debug << "Nodes in solution tree after pruning: "s << solution.real_count() << "\n"s;
     return ans;
   }

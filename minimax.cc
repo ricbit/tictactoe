@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
   struct DebugConfig {
     int max_nodes = 10'000;
     ostream& debug = cout;
+    bool should_prune = false;
   };
   BoardData<N, D> data;
   State state(data);
