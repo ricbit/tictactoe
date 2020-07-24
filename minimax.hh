@@ -8,6 +8,7 @@
 #include <chrono>
 #include <set>
 #include <map>
+#include <unordered_map>
 #include <queue>
 #include <cassert>
 #include <bitset>
@@ -173,34 +174,16 @@ class RandomTraversal {
 template<int N, int D>
 class PNSearch {
  public:
-  explicit PNSearch(SolutionTree::Node *root) : root(root) {
+  explicit PNSearch(const BoardData<N, D>& data, SolutionTree::Node *root) : data(data), root(root) {
   }
   void push(BoardNode<N, D> board_node) {
-    next.insert({board_node.node, board_node});
   }
   BoardNode<N, D> pop_best() {
+    cout << "\n------\n";
     return search_or_node(root);
   }
-  BoardNode<N, D> search_or_node(SolutionTree::Node *node) {
-    auto it = next.find(node);
-    if (it != next.end()) {
-      return it->second;
-    }
-    return search_and_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
-      return a.second->proof < b.second->proof;
-    })->second.get());
-  }
-  BoardNode<N, D> search_and_node(SolutionTree::Node *node) {
-    auto it = next.find(node);
-    if (it != next.end()) {
-      return it->second;
-    }
-    return search_or_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
-      return a.second->disproof < b.second->disproof;
-    })->second.get());
-  }
   bool empty() const {
-    return next.empty();
+    return root->is_final();
   }
   void retire(const BoardNode<N, D>& board_node, bool is_terminal) {
     auto& node = board_node.node;
@@ -216,7 +199,9 @@ class PNSearch {
       }
     }
     update_pn_value(node, board_node.turn);
-    next.erase(next.find(board_node.node));
+    cout << "after ";
+    cout << "proof : " << board_node.node->proof << " disproof: " << board_node.node->disproof << "\n";
+    cout << "children : " << board_node.node->children.size() << "\n";
   }
   void update_pn_value(SolutionTree::Node *node, Turn turn) {
     if (node == nullptr) {
@@ -244,7 +229,31 @@ class PNSearch {
     update_pn_value(node->parent, flip(turn));
   }
  private:
-  map<SolutionTree::Node*, BoardNode<N, D>> next;
+  BoardNode<N, D> choose(BoardNode<N, D> board_node) {
+    board_node.current_state.print();
+    cout << "before ";
+    cout << "proof : " << board_node.node->proof << " disproof: " << board_node.node->disproof << "\n";
+    cout << "children : " << board_node.node->children.size() << "\n";
+    cout << "turn : " << board_node.turn << "\n";
+    return board_node;
+  }
+  BoardNode<N, D> search_or_node(SolutionTree::Node *node) {
+    if (node->children.empty()) {
+      return choose(BoardNode<N, D>{node->rebuild_state(data), node->get_turn(), node});
+    }
+    return search_and_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+      return a.second->proof < b.second->proof;
+    })->second.get());
+  }
+  BoardNode<N, D> search_and_node(SolutionTree::Node *node) {
+    if (node->children.empty()) {
+      return choose(BoardNode<N, D>{node->rebuild_state(data), node->get_turn(), node});
+    }
+    return search_or_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+      return a.second->disproof < b.second->disproof;
+    })->second.get());
+  }
+  const BoardData<N, D>& data;
   SolutionTree::Node *root;
 };
 
@@ -259,7 +268,7 @@ class MiniMax {
   explicit MiniMax(
     const State<N, D>& state,
     const BoardData<N, D>& data)
-    :  state(state), data(data), nodes_visited(0), solution(board_size), traversal(solution.get_root()) {
+    :  state(state), data(data), nodes_visited(0), solution(board_size), traversal(data, solution.get_root()) {
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
@@ -289,7 +298,6 @@ class MiniMax {
   }
 
   optional<BoardValue> queue_play(BoardNode<N, D> root) {
-    assert(traversal.empty());
     traversal.push(root);
     constexpr int slice = 1;
     vector<BoardNode<N, D>> nodes;
