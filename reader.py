@@ -12,16 +12,18 @@ class Tree:
     self.d = d
     self.root = root
 
-parser = re.compile(r"(\d+) (\d+) (\d+) (\d+) (\d+) :(.*)$")
+parser = re.compile(r"(\d+) (\d+) (\d+) (\d+) (\d+) (\d+) (\d+) :(.*)$")
 
 def read_line(f, node):
   line = f.readline()
   p = parser.match(line)
-  (result, final, count, size, reason, children) = [p.group(x) for x in range(1, 7)]
+  (result, final, proof, disproof, count, size, reason, children) = [p.group(x) for x in range(1, 9)]
   node.result = int(result)
   node.count = int(count)
   node.reason = int(reason)
   node.final = bool(int(final))
+  node.proof = int(proof)
+  node.disproof = int(disproof)
   for childpos in map(int, children.split()):
     child_node = Node()
     read_line(f, child_node)

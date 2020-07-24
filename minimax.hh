@@ -14,6 +14,7 @@
 #include <list>
 #include <stack>
 #include <mutex>
+#include <numeric>
 #include "semantic.hh"
 #include "boarddata.hh"
 #include "state.hh"
@@ -202,22 +203,24 @@ class PNSearch {
     if (node == nullptr) {
       return;
     }
-    if (turn == Turn::X) {
-      auto proof = accumulate(begin(node->children), end(node->children), [](const auto& a, const auto& b) {
-        return a + b.second->proof;
-      });
-      node->proof = clamp(proof, 0, INFTY);
-      node->disproof = *min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
-        return a.second->disproof < b.second->disproof;
-      });
-    } else {
-      auto disproof = accumulate(begin(node->children), end(node->children), [](const auto& a, const auto& b) {
-        return a + b.second->disproof;
-      });
-      node->disproof = clamp(disproof, 0, INFTY);
-      node->proof = *max_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
-        return a.second->disproof < b.second->disproof;
-      });
+    if (!node->children.empty()) {
+      if (turn == Turn::O) {
+        auto proof = accumulate(begin(node->children), end(node->children), 0_pn, [](const auto& a, const auto& b) {
+          return ProofNumber{a + b.second->proof};
+        });
+        node->proof = clamp(proof, 0_pn, INFTY);
+        node->disproof = min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+          return a.second->disproof < b.second->disproof;
+        })->second->disproof;
+      } else {
+        auto disproof = accumulate(begin(node->children), end(node->children), 0_pn, [](const auto& a, const auto& b) {
+          return ProofNumber{a + b.second->disproof};
+        });
+        node->disproof = clamp(disproof, 0_pn, INFTY);
+        node->proof = min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+          return a.second->proof < b.second->proof;
+        })->second->proof;
+      }
     }
     update_pn_value(node->parent, flip(turn));
   }
@@ -253,7 +256,7 @@ class MiniMax {
     auto ans = queue_play(BoardNode{current_state, turn, solution.get_root()});
     config.debug << "Total nodes visited: "s << nodes_visited << "\n"s;
     config.debug << "Nodes in solution tree: "s << solution.real_count() << "\n"s;
-    solution.prune();
+    //solution.prune();
     config.debug << "Nodes in solution tree after pruning: "s << solution.real_count() << "\n"s;
     return ans;
   }
@@ -371,7 +374,7 @@ class MiniMax {
       BoardValue value, SolutionTree::Reason reason, Turn turn, bool is_final = true) {
     node->reason = reason;
     node->value = value;
-    node->node_final = is_final;    
+    node->node_final = is_final;
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }

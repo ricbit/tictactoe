@@ -216,6 +216,8 @@ class SolutionTree {
   void dump_node(ofstream& ofs, const Node* node) const {
     ofs << static_cast<int>(node->value) << " ";
     ofs << static_cast<int>(node->node_final) << " ";
+    ofs << static_cast<int>(node->proof) << " ";
+    ofs << static_cast<int>(node->disproof) << " ";
     ofs << node->count << " " << node->children.size() << " ";
     ofs << static_cast<int>(node->reason) << " : ";
     for (const auto& [pos, p] : node->children) {
