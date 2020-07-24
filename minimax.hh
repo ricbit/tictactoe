@@ -7,6 +7,7 @@
 #include <random>
 #include <chrono>
 #include <set>
+#include <map>
 #include <queue>
 #include <cassert>
 #include <bitset>
@@ -174,12 +175,29 @@ class PNSearch {
  public:
   explicit PNSearch(SolutionTree::Node *root) : root(root) {
   }
-  void push(BoardNode<N, D> node) {
-    next.insert(node);
+  void push(BoardNode<N, D> board_node) {
+    next.insert({board_node.node, board_node});
   }
   BoardNode<N, D> pop_best() {
-    BoardNode<N, D> node = move(next.extract(next.begin()).value());
-    return node;
+    return search_or_node(root);
+  }
+  BoardNode<N, D> search_or_node(SolutionTree::Node *node) {
+    auto it = next.find(node);
+    if (it != next.end()) {
+      return it->second;
+    }
+    return search_and_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+      return a.second->proof < b.second->proof;
+    })->second.get());
+  }
+  BoardNode<N, D> search_and_node(SolutionTree::Node *node) {
+    auto it = next.find(node);
+    if (it != next.end()) {
+      return it->second;
+    }
+    return search_or_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+      return a.second->disproof < b.second->disproof;
+    })->second.get());
   }
   bool empty() const {
     return next.empty();
@@ -198,6 +216,7 @@ class PNSearch {
       }
     }
     update_pn_value(node, board_node.turn);
+    next.erase(next.find(board_node.node));
   }
   void update_pn_value(SolutionTree::Node *node, Turn turn) {
     if (node == nullptr) {
@@ -225,7 +244,7 @@ class PNSearch {
     update_pn_value(node->parent, flip(turn));
   }
  private:
-  set<BoardNode<N, D>, decltype(CompareBoardNode)> next;
+  map<SolutionTree::Node*, BoardNode<N, D>> next;
   SolutionTree::Node *root;
 };
 
