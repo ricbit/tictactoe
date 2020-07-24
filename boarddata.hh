@@ -28,6 +28,9 @@ SEMANTIC_INDEX(NodeLine, node)
 SEMANTIC_INDEX(LineCount, lcount)
 SEMANTIC_INDEX(MarkCount, mcount)
 SEMANTIC_INDEX(Crossing, cross)
+SEMANTIC_INDEX(ProofNumber, pn)
+
+constexpr ProofNumber INFTY = 1'000'000_pn;
 
 template<typename T>
 using bag = vector<T>;

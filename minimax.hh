@@ -98,7 +98,7 @@ class DFS {
   bool empty() const {
     return next.empty();
   }
-  void retire(const BoardNode<N, D>& node) {
+  void retire(const BoardNode<N, D>& node, bool is_terminal) {
     // empty
   }
  private:
@@ -122,7 +122,7 @@ class BFS {
   bool empty() const {
     return next.empty();
   }
-  void retire(const BoardNode<N, D>& node) {
+  void retire(const BoardNode<N, D>& node, bool is_terminal) {
     // empty
   }
  private:
@@ -160,7 +160,7 @@ class RandomTraversal {
   bool empty() const {
     return next.empty();
   }
-  void retire(const BoardNode<N, D>& node) {
+  void retire(const BoardNode<N, D>& node, bool is_terminal) {
     // empty
   }
  private:
@@ -183,8 +183,43 @@ class PNSearch {
   bool empty() const {
     return next.empty();
   }
-  void retire(const BoardNode<N, D>& node) {
-    // empty
+  void retire(const BoardNode<N, D>& board_node, bool is_terminal) {
+    auto& node = board_node.node;
+    if (is_terminal) {
+      if (node->value == BoardValue::X_WIN) {
+        node->proof = 0_pn;
+        node->disproof = INFTY;
+      } else if (node->value == BoardValue::O_WIN || node->value == BoardValue::DRAW) {
+        node->disproof = 0_pn;
+        node->proof = INFTY;
+      } else {
+        assert(false);
+      }
+    }
+    update_pn_value(node, board_node.turn);
+  }
+  void update_pn_value(SolutionTree::Node *node, Turn turn) {
+    if (node == nullptr) {
+      return;
+    }
+    if (turn == Turn::X) {
+      auto proof = accumulate(begin(node->children), end(node->children), [](const auto& a, const auto& b) {
+        return a + b.second->proof;
+      });
+      node->proof = clamp(proof, 0, INFTY);
+      node->disproof = *min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+        return a.second->disproof < b.second->disproof;
+      });
+    } else {
+      auto disproof = accumulate(begin(node->children), end(node->children), [](const auto& a, const auto& b) {
+        return a + b.second->disproof;
+      });
+      node->disproof = clamp(disproof, 0, INFTY);
+      node->proof = *max_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+        return a.second->disproof < b.second->disproof;
+      });
+    }
+    update_pn_value(node->parent, flip(turn));
   }
  private:
   set<BoardNode<N, D>, decltype(CompareBoardNode)> next;
@@ -243,25 +278,23 @@ class MiniMax {
         nodes.emplace_back(traversal.pop_best());
       }
       for_each(begin(nodes), end(nodes), [&](auto node) {
-        process_node(node);
-      });
-      for_each(begin(nodes), end(nodes), [&](auto node) {
-        traversal.retire(node);
+        bool is_terminal = process_node(node);
+        traversal.retire(node, is_terminal);
       });
     }
     return root.node->value;
   }
 
-  void process_node(const BoardNode<N, D>& board_node) {
+  bool process_node(const BoardNode<N, D>& board_node) {
     auto& [current_state, turn, node] = board_node;
     report_progress(board_node);
     if (node->some_parent_final()) {
       node->reason = SolutionTree::Reason::PRUNING;
-      return;
+      return false;
     }
     auto terminal_node = check_terminal_node(current_state, turn, node);
     if (terminal_node.has_value()) {
-      return;
+      return true;
     }
 
     auto open_positions = current_state.get_open_positions(to_mark(turn));
@@ -274,6 +307,7 @@ class MiniMax {
       lock_guard lock(next_m);
       traversal.push(BoardNode{child, flip(turn), child_node});
     }
+    return false;
   }
 
   optional<BoardValue> check_terminal_node(const State<N, D>& current_state, Turn turn, SolutionTree::Node *node) {
@@ -337,7 +371,7 @@ class MiniMax {
       BoardValue value, SolutionTree::Reason reason, Turn turn, bool is_final = true) {
     node->reason = reason;
     node->value = value;
-    node->node_final = is_final;
+    node->node_final = is_final;    
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }
@@ -345,7 +379,7 @@ class MiniMax {
       auto parent_turn = flip(turn);
       auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, node->parent, parent_turn);
       bool old_is_final = node->parent->is_final();
-      bool should_update = true; // new_parent_value.has_value() || parent_is_final != old_is_final;
+      bool should_update = new_parent_value.has_value() || parent_is_final != old_is_final;
       if (should_update) {
         bool is_early = new_parent_value.has_value() && parent_is_final && !old_is_final;
         auto parent_reason = is_early ?
