@@ -117,12 +117,12 @@ class BFS {
   explicit BFS(const BoardData<N, D>& data, SolutionTree::Node *root) : data(data), root(root) {
   }
   void push(BoardNode<N, D> node) {
-    next.push(node);
+    next.push(node.node);
   }
   BoardNode<N, D> pop_best() {
-    BoardNode<N, D> node = next.front();
+    auto node = next.front();
     next.pop();
-    return node;
+    return BoardNode<N, D>{node->rebuild_state(data), node->get_turn(), node};
   }
   bool empty() const {
     return next.empty();
@@ -131,7 +131,7 @@ class BFS {
     // empty
   }
  private:
-  queue<BoardNode<N, D>> next;
+  queue<SolutionTree::Node*> next;
   const BoardData<N, D>& data;
   SolutionTree::Node *root;
 };

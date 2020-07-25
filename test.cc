@@ -607,6 +607,23 @@ TEST(MiniMaxTest, Check33) {
   EXPECT_TRUE(minimax.get_solution().validate());
 }
 
+TEST(MiniMaxTest, CheckOneNodeOfBFS) {
+  struct Config {
+    int max_nodes = 1;
+    DummyCout debug;
+    bool should_prune = false;
+  };
+  BoardData<3, 2> data;
+  State state(data);
+  auto minimax = MiniMax<3, 2, BFS<3, 2>, Config>(state, data);
+  minimax.play(state, Turn::X);
+  auto& solution = minimax.get_solution();
+  EXPECT_EQ(4, minimax.solution.real_count());
+  auto first_node = solution.get_root()->children[0].second.get();
+  EXPECT_EQ(Turn::X, solution.get_root()->get_turn());
+  EXPECT_EQ(Turn::O, first_node->get_turn());
+}
+
 bool validate_all_parents(const SolutionTree::Node *node) {
   for (const auto& child_pair : node->children) {
     const auto child_node = child_pair.second.get();
