@@ -69,11 +69,15 @@ class SolutionTree {
     State<N, D> rebuild_state(const BoardData<N, D>& data) const {
       Turn turn = flip(get_turn());
       State<N, D> state(data);
-      for (const Node *p = this; p->parent != nullptr; p = p->parent) {
-        state.play(p->get_position(), to_mark(turn));
-        turn = flip(turn);
-      }
+      rebuild_state(state, this, to_mark(turn));
       return state;
+    }
+    template<int N, int D>
+    void rebuild_state(State<N, D>& state, const Node *p, Mark mark) const {
+      if (p->parent != nullptr) {
+        rebuild_state(state, p->parent, flip(mark));
+        state.play(p->get_position(), mark);
+      }
     }
     optional<BoardValue> min_child() const {
       return extreme_child([](const auto& a, const auto&b) {
