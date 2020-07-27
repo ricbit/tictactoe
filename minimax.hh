@@ -292,7 +292,7 @@ class MiniMax {
   constexpr static Config config = Config();
 
   optional<BoardValue> play(State<N, D>& current_state, Turn turn) {
-    auto ans = queue_play(BoardNode{current_state, turn, solution.get_root()});
+    auto ans = queue_play(BoardNode<N, D>{current_state, turn, solution.get_root()});
     config.debug << "Total nodes visited: "s << nodes_visited << "\n"s;
     config.debug << "Nodes in solution tree: "s << solution.real_count() << "\n"s;
     if constexpr (config.should_prune) {
@@ -348,7 +348,7 @@ class MiniMax {
       node->children.emplace_back(sorted[i].second, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto child_node = node->children.rbegin()->second.get();
       lock_guard lock(next_m);
-      traversal.push(BoardNode{child, flip(turn), child_node});
+      traversal.push(BoardNode<N, D>{child, flip(turn), child_node});
     }
     return false;
   }
