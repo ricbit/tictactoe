@@ -183,12 +183,6 @@ class SolutionTree {
     if (node->children.empty()) {
       return true;
     }
-    auto is_unknown = [](const auto &child) {
-      return child.second->value == BoardValue::UNKNOWN;
-    };
-    if (any_of(begin(node->children), end(node->children), is_unknown)) {
-      return node->value == BoardValue::UNKNOWN;
-    }
     if (mark == Mark::X) {
       if (node->min_child() != node->value) {
         return false;
@@ -217,7 +211,7 @@ class SolutionTree {
     } else if (mark == Mark::O) {
       if ((node->value == BoardValue::O_WIN || node->value == BoardValue::DRAW)
           && node->children.size() > 1) {
-        prune_children(node, *node->max_child());
+        prune_children(node, *node->best_child_O());
       }
     }
     for_each(begin(node->children), end(node->children), [&](auto& child) {
@@ -227,7 +221,7 @@ class SolutionTree {
 
   void prune_children(Node *node, BoardValue goal) {
     [[maybe_unused]] auto r = remove_if(begin(node->children), end(node->children), [&](const auto& child) {
-      return child.second->value != goal;
+      return child.second->value != goal || !child.second->is_final();
     });
     auto it = begin(node->children);
     if (it != end(node->children)) {
