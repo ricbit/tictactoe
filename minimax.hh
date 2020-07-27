@@ -193,10 +193,10 @@ class PNSearch {
   void retire(const BoardNode<N, D>& board_node, bool is_terminal) {
     auto& node = board_node.node;
     if (is_terminal) {
-      if (node->value == BoardValue::X_WIN) {
+      if (node->get_value() == BoardValue::X_WIN) {
         node->proof = 0_pn;
         node->disproof = INFTY;
-      } else if (node->value == BoardValue::O_WIN || node->value == BoardValue::DRAW) {
+      } else if (node->get_value() == BoardValue::O_WIN || node->get_value() == BoardValue::DRAW) {
         node->disproof = 0_pn;
         node->proof = INFTY;
       } else {
@@ -323,7 +323,7 @@ class MiniMax {
         traversal.retire(node, is_terminal);
       });
     }
-    return root.node->value;
+    return root.node->get_value();
   }
 
   bool process_node(const BoardNode<N, D>& board_node) {
@@ -411,7 +411,7 @@ class MiniMax {
   BoardValue unsafe_save_node(SolutionTree::Node *node, Zobrist node_zobrist,
       BoardValue value, SolutionTree::Reason reason, Turn turn, bool is_final = true) {
     node->reason = reason;
-    node->value = value;
+    node->set_value(value);
     node->node_final = is_final;
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
@@ -425,7 +425,7 @@ class MiniMax {
         bool is_early = new_parent_value.has_value() && parent_is_final && !old_is_final;
         auto parent_reason = is_early ?
             SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
-        auto updated_parent_value = new_parent_value.value_or(node->parent->value);
+        auto updated_parent_value = new_parent_value.value_or(node->parent->get_value());
         unsafe_save_node(
             node->parent, node->parent->zobrist, updated_parent_value, parent_reason, flip(turn), parent_is_final);
       }
@@ -452,7 +452,7 @@ class MiniMax {
   template<typename T>
   bool is_final_candidate(T& children, optional<BoardValue> new_value) {
     return find_if(begin(children), end(children), [&](const auto& child) {
-      return child.second->value == new_value && child.second->is_final();
+      return child.second->get_value() == new_value && child.second->is_final();
     }) != end(children);
   }
 
@@ -468,7 +468,7 @@ class MiniMax {
     });
     bool parent_is_final = all_children_final ||
         (final_candidate && is_final(*new_value, parent_turn));
-    if (new_value != parent->value) {
+    if (new_value != parent->get_value()) {
       return {new_value, parent_is_final};
     } else {
       return {{}, parent_is_final};

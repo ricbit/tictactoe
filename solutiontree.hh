@@ -18,7 +18,7 @@ class SolutionTree {
     Node(Node *parent, int children_size) : parent(parent), zobrist(Zobrist{0}) {
       children.reserve(children_size);
     }
-    BoardValue value = BoardValue::UNKNOWN;
+    BoardValue valuex = BoardValue::UNKNOWN;
     int count = 1;
     Reason reason = Reason::UNKNOWN;
     vector<pair<Position, unique_ptr<Node>>> children;
@@ -30,11 +30,17 @@ class SolutionTree {
     Node *get_last_child() const {
       return children.rbegin()->second.get();
     }
+    BoardValue get_value() const {
+      return valuex;
+    }
+    void set_value(BoardValue value) {
+      valuex = value;
+    }
     bool has_parent() const {
       return parent != nullptr;
     }
     const BoardValue get_parent_value() const {
-      return has_parent() ? parent->value : BoardValue::UNKNOWN;
+      return has_parent() ? parent->get_value() : BoardValue::UNKNOWN;
     }
     bool is_final() const {
       return node_final;
@@ -93,10 +99,10 @@ class SolutionTree {
         return highest_value;
       }
       bool has_draw_final = find_if(begin(children), end(children), [](const auto& child) {
-        return child.second->is_final() && child.second->value == BoardValue::DRAW;
+        return child.second->is_final() && child.second->get_value() == BoardValue::DRAW;
       }) != end(children);
       bool has_o_win_final = find_if(begin(children), end(children), [](const auto& child) {
-        return child.second->is_final() && child.second->value == BoardValue::O_WIN;
+        return child.second->is_final() && child.second->get_value() == BoardValue::O_WIN;
       }) != end(children);
       if (has_draw_final && !has_o_win_final) {
         return BoardValue::DRAW;
@@ -126,11 +132,11 @@ class SolutionTree {
     optional<BoardValue> extreme_child(T comp) const {
       optional<BoardValue> ans;
       for (const auto& [pos, child] : children) {
-        if (child->value != BoardValue::UNKNOWN) {
+        if (child->get_value() != BoardValue::UNKNOWN) {
           if (ans.has_value()) {
-            ans = comp(*ans, child->value) ? *ans : child->value;
+            ans = comp(*ans, child->get_value()) ? *ans : child->get_value();
           } else {
-            ans = child->value;
+            ans = child->get_value();
           }
         }
       }
@@ -184,17 +190,17 @@ class SolutionTree {
       return true;
     }
     if (mark == Mark::X) {
-      if (node->min_child() != node->value) {
+      if (node->min_child() != node->get_value()) {
         return false;
       }
-      if (node->value == BoardValue::X_WIN && node->children.size() != 1) {
+      if (node->get_value() == BoardValue::X_WIN && node->children.size() != 1) {
         return false;
       }
     } else if (mark == Mark::O) {
-      if (node->max_child() != node->value) {
+      if (node->max_child() != node->get_value()) {
         return false;
       }
-      if ((node->value == BoardValue::O_WIN || node->value == BoardValue::DRAW)
+      if ((node->get_value() == BoardValue::O_WIN || node->get_value() == BoardValue::DRAW)
           && node->children.size() != 1) {
         return false;
       }
@@ -205,11 +211,11 @@ class SolutionTree {
   }
   void prune(Node *node, Mark mark) {
     if (mark == Mark::X) {
-      if (node->value == BoardValue::X_WIN && node->children.size() > 1) {
+      if (node->get_value() == BoardValue::X_WIN && node->children.size() > 1) {
         prune_children(node, BoardValue::X_WIN);
       }
     } else if (mark == Mark::O) {
-      if ((node->value == BoardValue::O_WIN || node->value == BoardValue::DRAW)
+      if ((node->get_value() == BoardValue::O_WIN || node->get_value() == BoardValue::DRAW)
           && node->children.size() > 1) {
         prune_children(node, *node->best_child_O());
       }
@@ -221,7 +227,7 @@ class SolutionTree {
 
   void prune_children(Node *node, BoardValue goal) {
     [[maybe_unused]] auto r = remove_if(begin(node->children), end(node->children), [&](const auto& child) {
-      return child.second->value != goal || !child.second->is_final();
+      return child.second->get_value() != goal || !child.second->is_final();
     });
     auto it = begin(node->children);
     if (it != end(node->children)) {
@@ -231,7 +237,7 @@ class SolutionTree {
   }
 
   void dump_node(ofstream& ofs, const Node* node) const {
-    ofs << static_cast<int>(node->value) << " ";
+    ofs << static_cast<int>(node->get_value()) << " ";
     ofs << static_cast<int>(node->node_final) << " ";
     ofs << static_cast<int>(node->proof) << " ";
     ofs << static_cast<int>(node->disproof) << " ";

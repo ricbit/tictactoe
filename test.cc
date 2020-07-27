@@ -479,12 +479,12 @@ struct TestingTree {
 
 unique_ptr<SolutionTree::Node> build_tree(TestingTree tree) {
   auto parent = make_unique<SolutionTree::Node>(nullptr, tree.children.size());
-  parent->value = tree.value;
+  parent->set_value(tree.value);
   parent->node_final = tree.is_final;
   for_each(begin(tree.children), end(tree.children), [&](const auto& child_values) {
     const auto& [value, is_final] = child_values;
     auto& child = parent->children.emplace_back(0, make_unique<SolutionTree::Node>(parent.get(), 0));
-    child.second->value = value;
+    child.second->set_value(value);
     child.second->node_final = is_final;
   });
   return parent;
