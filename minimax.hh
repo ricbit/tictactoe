@@ -412,7 +412,7 @@ class MiniMax {
       BoardValue value, SolutionTree::Reason reason, Turn turn, bool is_final = true) {
     node->set_reason(reason);
     node->set_value(value);
-    node->node_final = is_final;
+    node->set_is_final(is_final);
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }

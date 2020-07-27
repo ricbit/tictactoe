@@ -26,7 +26,7 @@ class SolutionTree {
     vector<pair<Position, unique_ptr<Node>>> children;
     Node *parent;
     Zobrist zobrist;
-    bool node_final = false;
+    bool node_finalx = false;
     ProofNumber proof = 1_pn;
     ProofNumber disproof = 1_pn;
     Node *get_last_child() const {
@@ -51,7 +51,10 @@ class SolutionTree {
       return has_parent() ? parent->get_value() : BoardValue::UNKNOWN;
     }
     bool is_final() const {
-      return node_final;
+      return node_finalx;
+    }
+    void set_is_final(bool is_final) {
+      node_finalx = is_final;
     }
     bool is_parent_final() const {
       return parent == nullptr ? false : parent->is_final();
@@ -246,7 +249,7 @@ class SolutionTree {
 
   void dump_node(ofstream& ofs, const Node* node) const {
     ofs << static_cast<int>(node->get_value()) << " ";
-    ofs << static_cast<int>(node->node_final) << " ";
+    ofs << static_cast<int>(node->is_final()) << " ";
     ofs << static_cast<int>(node->proof) << " ";
     ofs << static_cast<int>(node->disproof) << " ";
     ofs << node->count << " " << node->children.size() << " ";
