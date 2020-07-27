@@ -18,9 +18,11 @@ class SolutionTree {
     Node(Node *parent, int children_size) : parent(parent), zobrist(Zobrist{0}) {
       children.reserve(children_size);
     }
-    BoardValue valuex = BoardValue::UNKNOWN;
+    struct {
+      uint8_t value : 2 = static_cast<uint8_t>(BoardValue::UNKNOWN);
+      uint8_t reason : 4 = static_cast<uint8_t>(Reason::UNKNOWN);
+    } packed_values;
     int count = 1;
-    Reason reasonx = Reason::UNKNOWN;
     vector<pair<Position, unique_ptr<Node>>> children;
     Node *parent;
     Zobrist zobrist;
@@ -31,16 +33,16 @@ class SolutionTree {
       return children.rbegin()->second.get();
     }
     BoardValue get_value() const {
-      return valuex;
+      return static_cast<BoardValue>(packed_values.value);
     }
     void set_value(BoardValue value) {
-      valuex = value;
+      packed_values.value = static_cast<uint8_t>(value);
     }
     Reason get_reason() const {
-      return reasonx;
+      return static_cast<Reason>(packed_values.reason);
     }
     void set_reason(Reason reason) {
-      reasonx = reason;
+      packed_values.reason = static_cast<uint8_t>(reason);
     }
     bool has_parent() const {
       return parent != nullptr;
