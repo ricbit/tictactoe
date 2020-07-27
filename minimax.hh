@@ -183,12 +183,14 @@ class PNSearch {
   void push(BoardNode<N, D> board_node) {
   }
   BoardNode<N, D> pop_best() {
-    //cout << "\n------\n";
     return search_or_node(root);
   }
   bool empty() const {
-    //return root->is_final();
-    return root->proof == 0 || root->disproof == 0;
+    bool is_final = root->is_final();
+    if (is_final) {
+      assert(root->proof == 0 || root->disproof == 0);
+    }
+    return is_final;
   }
   void retire(const BoardNode<N, D>& board_node, bool is_terminal) {
     auto& node = board_node.node;

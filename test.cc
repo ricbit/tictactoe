@@ -602,7 +602,7 @@ TEST(MiniMaxTest, GetParentValueAnyOfOWinAndDrawAreEquivalentForO) {
   EXPECT_TRUE(is_final);
 }
 
-TEST(MiniMaxTest, Check32) {
+TEST(MiniMaxTest, Check32DFS) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
@@ -611,10 +611,28 @@ TEST(MiniMaxTest, Check32) {
   EXPECT_TRUE(minimax.get_solution().validate());
 }
 
-TEST(MiniMaxTest, Check33) {
+TEST(MiniMaxTest, Check33DFS) {
   BoardData<3, 3> data;
   State state(data);
   auto minimax = MiniMax(state, data);
+  auto result = minimax.play(state, Turn::X);
+  EXPECT_EQ(BoardValue::X_WIN, *result);
+  EXPECT_TRUE(minimax.get_solution().validate());
+}
+
+TEST(MiniMaxTest, Check32PNSearch) {
+  BoardData<3, 2> data;
+  State state(data);
+  auto minimax = MiniMax<3, 2, PNSearch<3, 2>>(state, data);
+  auto result = minimax.play(state, Turn::X);
+  EXPECT_EQ(BoardValue::DRAW, *result);
+  EXPECT_TRUE(minimax.get_solution().validate());
+}
+
+TEST(MiniMaxTest, Check33PNSearch) {
+  BoardData<3, 3> data;
+  State state(data);
+  auto minimax = MiniMax<3, 3, PNSearch<3, 3>>(state, data);
   auto result = minimax.play(state, Turn::X);
   EXPECT_EQ(BoardValue::X_WIN, *result);
   EXPECT_TRUE(minimax.get_solution().validate());
