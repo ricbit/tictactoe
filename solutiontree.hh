@@ -21,12 +21,12 @@ class SolutionTree {
     struct {
       uint8_t value : 2 = static_cast<uint8_t>(BoardValue::UNKNOWN);
       uint8_t reason : 4 = static_cast<uint8_t>(Reason::UNKNOWN);
+      uint8_t is_final : 1 = static_cast<uint8_t>(false);
     } packed_values;
     int count = 1;
     vector<pair<Position, unique_ptr<Node>>> children;
     Node *parent;
     Zobrist zobrist;
-    bool node_finalx = false;
     ProofNumber proof = 1_pn;
     ProofNumber disproof = 1_pn;
     Node *get_last_child() const {
@@ -51,10 +51,10 @@ class SolutionTree {
       return has_parent() ? parent->get_value() : BoardValue::UNKNOWN;
     }
     bool is_final() const {
-      return node_finalx;
+      return packed_values.is_final;
     }
     void set_is_final(bool is_final) {
-      node_finalx = is_final;
+      packed_values.is_final = is_final;
     }
     bool is_parent_final() const {
       return parent == nullptr ? false : parent->is_final();
