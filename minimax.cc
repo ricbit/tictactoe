@@ -13,11 +13,11 @@
 
 int main(int argc, char **argv) {
   constexpr int N = 4;
-  constexpr int D = 3;
+  constexpr int D = 2;
   struct DebugConfig {
-    int max_nodes = 50'000;
+    int max_nodes = 1'000'000;
     ostream& debug = cout;
-    bool should_prune = false;
+    bool should_prune = true;
   };
   BoardData<N, D> data;
   State state(data);

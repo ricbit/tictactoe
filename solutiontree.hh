@@ -200,6 +200,12 @@ class SolutionTree {
     if (node->children.empty()) {
       return true;
     }
+    auto is_unknown = [](const auto &child) {
+      return child.second->get_value() == BoardValue::UNKNOWN;
+    };
+    if (any_of(begin(node->children), end(node->children), is_unknown)) {
+      return node->get_value() == BoardValue::UNKNOWN;
+    }
     if (mark == Mark::X) {
       if (node->min_child() != node->get_value()) {
         return false;
