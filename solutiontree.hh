@@ -20,7 +20,7 @@ class SolutionTree {
     }
     BoardValue valuex = BoardValue::UNKNOWN;
     int count = 1;
-    Reason reason = Reason::UNKNOWN;
+    Reason reasonx = Reason::UNKNOWN;
     vector<pair<Position, unique_ptr<Node>>> children;
     Node *parent;
     Zobrist zobrist;
@@ -35,6 +35,12 @@ class SolutionTree {
     }
     void set_value(BoardValue value) {
       valuex = value;
+    }
+    Reason get_reason() const {
+      return reasonx;
+    }
+    void set_reason(Reason reason) {
+      reasonx = reason;
     }
     bool has_parent() const {
       return parent != nullptr;
@@ -242,7 +248,7 @@ class SolutionTree {
     ofs << static_cast<int>(node->proof) << " ";
     ofs << static_cast<int>(node->disproof) << " ";
     ofs << node->count << " " << node->children.size() << " ";
-    ofs << static_cast<int>(node->reason) << " : ";
+    ofs << static_cast<int>(node->get_reason()) << " : ";
     for (const auto& [pos, p] : node->children) {
       ofs << pos << "  ";
     }

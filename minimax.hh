@@ -330,7 +330,7 @@ class MiniMax {
     auto& [current_state, turn, node] = board_node;
     report_progress(board_node);
     if (node->some_parent_final()) {
-      node->reason = SolutionTree::Reason::PRUNING;
+      node->set_reason(SolutionTree::Reason::PRUNING);
       return false;
     }
     auto terminal_node = check_terminal_node(current_state, turn, node);
@@ -410,7 +410,7 @@ class MiniMax {
 
   BoardValue unsafe_save_node(SolutionTree::Node *node, Zobrist node_zobrist,
       BoardValue value, SolutionTree::Reason reason, Turn turn, bool is_final = true) {
-    node->reason = reason;
+    node->set_reason(reason);
     node->set_value(value);
     node->node_final = is_final;
     if (node->is_final()) {
