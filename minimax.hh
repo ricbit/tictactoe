@@ -206,9 +206,6 @@ class PNSearch {
       }
     }
     update_pn_value(node, board_node.turn);
-    /*cout << "after ";
-    cout << "proof : " << board_node.node->proof << " disproof: " << board_node.node->disproof << "\n";
-    cout << "children : " << board_node.node->children.size() << "\n";*/
   }
   void update_pn_value(SolutionTree::Node *node, Turn turn) {
     if (node == nullptr) {
@@ -237,16 +234,9 @@ class PNSearch {
   }
  private:
   BoardNode<N, D> choose(BoardNode<N, D> board_node) {
-    /*board_node.current_state.print();
-    cout << "before ";
-    cout << "proof : " << board_node.node->proof << " disproof: " << board_node.node->disproof << "\n";
-    cout << "children : " << board_node.node->children.size() << "\n";
-    cout << "turn : " << board_node.turn << "\n";*/
     return board_node;
   }
   BoardNode<N, D> search_or_node(SolutionTree::Node *node) {
-    /*cout << "proof : " << node->proof << " disproof: " << node->disproof << "\n";
-    node->rebuild_state(data).print();*/
     if (node->children.empty()) {
       return choose(BoardNode<N, D>{node->rebuild_state(data), node->get_turn(), node});
     }
@@ -255,8 +245,6 @@ class PNSearch {
     })->second.get());
   }
   BoardNode<N, D> search_and_node(SolutionTree::Node *node) {
-    /*cout << "proof : " << node->proof << " disproof: " << node->disproof << "\n";
-    node->rebuild_state(data).print();*/
     if (node->children.empty()) {
       return choose(BoardNode<N, D>{node->rebuild_state(data), node->get_turn(), node});
     }
