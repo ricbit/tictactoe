@@ -79,10 +79,29 @@ class SolutionTree {
         state.play(p->get_position(), mark);
       }
     }
+    optional<BoardValue> best_child_X() const {
+      return min_child();
+    }
     optional<BoardValue> min_child() const {
       return extreme_child([](const auto& a, const auto&b) {
         return a < b;
       });
+    }
+    optional<BoardValue> best_child_O() const {
+      auto highest_value = max_child();
+      if (highest_value <= BoardValue::DRAW) {
+        return highest_value;
+      }
+      bool has_draw_final = find_if(begin(children), end(children), [](const auto& child) {
+        return child.second->is_final() && child.second->value == BoardValue::DRAW;
+      }) != end(children);
+      bool has_o_win_final = find_if(begin(children), end(children), [](const auto& child) {
+        return child.second->is_final() && child.second->value == BoardValue::O_WIN;
+      }) != end(children);
+      if (has_draw_final && !has_o_win_final) {
+        return BoardValue::DRAW;
+      }
+      return highest_value;
     }
     optional<BoardValue> max_child() const {
       return extreme_child([](const auto& a, const auto&b) {

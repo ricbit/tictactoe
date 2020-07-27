@@ -589,6 +589,19 @@ TEST(MiniMaxTest, GetParentValueMinimaxCompleteIsFinalByExaustion) {
   EXPECT_TRUE(is_final);
 }
 
+TEST(MiniMaxTest, GetParentValueAnyOfOWinAndDrawAreEquivalentForO) {
+  BoardData<3, 2> data;
+  State state(data);
+  auto minimax = MiniMax(state, data);
+  auto parent = build_tree({BoardValue::O_WIN, false, {
+      {BoardValue::O_WIN, false},
+      {BoardValue::DRAW, true}
+  }});
+  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent.get(), Turn::O);
+  EXPECT_EQ(BoardValue::DRAW, *new_value);
+  EXPECT_TRUE(is_final);
+}
+
 TEST(MiniMaxTest, Check32) {
   BoardData<3, 2> data;
   State state(data);

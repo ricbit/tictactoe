@@ -187,7 +187,8 @@ class PNSearch {
     return search_or_node(root);
   }
   bool empty() const {
-    return root->is_final();
+    //return root->is_final();
+    return root->proof == 0 || root->disproof == 0;
   }
   void retire(const BoardNode<N, D>& board_node, bool is_terminal) {
     auto& node = board_node.node;
@@ -242,6 +243,8 @@ class PNSearch {
     return board_node;
   }
   BoardNode<N, D> search_or_node(SolutionTree::Node *node) {
+    cout << "proof : " << node->proof << " disproof: " << node->disproof << "\n";
+    node->rebuild_state(data).print();
     if (node->children.empty()) {
       return choose(BoardNode<N, D>{node->rebuild_state(data), node->get_turn(), node});
     }
@@ -250,6 +253,8 @@ class PNSearch {
     })->second.get());
   }
   BoardNode<N, D> search_and_node(SolutionTree::Node *node) {
+    cout << "proof : " << node->proof << " disproof: " << node->disproof << "\n";
+    node->rebuild_state(data).print();
     if (node->children.empty()) {
       return choose(BoardNode<N, D>{node->rebuild_state(data), node->get_turn(), node});
     }
@@ -444,15 +449,20 @@ class MiniMax {
     }
   }
 
+  template<typename T>
+  bool is_final_candidate(T& children, optional<BoardValue> new_value) {
+    return find_if(begin(children), end(children), [&](const auto& child) {
+      return child.second->value == new_value && child.second->is_final();
+    }) != end(children);
+  }
+
   pair<optional<BoardValue>, bool> get_updated_parent_value(
       optional<BoardValue> child_value,
       const SolutionTree::Node *parent,
       Turn parent_turn) {
     assert(child_value != BoardValue::UNKNOWN);
-    auto new_value = parent_turn == Turn::X ? parent->min_child() : parent->max_child();
-    bool final_candidate = find_if(begin(parent->children), end(parent->children), [&](const auto& child) {
-      return child.second->value == new_value && child.second->is_final();
-    }) != end(parent->children);
+    auto new_value = parent_turn == Turn::X ? parent->best_child_X() : parent->best_child_O();
+    bool final_candidate = is_final_candidate(parent->children, new_value);
     bool all_children_final = all_of(begin(parent->children), end(parent->children), [&](const auto& child) {
       return child.second->is_final();
     });
