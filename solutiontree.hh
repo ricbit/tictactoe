@@ -13,15 +13,21 @@ class SolutionTree {
   };
   struct Node {
     Node(Node *parent, int children_size, Zobrist zobrist) : parent(parent), zobrist(zobrist) {
-      children.reserve(children_size);
+      init(children_size);
     }
     Node(Node *parent, int children_size) : parent(parent), zobrist(Zobrist{0}) {
+      init(children_size);
+    }
+    void init(int children_size) {
       children.reserve(children_size);
+      packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
+      packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
+      packed_values.is_final = static_cast<uint8_t>(false);
     }
     struct {
-      uint8_t value : 2 = static_cast<uint8_t>(BoardValue::UNKNOWN);
-      uint8_t reason : 4 = static_cast<uint8_t>(Reason::UNKNOWN);
-      uint8_t is_final : 1 = static_cast<uint8_t>(false);
+      uint8_t value : 2;
+      uint8_t reason : 4;
+      uint8_t is_final : 1;
     } packed_values;
     int count = 1;
     vector<pair<Position, unique_ptr<Node>>> children;
