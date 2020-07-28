@@ -656,8 +656,8 @@ TEST(MiniMaxTest, Check33PNSearch) {
 
 TEST(MiniMaxTest, CheckOneNodeOfBFS) {
   struct Config {
-    int max_visited = 1;
-    int max_created = 100;
+    NodeCount max_visited = 1_nc;
+    NodeCount max_created = 100_nc;
     DummyCout debug;
     bool should_prune = false;
   };
@@ -674,8 +674,8 @@ TEST(MiniMaxTest, CheckOneNodeOfBFS) {
 
 TEST(MiniMaxTest, CheckMaxCreated) {
   struct Config {
-    int max_visited = 1'000'000;
-    int max_created = 100;
+    NodeCount max_visited = 1'000'000_nc;
+    NodeCount max_created = 100_nc;
     DummyCout debug;
     bool should_prune = false;
   };

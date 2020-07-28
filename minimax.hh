@@ -74,8 +74,8 @@ class DummyCout {
 };
 
 struct DefaultConfig {
-  int max_visited = 1000000;
-  int max_created = 1000000;
+  NodeCount max_visited = 1'000'000_nc;
+  NodeCount max_created = 1'000'000_nc;
   DummyCout debug;
   bool should_prune = true;
 };
@@ -505,7 +505,8 @@ class MiniMax {
 
   void report_progress(const BoardNode<N, D>& board_node) {
     if ((nodes_visited % 1000) == 0) {
-      config.debug << "id "s << nodes_visited << "\t"s;
+      config.debug << "visited "s << nodes_visited << "\t"s;
+      config.debug << "created "s << nodes_created << "\t"s;
       double value = board_node.node->estimate_work();
       ostringstream oss;
       oss << setprecision(2) << value * 100.0;

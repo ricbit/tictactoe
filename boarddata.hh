@@ -29,6 +29,7 @@ SEMANTIC_INDEX(LineCount, lcount)
 SEMANTIC_INDEX(MarkCount, mcount)
 SEMANTIC_INDEX(Crossing, cross)
 SEMANTIC_INDEX(ProofNumber, pn)
+SEMANTIC_INDEX(NodeCount, nc)
 
 constexpr ProofNumber INFTY = 1'000'000_pn;
 
