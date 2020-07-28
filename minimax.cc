@@ -16,9 +16,9 @@ int main(int argc, char **argv) {
   constexpr int D = 2;
   struct DebugConfig {
     int max_visited = 1'000'000;
-    int max_created = 100;
+    int max_created = 10'000'000;
     ostream& debug = cout;
-    bool should_prune = false;
+    bool should_prune = true;
   };
   BoardData<N, D> data;
   State state(data);

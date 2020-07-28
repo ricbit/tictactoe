@@ -196,7 +196,7 @@ class PNSearch {
         return pop_best();
       }
       int size = descent->children.size();
-      descent = descent->children[rand() % size].second.get();
+      descent = descent->children[rand() % size].second;
       return choose(BoardNode<N, D>{descent->rebuild_state(data), descent->get_turn(), descent});
     }
   }
@@ -257,7 +257,7 @@ class PNSearch {
     }
     return search_and_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
       return a.second->proof < b.second->proof;
-    })->second.get());
+    })->second);
   }
   BoardNode<N, D> search_and_node(SolutionTree::Node *node) {
     if (node->children.empty()) {
@@ -265,7 +265,7 @@ class PNSearch {
     }
     return search_or_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
       return a.second->disproof < b.second->disproof;
-    })->second.get());
+    })->second);
   }
   const BoardData<N, D>& data;
   SolutionTree::Node *root;
@@ -282,7 +282,7 @@ class MiniMax {
   explicit MiniMax(
     const State<N, D>& state,
     const BoardData<N, D>& data)
-    :  state(state), data(data), solution(board_size), traversal(data, solution.get_root()) {
+    :  state(state), data(data), solution(board_size, config.max_created), traversal(data, solution.get_root()) {
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
@@ -353,8 +353,8 @@ class MiniMax {
       }
       nodes_created++;
       const auto& child = child_state[i];
-      node->children.emplace_back(sorted[i].second, make_unique<SolutionTree::Node>(node, open_positions.count()));
-      auto child_node = node->children.rbegin()->second.get();
+      node->children.emplace_back(sorted[i].second, solution.create_node(node, open_positions.count()));
+      auto child_node = node->children.rbegin()->second;
       lock_guard lock(next_m);
       traversal.push(BoardNode<N, D>{child, flip(turn), child_node});
     }

@@ -477,28 +477,39 @@ struct TestingTree {
   vector<pair<BoardValue, bool>> children;
 };
 
-unique_ptr<SolutionTree::Node> build_tree(TestingTree tree) {
-  auto parent = make_unique<SolutionTree::Node>(nullptr, tree.children.size());
+struct TestingNodes {
+  vector<unique_ptr<SolutionTree::Node>> nodes;
+  SolutionTree::Node *root;
+};
+
+TestingNodes build_tree(TestingTree tree) {
+  TestingNodes nodes;
+  nodes.nodes.reserve(1 + tree.children.size());
+  nodes.nodes.emplace_back(make_unique<SolutionTree::Node>(nullptr, tree.children.size()));
+  auto parent = nodes.nodes.rbegin()->get();
   parent->set_value(tree.value);
   parent->set_is_final(tree.is_final);
   for_each(begin(tree.children), end(tree.children), [&](const auto& child_values) {
     const auto& [value, is_final] = child_values;
-    auto& child = parent->children.emplace_back(0, make_unique<SolutionTree::Node>(parent.get(), 0));
+    nodes.nodes.emplace_back(make_unique<SolutionTree::Node>(parent, 0));
+    auto& child = parent->children.emplace_back(0, nodes.nodes.rbegin()->get());
     child.second->set_value(value);
     child.second->set_is_final(is_final);
   });
-  return parent;
+  nodes.root = nodes.nodes.begin()->get();
+  return nodes;
 }
 
 template<typename T>
 auto get_parent_checker(T& minimax) {
   return [&](BoardValue child_value, BoardValue parent_value, Turn turn, pair<optional<BoardValue>, bool> result) {
-    auto parent = build_tree({parent_value, false, {
+    auto solution = build_tree({parent_value, false, {
         {parent_value, true},
         {child_value, true},
         {BoardValue::UNKNOWN, false}
     }});
-    return result == minimax.get_updated_parent_value(child_value, parent.get(), turn);
+    auto& parent = solution.root;
+    return result == minimax.get_updated_parent_value(child_value, parent, turn);
   };
 }
 
@@ -541,11 +552,12 @@ TEST(MiniMaxTest, GetParentValueKeepValueChangeIsFinal) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto parent = build_tree({BoardValue::DRAW, false, {
+  auto solution = build_tree({BoardValue::DRAW, false, {
       {BoardValue::DRAW, true},
       {BoardValue::DRAW, true}
   }});
-  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent.get(), Turn::X);
+  auto& parent = solution.root;
+  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent, Turn::X);
   EXPECT_FALSE(new_value.has_value());
   EXPECT_TRUE(is_final);
 }
@@ -554,11 +566,12 @@ TEST(MiniMaxTest, GetParentValueOneDrawOneUnknown) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto parent = build_tree({BoardValue::UNKNOWN, false, {
+  auto solution = build_tree({BoardValue::UNKNOWN, false, {
       {BoardValue::UNKNOWN, false},
       {BoardValue::DRAW, true}
   }});
-  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent.get(), Turn::X);
+  auto& parent = solution.root;
+  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent, Turn::X);
   EXPECT_EQ(BoardValue::DRAW, *new_value);
   EXPECT_FALSE(is_final);
 }
@@ -567,11 +580,12 @@ TEST(MiniMaxTest, GetParentValueOneDrawNotFinalOneUnknownTurnO) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto parent = build_tree({BoardValue::UNKNOWN, false, {
+  auto solution = build_tree({BoardValue::UNKNOWN, false, {
       {BoardValue::UNKNOWN, false},
       {BoardValue::DRAW, false}
   }});
-  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent.get(), Turn::O);
+  auto& parent = solution.root;
+  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent, Turn::O);
   EXPECT_EQ(BoardValue::DRAW, *new_value);
   EXPECT_FALSE(is_final);
 }
@@ -580,11 +594,12 @@ TEST(MiniMaxTest, GetParentValueMinimaxCompleteIsFinalByExaustion) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto parent = build_tree({BoardValue::UNKNOWN, false, {
+  auto solution = build_tree({BoardValue::UNKNOWN, false, {
       {BoardValue::DRAW, true},
       {BoardValue::DRAW, true}
   }});
-  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent.get(), Turn::X);
+  auto& parent = solution.root;
+  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent, Turn::X);
   EXPECT_EQ(BoardValue::DRAW, *new_value);
   EXPECT_TRUE(is_final);
 }
@@ -593,11 +608,12 @@ TEST(MiniMaxTest, GetParentValueAnyOfOWinAndDrawAreEquivalentForO) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto parent = build_tree({BoardValue::O_WIN, false, {
+  auto solution = build_tree({BoardValue::O_WIN, false, {
       {BoardValue::O_WIN, false},
       {BoardValue::DRAW, true}
   }});
-  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent.get(), Turn::O);
+  auto& parent = solution.root;
+  auto [new_value, is_final] = minimax.get_updated_parent_value(BoardValue::DRAW, parent, Turn::O);
   EXPECT_EQ(BoardValue::DRAW, *new_value);
   EXPECT_TRUE(is_final);
 }
@@ -651,7 +667,7 @@ TEST(MiniMaxTest, CheckOneNodeOfBFS) {
   minimax.play(state, Turn::X);
   auto& solution = minimax.get_solution();
   EXPECT_EQ(4, solution.real_count());
-  auto first_node = solution.get_root()->children[0].second.get();
+  auto first_node = solution.get_root()->children[0].second;
   EXPECT_EQ(Turn::X, solution.get_root()->get_turn());
   EXPECT_EQ(Turn::O, first_node->get_turn());
 }
@@ -673,13 +689,13 @@ TEST(MiniMaxTest, CheckMaxCreated) {
 
 bool validate_all_parents(const SolutionTree::Node *node) {
   for (const auto& child_pair : node->children) {
-    const auto child_node = child_pair.second.get();
+    const auto child_node = child_pair.second;
     if (child_node->parent != node) {
       return false;
     }
   }
   return all_of(begin(node->children), end(node->children), [](const auto& child_pair) {
-    return validate_all_parents(child_pair.second.get());
+    return validate_all_parents(child_pair.second);
   });
 }
 
