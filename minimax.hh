@@ -179,12 +179,17 @@ class RandomTraversal {
 template<int N, int D>
 class PNSearch {
   SolutionTree::Node *descent = nullptr;
+  bag<pair<ProofNumber, ProofNumber>> pn_evolution;
  public:
   explicit PNSearch(const BoardData<N, D>& data, SolutionTree::Node *root) : data(data), root(root) {
+  }
+  ~PNSearch() {
+    save_evolution();
   }
   void push(BoardNode<N, D> board_node) {
   }
   BoardNode<N, D> pop_best() {
+    pn_evolution.push_back({root->proof, root->disproof});
     //return search_or_node(root);
     if (descent == nullptr) {
       auto chosen_node = search_or_node(root);
@@ -206,6 +211,12 @@ class PNSearch {
       assert(root->proof == 0 || root->disproof == 0);
     }
     return is_final;
+  }
+  void save_evolution() const {
+    ofstream ofs("pnevolution.txt");
+    for (const auto& pn : pn_evolution) {
+      ofs << pn.first << " " << pn.second << "\n";
+    }
   }
   void retire(const BoardNode<N, D>& board_node, bool is_terminal) {
     auto& node = board_node.node;

@@ -92,6 +92,9 @@ class svector {
 };
 
 template<typename T>
+using bag = std::vector<T>;
+
+template<typename T>
 class Index {
  public:
   constexpr explicit Index(int index) : index(index) {

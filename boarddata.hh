@@ -33,9 +33,6 @@ SEMANTIC_INDEX(NodeCount, nc)
 
 constexpr ProofNumber INFTY = 1'000'000_pn;
 
-template<typename T>
-using bag = vector<T>;
-
 enum class Direction {
   equal,
   up,
