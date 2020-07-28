@@ -31,7 +31,7 @@ class SolutionTree {
     } packed_values;
     int count = 1;
     vector<pair<Position, unique_ptr<Node>>> children;
-    Node *parent;
+    Node *parent; // 64 bits
     Zobrist zobrist;
     ProofNumber proof = 1_pn;
     ProofNumber disproof = 1_pn;

@@ -640,7 +640,7 @@ TEST(MiniMaxTest, Check33PNSearch) {
 
 TEST(MiniMaxTest, CheckOneNodeOfBFS) {
   struct Config {
-    int max_evaluated = 1;
+    int max_visited = 1;
     int max_created = 100;
     DummyCout debug;
     bool should_prune = false;
@@ -650,10 +650,25 @@ TEST(MiniMaxTest, CheckOneNodeOfBFS) {
   auto minimax = MiniMax<3, 2, BFS<3, 2>, Config>(state, data);
   minimax.play(state, Turn::X);
   auto& solution = minimax.get_solution();
-  EXPECT_EQ(4, minimax.solution.real_count());
+  EXPECT_EQ(4, solution.real_count());
   auto first_node = solution.get_root()->children[0].second.get();
   EXPECT_EQ(Turn::X, solution.get_root()->get_turn());
   EXPECT_EQ(Turn::O, first_node->get_turn());
+}
+
+TEST(MiniMaxTest, CheckMaxCreated) {
+  struct Config {
+    int max_visited = 1'000'000;
+    int max_created = 100;
+    DummyCout debug;
+    bool should_prune = false;
+  };
+  BoardData<3, 2> data;
+  State state(data);
+  auto minimax = MiniMax<3, 2, BFS<3, 2>, Config>(state, data);
+  minimax.play(state, Turn::X);
+  auto& solution = minimax.get_solution();
+  EXPECT_EQ(100, solution.real_count());
 }
 
 bool validate_all_parents(const SolutionTree::Node *node) {

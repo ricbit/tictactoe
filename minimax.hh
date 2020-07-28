@@ -74,7 +74,7 @@ class DummyCout {
 };
 
 struct DefaultConfig {
-  int max_evaluated = 1000000;
+  int max_visited = 1000000;
   int max_created = 1000000;
   DummyCout debug;
   bool should_prune = true;
@@ -282,16 +282,17 @@ class MiniMax {
   explicit MiniMax(
     const State<N, D>& state,
     const BoardData<N, D>& data)
-    :  state(state), data(data), nodes_visited(0), solution(board_size), traversal(data, solution.get_root()) {
+    :  state(state), data(data), solution(board_size), traversal(data, solution.get_root()) {
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
-  int nodes_visited;
   SolutionTree solution;
   Traversal traversal;
   mutex next_m;
   mutex node_m;
   unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
+  int nodes_visited = 0;
+  int nodes_created = 1;
   constexpr static Config config = Config();
 
   optional<BoardValue> play(State<N, D>& current_state, Turn turn) {
@@ -318,7 +319,7 @@ class MiniMax {
     constexpr int slice = 1;
     vector<BoardNode<N, D>> nodes;
     nodes.reserve(slice);
-    while (!traversal.empty() && nodes_visited < config.max_evaluated) {
+    while (!traversal.empty() && nodes_visited < config.max_visited && nodes_created < config.max_created) {
       nodes.clear();
       for (int i = 0; i < slice && !traversal.empty(); i++) {
         nodes.emplace_back(traversal.pop_best());
@@ -347,6 +348,10 @@ class MiniMax {
     auto [sorted, child_state] = get_children(current_state, turn, open_positions);
     int size = sorted.size();
     for (int i = size - 1; i >= 0; i--) {
+      if (nodes_created == config.max_created) {
+        return false;
+      }
+      nodes_created++;
       const auto& child = child_state[i];
       node->children.emplace_back(sorted[i].second, make_unique<SolutionTree::Node>(node, open_positions.count()));
       auto child_node = node->children.rbegin()->second.get();
@@ -358,7 +363,7 @@ class MiniMax {
 
   optional<BoardValue> check_terminal_node(const State<N, D>& current_state, Turn turn, SolutionTree::Node *node) {
     Zobrist zob = current_state.get_zobrist();
-    if (nodes_visited > config.max_evaluated) {
+    if (nodes_visited > config.max_visited) {
       return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES, turn);
     }
     if (current_state.get_win_state()) {
