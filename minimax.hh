@@ -74,7 +74,8 @@ class DummyCout {
 };
 
 struct DefaultConfig {
-  int max_nodes = 1000000;
+  int max_evaluated = 1000000;
+  int max_created = 1000000;
   DummyCout debug;
   bool should_prune = true;
 };
@@ -177,13 +178,27 @@ class RandomTraversal {
 
 template<int N, int D>
 class PNSearch {
+  SolutionTree::Node *descent = nullptr;
  public:
   explicit PNSearch(const BoardData<N, D>& data, SolutionTree::Node *root) : data(data), root(root) {
   }
   void push(BoardNode<N, D> board_node) {
   }
   BoardNode<N, D> pop_best() {
-    return search_or_node(root);
+    //return search_or_node(root);
+    if (descent == nullptr) {
+      auto chosen_node = search_or_node(root);
+      descent = chosen_node.node;
+      return chosen_node;
+    } else {
+      if (descent->children.empty()) {
+        descent = nullptr;
+        return pop_best();
+      }
+      int size = descent->children.size();
+      descent = descent->children[rand() % size].second.get();
+      return choose(BoardNode<N, D>{descent->rebuild_state(data), descent->get_turn(), descent});
+    }
   }
   bool empty() const {
     bool is_final = root->is_final();
@@ -303,7 +318,7 @@ class MiniMax {
     constexpr int slice = 1;
     vector<BoardNode<N, D>> nodes;
     nodes.reserve(slice);
-    while (!traversal.empty() && nodes_visited < config.max_nodes) {
+    while (!traversal.empty() && nodes_visited < config.max_evaluated) {
       nodes.clear();
       for (int i = 0; i < slice && !traversal.empty(); i++) {
         nodes.emplace_back(traversal.pop_best());
@@ -343,7 +358,7 @@ class MiniMax {
 
   optional<BoardValue> check_terminal_node(const State<N, D>& current_state, Turn turn, SolutionTree::Node *node) {
     Zobrist zob = current_state.get_zobrist();
-    if (nodes_visited > config.max_nodes) {
+    if (nodes_visited > config.max_evaluated) {
       return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree::Reason::OUT_OF_NODES, turn);
     }
     if (current_state.get_win_state()) {

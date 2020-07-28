@@ -8,7 +8,7 @@ def read_boardvalues():
   return boardvalues
 
 def encode_result(result):
-  return boardvalues[result]
+  return boardvalues[result].title()
 
 def print_table(n, d, board, node, x_set, o_set, current, encode, depth):
     s = []
@@ -24,10 +24,11 @@ def print_table(n, d, board, node, x_set, o_set, current, encode, depth):
         elif pos in o_set:
           s.append("O")
         elif pos in children:
-          s.append('<a href="%s">%d</a><br>(%s)' %
+          s.append('<a href="%s">%d</a><br>%s<br>%d&nbsp;-&nbsp;%d' %
               ("/game/%s%d#%d" % (current, pos, depth + 1),
                node.children[pos].count,
-               encode_result(node.children[pos].result)))
+               encode_result(node.children[pos].result),
+               node.children[pos].proof, node.children[pos].disproof))
         else:
           s.append("&nbsp;")
         s.append("</td>")

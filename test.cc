@@ -640,7 +640,8 @@ TEST(MiniMaxTest, Check33PNSearch) {
 
 TEST(MiniMaxTest, CheckOneNodeOfBFS) {
   struct Config {
-    int max_nodes = 1;
+    int max_evaluated = 1;
+    int max_created = 100;
     DummyCout debug;
     bool should_prune = false;
   };
