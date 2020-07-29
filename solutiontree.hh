@@ -6,6 +6,7 @@
 #include "boarddata.hh"
 #include "state.hh"
 
+template<int MaxNodes>
 class SolutionTree {
  public:
   enum class Reason {
@@ -250,9 +251,8 @@ class SolutionTree {
   void update_count() {
     update_count(root);
   }
-  SolutionTree(int board_size, int max_created)
-      : max_nodes(max_created) {
-    nodes.reserve(max_created);
+  SolutionTree(int board_size) {
+    nodes.reserve(MaxNodes);
     nodes.emplace_back(nullptr, 0);
     root = &nodes[0];
     root->set_is_root(true);
@@ -261,7 +261,6 @@ class SolutionTree {
     return &nodes.emplace_back(parent, children_size);
   }
  private:
-  int max_nodes;
   vector<Node> nodes;
   Node* root;
   int update_count(Node *node) {

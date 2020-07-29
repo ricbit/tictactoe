@@ -477,21 +477,23 @@ struct TestingTree {
   vector<pair<BoardValue, bool>> children;
 };
 
+template<int M>
 struct TestingNodes {
-  vector<unique_ptr<SolutionTree::Node>> nodes;
-  SolutionTree::Node *root;
+  vector<unique_ptr<typename SolutionTree<M>::Node>> nodes;
+  SolutionTree<M>::Node *root;
 };
 
-TestingNodes build_tree(TestingTree tree) {
-  TestingNodes nodes;
+template<int M>
+TestingNodes<M> build_tree(TestingTree tree) {
+  TestingNodes<M> nodes;
   nodes.nodes.reserve(1 + tree.children.size());
-  nodes.nodes.emplace_back(make_unique<SolutionTree::Node>(nullptr, tree.children.size()));
+  nodes.nodes.emplace_back(make_unique<typename SolutionTree<M>::Node>(nullptr, tree.children.size()));
   auto parent = nodes.nodes.rbegin()->get();
   parent->set_value(tree.value);
   parent->set_is_final(tree.is_final);
   for_each(begin(tree.children), end(tree.children), [&](const auto& child_values) {
     const auto& [value, is_final] = child_values;
-    nodes.nodes.emplace_back(make_unique<SolutionTree::Node>(parent, 0));
+    nodes.nodes.emplace_back(make_unique<typename SolutionTree<M>::Node>(parent, 0));
     auto& child = parent->children.emplace_back(0, nodes.nodes.rbegin()->get());
     child.second->set_value(value);
     child.second->set_is_final(is_final);
@@ -503,7 +505,7 @@ TestingNodes build_tree(TestingTree tree) {
 template<typename T>
 auto get_parent_checker(T& minimax) {
   return [&](BoardValue child_value, BoardValue parent_value, Turn turn, pair<optional<BoardValue>, bool> result) {
-    auto solution = build_tree({parent_value, false, {
+    auto solution = build_tree<T::M>({parent_value, false, {
         {parent_value, true},
         {child_value, true},
         {BoardValue::UNKNOWN, false}
@@ -552,7 +554,7 @@ TEST(MiniMaxTest, GetParentValueKeepValueChangeIsFinal) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto solution = build_tree({BoardValue::DRAW, false, {
+  auto solution = build_tree<decltype(minimax)::M>({BoardValue::DRAW, false, {
       {BoardValue::DRAW, true},
       {BoardValue::DRAW, true}
   }});
@@ -566,7 +568,7 @@ TEST(MiniMaxTest, GetParentValueOneDrawOneUnknown) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto solution = build_tree({BoardValue::UNKNOWN, false, {
+  auto solution = build_tree<decltype(minimax)::M>({BoardValue::UNKNOWN, false, {
       {BoardValue::UNKNOWN, false},
       {BoardValue::DRAW, true}
   }});
@@ -580,7 +582,7 @@ TEST(MiniMaxTest, GetParentValueOneDrawNotFinalOneUnknownTurnO) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto solution = build_tree({BoardValue::UNKNOWN, false, {
+  auto solution = build_tree<decltype(minimax)::M>({BoardValue::UNKNOWN, false, {
       {BoardValue::UNKNOWN, false},
       {BoardValue::DRAW, false}
   }});
@@ -594,7 +596,7 @@ TEST(MiniMaxTest, GetParentValueMinimaxCompleteIsFinalByExaustion) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto solution = build_tree({BoardValue::UNKNOWN, false, {
+  auto solution = build_tree<decltype(minimax)::M>({BoardValue::UNKNOWN, false, {
       {BoardValue::DRAW, true},
       {BoardValue::DRAW, true}
   }});
@@ -608,7 +610,7 @@ TEST(MiniMaxTest, GetParentValueAnyOfOWinAndDrawAreEquivalentForO) {
   BoardData<3, 2> data;
   State state(data);
   auto minimax = MiniMax(state, data);
-  auto solution = build_tree({BoardValue::O_WIN, false, {
+  auto solution = build_tree<decltype(minimax)::M>({BoardValue::O_WIN, false, {
       {BoardValue::O_WIN, false},
       {BoardValue::DRAW, true}
   }});
@@ -639,7 +641,7 @@ TEST(MiniMaxTest, Check33DFS) {
 TEST(MiniMaxTest, Check32PNSearch) {
   BoardData<3, 2> data;
   State state(data);
-  auto minimax = MiniMax<3, 2, PNSearch<3, 2>>(state, data);
+  auto minimax = MiniMax<3, 2, PNSearch<3, 2, MiniMax<3, 2>::M>>(state, data);
   auto result = minimax.play(state, Turn::X);
   EXPECT_EQ(BoardValue::DRAW, *result);
   EXPECT_TRUE(minimax.get_solution().validate());
@@ -648,22 +650,23 @@ TEST(MiniMaxTest, Check32PNSearch) {
 TEST(MiniMaxTest, Check33PNSearch) {
   BoardData<3, 3> data;
   State state(data);
-  auto minimax = MiniMax<3, 3, PNSearch<3, 3>>(state, data);
+  auto minimax = MiniMax<3, 3, PNSearch<3, 3, MiniMax<3, 2>::M>>(state, data);
   auto result = minimax.play(state, Turn::X);
   EXPECT_EQ(BoardValue::X_WIN, *result);
   EXPECT_TRUE(minimax.get_solution().validate());
 }
 
+struct ConfigBFSOne {
+  constexpr static NodeCount max_visited = 1_nc;
+  constexpr static NodeCount max_created = 100_nc;
+  DummyCout debug;
+  bool should_prune = false;
+};
+
 TEST(MiniMaxTest, CheckOneNodeOfBFS) {
-  struct Config {
-    NodeCount max_visited = 1_nc;
-    NodeCount max_created = 100_nc;
-    DummyCout debug;
-    bool should_prune = false;
-  };
   BoardData<3, 2> data;
   State state(data);
-  auto minimax = MiniMax<3, 2, BFS<3, 2>, Config>(state, data);
+  auto minimax = MiniMax<3, 2, BFS<3, 2, ConfigBFSOne::max_created>, ConfigBFSOne>(state, data);
   minimax.play(state, Turn::X);
   auto& solution = minimax.get_solution();
   EXPECT_EQ(4, solution.real_count());
@@ -672,22 +675,24 @@ TEST(MiniMaxTest, CheckOneNodeOfBFS) {
   EXPECT_EQ(Turn::O, first_node->get_turn());
 }
 
+struct ConfigBFSMax {
+  constexpr static NodeCount max_visited = 1'000'000_nc;
+  constexpr static NodeCount max_created = 100_nc;
+  DummyCout debug;
+  bool should_prune = false;
+};
+
 TEST(MiniMaxTest, CheckMaxCreated) {
-  struct Config {
-    NodeCount max_visited = 1'000'000_nc;
-    NodeCount max_created = 100_nc;
-    DummyCout debug;
-    bool should_prune = false;
-  };
   BoardData<3, 2> data;
   State state(data);
-  auto minimax = MiniMax<3, 2, BFS<3, 2>, Config>(state, data);
+  auto minimax = MiniMax<3, 2, BFS<3, 2, ConfigBFSMax::max_created>, ConfigBFSMax>(state, data);
   minimax.play(state, Turn::X);
   auto& solution = minimax.get_solution();
   EXPECT_EQ(100, solution.real_count());
 }
 
-bool validate_all_parents(const SolutionTree::Node *node) {
+template<int M>
+bool validate_all_parents(const typename SolutionTree<M>::Node *node) {
   for (const auto& child_pair : node->children) {
     const auto child_node = child_pair.second;
     if (child_node->get_parent() != node) {
@@ -695,7 +700,7 @@ bool validate_all_parents(const SolutionTree::Node *node) {
     }
   }
   return all_of(begin(node->children), end(node->children), [](const auto& child_pair) {
-    return validate_all_parents(child_pair.second);
+    return validate_all_parents<M>(child_pair.second);
   });
 }
 
@@ -705,7 +710,7 @@ TEST(SolutionTreeTest, ValidateParents) {
   auto minimax = MiniMax(state, data);
   minimax.play(state, Turn::X);
   auto root = minimax.get_solution().get_root();
-  EXPECT_TRUE(validate_all_parents(root));
+  EXPECT_TRUE(validate_all_parents<decltype(minimax)::M>(root));
 }
 
 }
