@@ -690,7 +690,7 @@ TEST(MiniMaxTest, CheckMaxCreated) {
 bool validate_all_parents(const SolutionTree::Node *node) {
   for (const auto& child_pair : node->children) {
     const auto child_node = child_pair.second;
-    if (child_node->parent != node) {
+    if (child_node->get_parent() != node) {
       return false;
     }
   }

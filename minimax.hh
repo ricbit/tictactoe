@@ -256,7 +256,7 @@ class PNSearch {
         })->second->proof;
       }
     }
-    update_pn_value(node->parent, flip(turn));
+    update_pn_value(node->get_parent(), flip(turn));
   }
  private:
   BoardNode<N, D> choose(BoardNode<N, D> board_node) {
@@ -437,18 +437,18 @@ class MiniMax {
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }
-    if (node->parent != nullptr) {
+    if (node->get_parent() != nullptr) {
       auto parent_turn = flip(turn);
-      auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, node->parent, parent_turn);
-      bool old_is_final = node->parent->is_final();
+      auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, node->get_parent(), parent_turn);
+      bool old_is_final = node->get_parent()->is_final();
       bool should_update = new_parent_value.has_value() || parent_is_final != old_is_final;
       if (should_update) {
         bool is_early = new_parent_value.has_value() && parent_is_final && !old_is_final;
         auto parent_reason = is_early ?
             SolutionTree::Reason::MINIMAX_EARLY : SolutionTree::Reason::MINIMAX_COMPLETE;
-        auto updated_parent_value = new_parent_value.value_or(node->parent->get_value());
+        auto updated_parent_value = new_parent_value.value_or(node->get_parent()->get_value());
         unsafe_save_node(
-            node->parent, node->parent->zobrist, updated_parent_value, parent_reason, flip(turn), parent_is_final);
+            node->get_parent(), node->get_parent()->zobrist, updated_parent_value, parent_reason, flip(turn), parent_is_final);
       }
     }
     return value;

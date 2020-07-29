@@ -65,10 +65,10 @@ class SolutionTree {
   };
 
   struct Node {
-    Node(Node *parent, int children_size, Zobrist zobrist) : parent(parent), zobrist(zobrist) {
+    Node(Node *parent, int children_size, Zobrist zobrist) : parentx(parent), zobrist(zobrist) {
       init(children_size);
     }
-    Node(Node *parent, int children_size) : parent(parent), zobrist(Zobrist{0}) {
+    Node(Node *parent, int children_size) : parentx(parent), zobrist(Zobrist{0}) {
       init(children_size);
     }
     void init(int children_size) {
@@ -84,12 +84,15 @@ class SolutionTree {
     } packed_values;
     int count = 1;
     Children children;
-    Node *parent; // 64 bits
+    Node *parentx; // 64 bits
     Zobrist zobrist;
     ProofNumber proof = 1_pn;
     ProofNumber disproof = 1_pn;
     Node *get_last_child() const {
       return children.rbegin()->second;
+    }
+    Node *get_parent() const {
+      return parentx;
     }
     BoardValue get_value() const {
       return static_cast<BoardValue>(packed_values.value);
@@ -104,10 +107,10 @@ class SolutionTree {
       packed_values.reason = static_cast<uint8_t>(reason);
     }
     bool has_parent() const {
-      return parent != nullptr;
+      return get_parent() != nullptr;
     }
     const BoardValue get_parent_value() const {
-      return has_parent() ? parent->get_value() : BoardValue::UNKNOWN;
+      return has_parent() ? get_parent()->get_value() : BoardValue::UNKNOWN;
     }
     bool is_final() const {
       return packed_values.is_final;
@@ -116,10 +119,10 @@ class SolutionTree {
       packed_values.is_final = is_final;
     }
     bool is_parent_final() const {
-      return parent == nullptr ? false : parent->is_final();
+      return get_parent() == nullptr ? false : get_parent()->is_final();
     }
     bool some_parent_final() const {
-      for (Node *p = parent; p != nullptr; p = p->parent) {
+      for (Node *p = get_parent(); p != nullptr; p = p->get_parent()) {
         if (p->is_final()) {
           return true;
         }
@@ -127,7 +130,7 @@ class SolutionTree {
       return false;
     }
     Position get_position() const {
-      for (const auto& [pos, child] : parent->children) {
+      for (const auto& [pos, child] : get_parent()->children) {
         if (child == this) {
           return pos;
         }
@@ -136,7 +139,7 @@ class SolutionTree {
     }
     Turn get_turn() const {
       int len = 0;
-      for (const Node *p = this; p != nullptr; p = p->parent) {
+      for (const Node *p = this; p != nullptr; p = p->get_parent()) {
         len++;
       }
       return len % 2 == 1 ? Turn::X : Turn::O;
@@ -150,8 +153,8 @@ class SolutionTree {
     }
     template<int N, int D>
     void rebuild_state(State<N, D>& state, const Node *p, Mark mark) const {
-      if (p->parent != nullptr) {
-        rebuild_state(state, p->parent, flip(mark));
+      if (p->get_parent() != nullptr) {
+        rebuild_state(state, p->get_parent(), flip(mark));
         state.play(p->get_position(), mark);
       }
     }
@@ -189,14 +192,14 @@ class SolutionTree {
     }
    private:
     double estimate_work(double child_value) const {
-      if (parent == nullptr) {
+      if (get_parent() == nullptr) {
         return child_value;
       }
-      double final_nodes = count_if(begin(parent->children), end(parent->children), [&](const auto& child) {
+      double final_nodes = count_if(begin(get_parent()->children), end(get_parent()->children), [&](const auto& child) {
         return child.second->is_final() && child.second != this;
       });
-      double total_nodes = parent->children.size();
-      return parent->estimate_work((final_nodes + child_value) / total_nodes);
+      double total_nodes = get_parent()->children.size();
+      return get_parent()->estimate_work((final_nodes + child_value) / total_nodes);
     }
     template<typename T>
     optional<BoardValue> extreme_child(T comp) const {
@@ -213,6 +216,7 @@ class SolutionTree {
       return ans;
     }
   };
+
   Node *get_root() {
     return root;
   }
