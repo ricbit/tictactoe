@@ -76,11 +76,13 @@ class SolutionTree {
       packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
       packed_values.is_final = static_cast<uint8_t>(false);
+      packed_values.is_root = static_cast<uint8_t>(false);
     }
     struct {
       uint8_t value : 2;
       uint8_t reason : 4;
       uint8_t is_final : 1;
+      uint8_t is_root : 1;
     } packed_values;
     int count = 1;
     Children children;
@@ -107,10 +109,16 @@ class SolutionTree {
       packed_values.reason = static_cast<uint8_t>(reason);
     }
     bool has_parent() const {
-      return get_parent() != nullptr;
+      return !is_root();
     }
     const BoardValue get_parent_value() const {
       return has_parent() ? get_parent()->get_value() : BoardValue::UNKNOWN;
+    }
+    bool is_root() const {
+      return packed_values.is_root;
+    }
+    void set_is_root(bool is_root) {
+      packed_values.is_root = is_root;
     }
     bool is_final() const {
       return packed_values.is_final;
@@ -246,6 +254,7 @@ class SolutionTree {
     nodes.reserve(max_created);
     nodes.emplace_back(nullptr, 0);
     root = &nodes[0];
+    root->set_is_root(true);
   }
   Node *create_node(Node *parent, int children_size) {
     nodes.emplace_back(parent, children_size);
