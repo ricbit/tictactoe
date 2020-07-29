@@ -11,6 +11,59 @@ class SolutionTree {
   enum class Reason {
     #include "reason.hh"
   };
+
+  class Node;
+
+  class Children {
+    vector<pair<Position, Node*>> children;
+   public:
+    template<typename... Args>
+    auto& emplace_back(Args&&... args) {
+      return children.emplace_back(args...);
+    }
+    auto& operator[](int index) {
+      return children[index];
+    }
+    void reserve(int size) {
+      children.reserve(size);
+    }
+    template<typename A, typename B>
+    void erase(A a, B b) {
+      children.erase(a, b);
+    }
+    bool empty() const {
+      return children.empty();
+    }
+    auto size() const {
+      return children.size();
+    }
+    auto begin() const {
+      return children.begin();
+    }
+    auto begin() {
+      return children.begin();
+    }
+    auto rbegin() const {
+      return children.rbegin();
+    }
+    auto rbegin() {
+      return children.rbegin();
+    }
+    auto end() const {
+      return children.end();
+    }
+    auto end() {
+      return children.end();
+    }
+    auto rend() const {
+      return children.rend();
+    }
+    auto rend() {
+      return children.rend();
+    }
+   private:
+  };
+
   struct Node {
     Node(Node *parent, int children_size, Zobrist zobrist) : parent(parent), zobrist(zobrist) {
       init(children_size);
@@ -30,7 +83,6 @@ class SolutionTree {
       uint8_t is_final : 1;
     } packed_values;
     int count = 1;
-    using Children = vector<pair<Position, Node*>>;
     Children children;
     Node *parent; // 64 bits
     Zobrist zobrist;
