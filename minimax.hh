@@ -178,7 +178,7 @@ class RandomTraversal {
 
 template<int N, int D>
 class PNSearch {
-  SolutionTree::Node *descent = nullptr;
+  optional<SolutionTree::Node*> descent;
   bag<pair<ProofNumber, ProofNumber>> pn_evolution;
  public:
   explicit PNSearch(const BoardData<N, D>& data, SolutionTree::Node *root) : data(data), root(root) {
@@ -191,18 +191,18 @@ class PNSearch {
   BoardNode<N, D> pop_best() {
     pn_evolution.push_back({root->proof, root->disproof});
     //return search_or_node(root);
-    if (descent == nullptr) {
+    if (!descent.has_value()) {
       auto chosen_node = search_or_node(root);
       descent = chosen_node.node;
       return chosen_node;
     } else {
-      if (descent->children.empty()) {
-        descent = nullptr;
+      if ((*descent)->children.empty()) {
+        descent.reset();
         return pop_best();
       }
-      int size = descent->children.size();
-      descent = descent->children[rand() % size].second;
-      return choose(BoardNode<N, D>{descent->rebuild_state(data), descent->get_turn(), descent});
+      int size = (*descent)->children.size();
+      descent = (*descent)->children[rand() % size].second;
+      return choose(BoardNode<N, D>{(*descent)->rebuild_state(data), (*descent)->get_turn(), *descent});
     }
   }
   bool empty() const {
@@ -234,9 +234,6 @@ class PNSearch {
     update_pn_value(node, board_node.turn);
   }
   void update_pn_value(SolutionTree::Node *node, Turn turn) {
-    if (node == nullptr) {
-      return;
-    }
     if (!node->children.empty()) {
       if (turn == Turn::O) {
         auto proof = accumulate(begin(node->children), end(node->children), 0_pn, [](const auto& a, const auto& b) {
@@ -256,7 +253,9 @@ class PNSearch {
         })->second->proof;
       }
     }
-    update_pn_value(node->get_parent(), flip(turn));
+    if (node->has_parent()) {
+      update_pn_value(node->get_parent(), flip(turn));
+    }
   }
  private:
   BoardNode<N, D> choose(BoardNode<N, D> board_node) {
@@ -437,7 +436,7 @@ class MiniMax {
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }
-    if (node->get_parent() != nullptr) {
+    if (node->has_parent()) {
       auto parent_turn = flip(turn);
       auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, node->get_parent(), parent_turn);
       bool old_is_final = node->get_parent()->is_final();
