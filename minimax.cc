@@ -12,11 +12,11 @@
 #include "minimax.hh"
 
 int main(int argc, char **argv) {
-  constexpr int N = 4;
+  constexpr int N = 5;
   constexpr int D = 3;
   struct DebugConfig {
     NodeCount max_visited = 10'000'000_nc;
-    NodeCount max_created = 10'000'000_nc;
+    NodeCount max_created = 1'000'000_nc;
     ostream& debug = cout;
     bool should_prune = false;
   };

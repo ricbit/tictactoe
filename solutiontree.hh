@@ -30,7 +30,8 @@ class SolutionTree {
       uint8_t is_final : 1;
     } packed_values;
     int count = 1;
-    vector<pair<Position, Node*>> children;
+    using Children = vector<pair<Position, Node*>>;
+    Children children;
     Node *parent; // 64 bits
     Zobrist zobrist;
     ProofNumber proof = 1_pn;
