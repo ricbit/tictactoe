@@ -127,7 +127,7 @@ class SolutionTree {
       packed_values.is_final = is_final;
     }
     bool is_parent_final() const {
-      return get_parent() == nullptr ? false : get_parent()->is_final();
+      return has_parent() ? get_parent()->is_final() : false;
     }
     bool some_parent_final() const {
       for (Node *p = get_parent(); p != nullptr; p = p->get_parent()) {
@@ -161,7 +161,7 @@ class SolutionTree {
     }
     template<int N, int D>
     void rebuild_state(State<N, D>& state, const Node *p, Mark mark) const {
-      if (p->get_parent() != nullptr) {
+      if (p->has_parent()) {
         rebuild_state(state, p->get_parent(), flip(mark));
         state.play(p->get_position(), mark);
       }
@@ -200,7 +200,7 @@ class SolutionTree {
     }
    private:
     double estimate_work(double child_value) const {
-      if (get_parent() == nullptr) {
+      if (!has_parent()) {
         return child_value;
       }
       double final_nodes = count_if(begin(get_parent()->children), end(get_parent()->children), [&](const auto& child) {
