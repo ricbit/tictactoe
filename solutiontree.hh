@@ -258,8 +258,7 @@ class SolutionTree {
     root->set_is_root(true);
   }
   Node *create_node(Node *parent, int children_size) {
-    nodes.emplace_back(parent, children_size);
-    return &*nodes.rbegin();
+    return &nodes.emplace_back(parent, children_size);
   }
  private:
   int max_nodes;
