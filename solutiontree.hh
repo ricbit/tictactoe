@@ -130,7 +130,8 @@ class SolutionTree {
       return has_parent() ? get_parent()->is_final() : false;
     }
     bool some_parent_final() const {
-      for (Node *p = get_parent(); p != nullptr; p = p->get_parent()) {
+      for (const Node *p = this; p->has_parent();) {
+        p = p->get_parent();
         if (p->is_final()) {
           return true;
         }
@@ -146,8 +147,8 @@ class SolutionTree {
       assert(false);
     }
     Turn get_turn() const {
-      int len = 0;
-      for (const Node *p = this; p != nullptr; p = p->get_parent()) {
+      int len = 1;
+      for (const Node *p = this; p->has_parent(); p = p->get_parent()) {
         len++;
       }
       return len % 2 == 1 ? Turn::X : Turn::O;
