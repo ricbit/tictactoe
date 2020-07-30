@@ -2,6 +2,7 @@
 #define MINIMAX_HH
 
 #include <iostream>
+#include <tuple>
 #include <vector>
 #include <algorithm>
 #include <random>
@@ -179,7 +180,7 @@ class RandomTraversal {
 template<int N, int D, int M>
 class PNSearch {
   optional<typename SolutionTree<M>::Node*> descent;
-  bag<pair<ProofNumber, ProofNumber>> pn_evolution;
+  bag<tuple<ProofNumber, ProofNumber, int>> pn_evolution;
  public:
   explicit PNSearch(const BoardData<N, D>& data, SolutionTree<M>::Node *root) : data(data), root(root) {
   }
@@ -189,7 +190,11 @@ class PNSearch {
   void push(BoardNode<N, D, M> board_node) {
   }
   BoardNode<N, D, M> pop_best() {
-    pn_evolution.push_back({root->proof, root->disproof});
+    auto x = pop_best_2();
+    pn_evolution.push_back({root->proof, root->disproof, x.node->get_depth()});
+    return x;
+  }
+  BoardNode<N, D, M> pop_best_2() {
     //return search_or_node(root);
     if (!descent.has_value()) {
       auto chosen_node = search_or_node(root);
@@ -215,7 +220,7 @@ class PNSearch {
   void save_evolution() const {
     ofstream ofs("pnevolution.txt");
     for (const auto& pn : pn_evolution) {
-      ofs << pn.first << " " << pn.second << "\n";
+      ofs << get<0>(pn) << " " << get<1>(pn) << " " << get<2>(pn) << "\n";
     }
   }
   void retire(const BoardNode<N, D, M>& board_node, bool is_terminal) {

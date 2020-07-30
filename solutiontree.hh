@@ -164,6 +164,13 @@ class SolutionTree {
       }
       return len % 2 == 1 ? Turn::X : Turn::O;
     }
+    int get_depth() const {
+      int depth = 1;
+      for (const Node *p = this; p->has_parent(); p = p->get_parent()) {
+        depth++;
+      }
+      return depth;
+    }
     template<int N, int D>
     State<N, D> rebuild_state(const BoardData<N, D>& data) const {
       Turn turn = flip(get_turn());
