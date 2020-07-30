@@ -268,7 +268,7 @@ class SolutionTree {
   void update_count() {
     update_count(root);
   }
-  SolutionTree(int board_size) {
+  explicit SolutionTree(int board_size) {
     nodes.reserve(M);
     nodes.emplace_back(nullptr, 0);
     root = &nodes[0];
@@ -321,7 +321,7 @@ class SolutionTree {
         return false;
       }
     }
-    return all_of(begin(node->children), end(node->children), [&](auto& child) {
+    return all_of(begin(node->children), end(node->children), [&](const auto& child) {
       return validate(child.second, flip(mark));
     });
   }
@@ -336,7 +336,7 @@ class SolutionTree {
         prune_children(node, *node->best_child_O());
       }
     }
-    for_each(begin(node->children), end(node->children), [&](auto& child) {
+    for_each(begin(node->children), end(node->children), [&](const auto& child) {
       prune(child.second, flip(mark));
     });
   }
