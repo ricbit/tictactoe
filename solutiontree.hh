@@ -72,9 +72,7 @@ class SolutionTree {
       init(parent_node, children_size);
     }
     void init(Node *parent_node, int children_size) {
-      if (parent_node != nullptr) {
-        assert(parent_node < this);
-      }
+      assert(parent_node < this);
       children.reserve(children_size);
       packed_values.parent = static_cast<unsigned>(distance(parent_node, this));
       packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
@@ -158,11 +156,7 @@ class SolutionTree {
       assert(false);
     }
     Turn get_turn() const {
-      int len = 1;
-      for (const Node *p = this; p->has_parent(); p = p->get_parent()) {
-        len++;
-      }
-      return len % 2 == 1 ? Turn::X : Turn::O;
+      return get_depth() % 2 == 1 ? Turn::X : Turn::O;
     }
     int get_depth() const {
       int depth = 1;
@@ -198,16 +192,17 @@ class SolutionTree {
       if (highest_value <= BoardValue::DRAW) {
         return highest_value;
       }
-      bool has_draw_final = find_if(begin(children), end(children), [](const auto& child) {
-        return child.second->is_final() && child.second->get_value() == BoardValue::DRAW;
-      }) != end(children);
-      bool has_o_win_final = find_if(begin(children), end(children), [](const auto& child) {
-        return child.second->is_final() && child.second->get_value() == BoardValue::O_WIN;
-      }) != end(children);
+      bool has_draw_final = has_final_children(BoardValue::DRAW);
+      bool has_o_win_final = has_final_children(BoardValue::O_WIN);
       if (has_draw_final && !has_o_win_final) {
         return BoardValue::DRAW;
       }
       return highest_value;
+    }
+    bool has_final_children(BoardValue value) const {
+      return find_if(begin(children), end(children), [&](const auto& child) {
+        return child.second->is_final() && child.second->get_value() == value;
+      }) != end(children);
     }
     optional<BoardValue> max_child() const {
       return extreme_child([](const auto& a, const auto&b) {
