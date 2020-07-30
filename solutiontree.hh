@@ -18,9 +18,8 @@ class SolutionTree {
   class Children {
     vector<pair<Position, Node*>> children;
    public:
-    template<typename... Args>
-    auto& emplace_back(Args&&... args) {
-      return children.emplace_back(args...);
+    auto& emplace_back(Position pos, Node *parent) {
+      return children.emplace_back(pos, parent);
     }
     auto& operator[](int index) {
       return children[index];
@@ -66,14 +65,18 @@ class SolutionTree {
   };
 
   struct Node {
-    Node(Node *parent, int children_size, Zobrist zobrist) : parentx(parent), zobrist(zobrist) {
-      init(children_size);
+    Node(Node *parent_node, int children_size, Zobrist zobrist) : zobrist(zobrist) {
+      init(parent_node, children_size);
     }
-    Node(Node *parent, int children_size) : parentx(parent), zobrist(Zobrist{0}) {
-      init(children_size);
+    Node(Node *parent_node, int children_size) : zobrist(Zobrist{0}) {
+      init(parent_node, children_size);
     }
-    void init(int children_size) {
+    void init(Node *parent_node, int children_size) {
+      if (parent_node != nullptr) {
+        assert(parent_node < this);
+      }
       children.reserve(children_size);
+      packed_values.parent = static_cast<unsigned>(distance(parent_node, this));
       packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
       packed_values.is_final = static_cast<uint8_t>(false);
@@ -84,18 +87,25 @@ class SolutionTree {
       uint8_t reason : 4;
       uint8_t is_final : 1;
       uint8_t is_root : 1;
+      unsigned parent : bit_width(static_cast<unsigned>(M));
     } packed_values;
     int count = 1;
     Children children;
-    Node *parentx; // 64 bits
     Zobrist zobrist;
     ProofNumber proof = 1_pn;
     ProofNumber disproof = 1_pn;
     Node *get_last_child() const {
       return children.rbegin()->second;
     }
-    Node *get_parent() const {
-      return parentx;
+    const Node *get_parent() const {
+      const Node *next = this;
+      advance(next, -static_cast<signed>(packed_values.parent));
+      return next;
+    }
+    Node *get_parent() {
+      Node *next = this;
+      advance(next, -static_cast<signed>(packed_values.parent));
+      return next;
     }
     BoardValue get_value() const {
       return static_cast<BoardValue>(packed_values.value);

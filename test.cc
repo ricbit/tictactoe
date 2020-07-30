@@ -479,7 +479,7 @@ struct TestingTree {
 
 template<int M>
 struct TestingNodes {
-  vector<unique_ptr<typename SolutionTree<M>::Node>> nodes;
+  vector<typename SolutionTree<M>::Node> nodes;
   SolutionTree<M>::Node *root;
 };
 
@@ -487,18 +487,17 @@ template<int M>
 TestingNodes<M> build_tree(TestingTree tree) {
   TestingNodes<M> nodes;
   nodes.nodes.reserve(1 + tree.children.size());
-  nodes.nodes.emplace_back(make_unique<typename SolutionTree<M>::Node>(nullptr, tree.children.size()));
-  auto parent = nodes.nodes.rbegin()->get();
+  typename SolutionTree<M>::Node *parent = &nodes.nodes.emplace_back(nullptr, tree.children.size());
   parent->set_value(tree.value);
   parent->set_is_final(tree.is_final);
   for_each(begin(tree.children), end(tree.children), [&](const auto& child_values) {
     const auto& [value, is_final] = child_values;
-    nodes.nodes.emplace_back(make_unique<typename SolutionTree<M>::Node>(parent, 0));
-    auto& child = parent->children.emplace_back(0, nodes.nodes.rbegin()->get());
-    child.second->set_value(value);
-    child.second->set_is_final(is_final);
+    auto& child = nodes.nodes.emplace_back(parent, 0);
+    parent->children.emplace_back(0_pos, &*nodes.nodes.rbegin());
+    child.set_value(value);
+    child.set_is_final(is_final);
   });
-  nodes.root = nodes.nodes.begin()->get();
+  nodes.root = &*nodes.nodes.begin();
   return nodes;
 }
 
