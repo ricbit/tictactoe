@@ -454,6 +454,11 @@ class MiniMax {
     if (node->is_final()) {
       zobrist[node_zobrist] = value;
     }
+    /*if (reason != SolutionTree<M>::Reason::ZOBRIST) {
+      zobrist[node_zobrist] = value;
+    } else {
+      node->zobrist = zobrist[node_zobrist];
+    }*/
     if (node->has_parent()) {
       auto parent_turn = flip(turn);
       auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, node->get_parent(), parent_turn);
@@ -464,7 +469,7 @@ class MiniMax {
         auto parent_reason = is_early ?
             SolutionTree<M>::Reason::MINIMAX_EARLY : SolutionTree<M>::Reason::MINIMAX_COMPLETE;
         auto updated_parent_value = new_parent_value.value_or(node->get_parent()->get_value());
-        unsafe_save_node(node->get_parent(), node->get_parent()->zobrist, 
+        unsafe_save_node(node->get_parent(), node->get_parent()->get_zobrist(),
             updated_parent_value, parent_reason, flip(turn), parent_is_final);
       }
     }

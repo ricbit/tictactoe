@@ -77,6 +77,7 @@ class SolutionTree {
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
+      zobrist_next = this;
     }
     struct {
       uint8_t value : 2;
@@ -87,12 +88,24 @@ class SolutionTree {
     } packed_values;
     variant<RunTime, NodeCount> workspace = RunTime{.work = 0.0f};
     Children children;
-    Zobrist zobrist;
+    variant<Zobrist, Node*> zobrist;
+    Node *zobrist_next;
     ProofNumber proof = 1_pn;
     ProofNumber disproof = 1_pn;
 
     Node *get_last_child() const {
       return children.rbegin()->second;
+    }
+    const Zobrist get_zobrist() const {
+      struct Visitor {
+        Zobrist operator()(const Zobrist& z) {
+          return z; 
+        }
+        Zobrist operator()(const Node *p) {
+          return get<Zobrist>(p->zobrist);
+        }
+      };
+      return visit(Visitor(), zobrist);
     }
     const Node *get_parent() const {
       const Node *next = this;
