@@ -107,6 +107,9 @@ class DFS {
   void retire(const BoardNode<N, D, M>& node, bool is_terminal) {
     // empty
   }
+  float estimate_work(const SolutionTree<M>::Node *node) {
+    return node->estimate_work();
+  }
  private:
   stack<BoardNode<N, D, M>> next;
   const BoardData<N, D>& data;
@@ -131,6 +134,9 @@ class BFS {
   }
   void retire(const BoardNode<N, D, M>& node, bool is_terminal) {
     // empty
+  }
+  float estimate_work(const SolutionTree<M>::Node *node) {
+    return node->estimate_work();
   }
  private:
   queue<typename SolutionTree<M>::Node*> next;
@@ -171,6 +177,9 @@ class RandomTraversal {
   void retire(const BoardNode<N, D, M>& node, bool is_terminal) {
     // empty
   }
+  float estimate_work(const SolutionTree<M>::Node *node) {
+    return node->estimate_work();
+  }
  private:
   set<BoardNode<N, D, M>, decltype(CompareBoardNode)> next;
   const BoardData<N, D>& data;
@@ -190,25 +199,9 @@ class PNSearch {
   void push(BoardNode<N, D, M> board_node) {
   }
   BoardNode<N, D, M> pop_best() {
-    auto x = pop_best_2();
-    pn_evolution.push_back({root->proof, root->disproof, x.node->get_depth()});
-    return x;
-  }
-  BoardNode<N, D, M> pop_best_2() {
-    //return search_or_node(root);
-    if (!descent.has_value()) {
-      auto chosen_node = search_or_node(root);
-      descent = chosen_node.node;
-      return chosen_node;
-    } else {
-      if ((*descent)->children.empty()) {
-        descent.reset();
-        return pop_best();
-      }
-      int size = (*descent)->children.size();
-      descent = (*descent)->children[rand() % size].second;
-      return choose(BoardNode<N, D, M>{(*descent)->rebuild_state(data), (*descent)->get_turn(), *descent});
-    }
+    auto board_node = choose_best_pn_node();
+    pn_evolution.push_back({root->proof, root->disproof, board_node.node->get_depth()});
+    return board_node;
   }
   bool empty() const {
     bool is_final = root->is_final();
@@ -216,12 +209,6 @@ class PNSearch {
       assert(root->proof == 0 || root->disproof == 0);
     }
     return is_final;
-  }
-  void save_evolution() const {
-    ofstream ofs("pnevolution.txt");
-    for (const auto& pn : pn_evolution) {
-      ofs << get<0>(pn) << " " << get<1>(pn) << " " << get<2>(pn) << "\n";
-    }
   }
   void retire(const BoardNode<N, D, M>& board_node, bool is_terminal) {
     auto& node = board_node.node;
@@ -237,6 +224,32 @@ class PNSearch {
       }
     }
     update_pn_value(node, board_node.turn);
+  }
+  float estimate_work(const SolutionTree<M>::Node *node) {
+    return node->estimate_work();
+  }
+ private:
+  BoardNode<N, D, M> choose_best_pn_node() {
+    //return search_or_node(root);
+    if (!descent.has_value()) {
+      auto chosen_node = search_or_node(root);
+      descent = chosen_node.node;
+      return chosen_node;
+    } else {
+      if ((*descent)->children.empty()) {
+        descent.reset();
+        return pop_best();
+      }
+      int size = (*descent)->children.size();
+      descent = (*descent)->children[rand() % size].second;
+      return choose(BoardNode<N, D, M>{(*descent)->rebuild_state(data), (*descent)->get_turn(), *descent});
+    }
+  }
+  void save_evolution() const {
+    ofstream ofs("pnevolution.txt");
+    for (const auto& pn : pn_evolution) {
+      ofs << get<0>(pn) << " " << get<1>(pn) << " " << get<2>(pn) << "\n";
+    }
   }
   void update_pn_value(SolutionTree<M>::Node *node, Turn turn) {
     if (!node->children.empty()) {
@@ -262,7 +275,6 @@ class PNSearch {
       update_pn_value(node->get_parent(), flip(turn));
     }
   }
- private:
   BoardNode<N, D, M> choose(BoardNode<N, D, M> board_node) {
     return board_node;
   }
@@ -452,15 +464,15 @@ class MiniMax {
         auto parent_reason = is_early ?
             SolutionTree<M>::Reason::MINIMAX_EARLY : SolutionTree<M>::Reason::MINIMAX_COMPLETE;
         auto updated_parent_value = new_parent_value.value_or(node->get_parent()->get_value());
-        unsafe_save_node(
-            node->get_parent(), node->get_parent()->zobrist, updated_parent_value, parent_reason, flip(turn), parent_is_final);
+        unsafe_save_node(node->get_parent(), node->get_parent()->zobrist, 
+            updated_parent_value, parent_reason, flip(turn), parent_is_final);
       }
     }
     return value;
   }
 
   BoardValue winner(Mark mark) {
-    return mark == Mark::X ? BoardValue::X_WIN : BoardValue::O_WIN;
+    return winner(to_turn(mark));
   }
 
   BoardValue winner(Turn turn) {
@@ -523,7 +535,7 @@ class MiniMax {
     if ((nodes_visited % 1000) == 0) {
       config.debug << "visited "s << nodes_visited << "\t"s;
       config.debug << "created "s << nodes_created << "\t"s;
-      double value = board_node.node->estimate_work();
+      double value = traversal.estimate_work(board_node.node);
       ostringstream oss;
       oss << setprecision(2) << value * 100.0;
       config.debug << "done : "s << oss.str() << "%\n"s;

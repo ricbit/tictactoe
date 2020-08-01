@@ -88,6 +88,7 @@ class SolutionTree {
       unsigned parent : bit_width(static_cast<unsigned>(M));
     } packed_values;
     int count = 1;
+    float work;
     Children children;
     Zobrist zobrist;
     ProofNumber proof = 1_pn;
