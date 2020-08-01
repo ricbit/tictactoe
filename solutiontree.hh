@@ -216,10 +216,11 @@ class SolutionTree {
       if (!has_parent()) {
         return child_value;
       }
-      double final_nodes = count_if(begin(get_parent()->children), end(get_parent()->children), [&](const auto& child) {
+      auto& children = get_parent()->children;
+      double final_nodes = count_if(begin(children), end(children), [&](const auto& child) {
         return child.second->is_final() && child.second != this;
       });
-      double total_nodes = get_parent()->children.size();
+      double total_nodes = children.size();
       return get_parent()->estimate_work((final_nodes + child_value) / total_nodes);
     }
 
