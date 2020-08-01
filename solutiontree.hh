@@ -64,6 +64,10 @@ class SolutionTree {
    private:
   };
 
+  struct RunTime {
+    float work;
+  };
+
   struct Node {
     Node(Node *parent_node, int children_size, Zobrist zobrist = Zobrist{0}) : zobrist(zobrist) {
       assert(parent_node < this);
@@ -81,8 +85,7 @@ class SolutionTree {
       uint8_t is_root : 1;
       unsigned parent : bit_width(static_cast<unsigned>(M));
     } packed_values;
-    NodeCount count = 1_nc;
-    float work = 0.0f;
+    variant<RunTime, NodeCount> workspace = RunTime{.work = 0.0f};
     Children children;
     Zobrist zobrist;
     ProofNumber proof = 1_pn;
@@ -283,10 +286,14 @@ class SolutionTree {
   Node* root;
 
   NodeCount update_count(Node *node) {
-    return node->count = accumulate(begin(node->children), end(node->children), 1_nc,
-        [&](auto acc, const auto& child) {
-      return NodeCount{acc + update_count(child.second)};
-    });
+    if (node->children.empty()) {
+      return get<NodeCount>(node->workspace) = 1_nc;
+    } else {
+      return get<NodeCount>(node->workspace) = accumulate(begin(node->children), end(node->children), 1_nc,
+          [&](auto acc, const auto& child) {
+        return NodeCount{acc + update_count(child.second)};
+      });
+    }
   }
 
   NodeCount real_count(Node *node) const {
@@ -362,7 +369,7 @@ class SolutionTree {
     ofs << static_cast<int>(node->is_final()) << " ";
     ofs << static_cast<int>(node->proof) << " ";
     ofs << static_cast<int>(node->disproof) << " ";
-    ofs << node->count << " " << node->children.size() << " ";
+    ofs << get<NodeCount>(node->workspace) << " " << node->children.size() << " ";
     ofs << static_cast<int>(node->get_reason()) << " : ";
     for (const auto& [pos, p] : node->children) {
       ofs << pos << "  ";

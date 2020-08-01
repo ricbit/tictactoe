@@ -15,7 +15,7 @@ struct DebugConfig {
   constexpr static NodeCount max_visited = 10'000'000_nc;
   constexpr static NodeCount max_created = 10'000'000_nc;
   ostream& debug = cout;
-  bool should_prune = false;
+  bool should_prune = true;
 };
 
 int main(int argc, char **argv) {
