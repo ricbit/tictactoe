@@ -87,8 +87,8 @@ class SolutionTree {
       uint8_t is_root : 1;
       unsigned parent : bit_width(static_cast<unsigned>(M));
     } packed_values;
-    int count = 1;
-    float work;
+    NodeCount count = 1_nc;
+    float work = 0.0f;
     Children children;
     Zobrist zobrist;
     ProofNumber proof = 1_pn;
@@ -258,7 +258,7 @@ class SolutionTree {
   void prune() {
     prune(root, Mark::X);
   }
-  int real_count() const {
+  NodeCount real_count() const {
     return real_count(root);
   }
   void update_count() {
@@ -276,16 +276,16 @@ class SolutionTree {
  private:
   vector<Node> nodes;
   Node* root;
-  int update_count(Node *node) {
-    return node->count = accumulate(begin(node->children), end(node->children), 1,
+  NodeCount update_count(Node *node) {
+    return node->count = accumulate(begin(node->children), end(node->children), 1_nc,
         [&](auto acc, const auto& child) {
-      return acc + update_count(child.second);
+      return NodeCount{acc + update_count(child.second)};
     });
   }
-  int real_count(Node *node) const {
-    return accumulate(begin(node->children), end(node->children), 1,
+  NodeCount real_count(Node *node) const {
+    return accumulate(begin(node->children), end(node->children), 1_nc,
         [&](auto acc, const auto& child) {
-      return acc + real_count(child.second);
+      return NodeCount{acc + real_count(child.second)};
     });
   }
   bool validate(Node *node, Mark mark) const {
