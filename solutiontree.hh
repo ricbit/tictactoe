@@ -65,13 +65,7 @@ class SolutionTree {
   };
 
   struct Node {
-    Node(Node *parent_node, int children_size, Zobrist zobrist) : zobrist(zobrist) {
-      init(parent_node, children_size);
-    }
-    Node(Node *parent_node, int children_size) : zobrist(Zobrist{0}) {
-      init(parent_node, children_size);
-    }
-    void init(Node *parent_node, int children_size) {
+    Node(Node *parent_node, int children_size, Zobrist zobrist = Zobrist{0}) : zobrist(zobrist) {
       assert(parent_node < this);
       children.reserve(children_size);
       packed_values.parent = static_cast<unsigned>(distance(parent_node, this));
@@ -93,6 +87,7 @@ class SolutionTree {
     Zobrist zobrist;
     ProofNumber proof = 1_pn;
     ProofNumber disproof = 1_pn;
+
     Node *get_last_child() const {
       return children.rbegin()->second;
     }
@@ -224,6 +219,7 @@ class SolutionTree {
       double total_nodes = get_parent()->children.size();
       return get_parent()->estimate_work((final_nodes + child_value) / total_nodes);
     }
+
     template<typename T>
     optional<BoardValue> extreme_child(T comp) const {
       optional<BoardValue> ans;
@@ -243,51 +239,63 @@ class SolutionTree {
   Node *get_root() {
     return root;
   }
+
   const Node *get_root() const {
     return root;
   }
+
   template<int N, int D>
   void dump(const BoardData<N, D>& data, string filename) const {
     ofstream ofs(filename);
     ofs << N << " " << D << "\n";
     dump_node(ofs, root);
   }
+
   bool validate() const {
     return validate(root, Mark::X);
   }
+
   void prune() {
     prune(root, Mark::X);
   }
+
   NodeCount real_count() const {
     return real_count(root);
   }
+
   void update_count() {
     update_count(root);
   }
+
+  Node *create_node(Node *parent, int children_size) {
+    return &nodes.emplace_back(parent, children_size);
+  }
+
   explicit SolutionTree(int board_size) {
     nodes.reserve(M);
     nodes.emplace_back(nullptr, 0);
     root = &nodes[0];
     root->set_is_root(true);
   }
-  Node *create_node(Node *parent, int children_size) {
-    return &nodes.emplace_back(parent, children_size);
-  }
+
  private:
   vector<Node> nodes;
   Node* root;
+
   NodeCount update_count(Node *node) {
     return node->count = accumulate(begin(node->children), end(node->children), 1_nc,
         [&](auto acc, const auto& child) {
       return NodeCount{acc + update_count(child.second)};
     });
   }
+
   NodeCount real_count(Node *node) const {
     return accumulate(begin(node->children), end(node->children), 1_nc,
         [&](auto acc, const auto& child) {
       return NodeCount{acc + real_count(child.second)};
     });
   }
+
   bool validate(Node *node, Mark mark) const {
     if (!node->is_final()) {
       return false;
@@ -321,6 +329,7 @@ class SolutionTree {
       return validate(child.second, flip(mark));
     });
   }
+
   void prune(Node *node, Mark mark) {
     if (mark == Mark::X) {
       if (node->get_value() == BoardValue::X_WIN && node->children.size() > 1) {
