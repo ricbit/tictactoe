@@ -340,7 +340,7 @@ class MiniMax {
     constexpr int slice = 1;
     vector<BoardNode<N, D, M>> nodes;
     nodes.reserve(slice);
-    while (!traversal.empty() && nodes_visited < config.max_visited && nodes_created < config.max_created) {      
+    while (!traversal.empty() && nodes_visited < config.max_visited && nodes_created < config.max_created) {
       nodes.clear();
       for (int i = 0; i < slice && !traversal.empty(); i++) {
         nodes.emplace_back(traversal.pop_best());
@@ -356,10 +356,10 @@ class MiniMax {
   bool process_node(const BoardNode<N, D, M>& board_node) {
     auto& [current_state, turn, node] = board_node;
     report_progress(board_node);
-    /*if (node->some_parent_final()) {
+    if (node->some_parent_final()) {
       node->set_reason(SolutionTree<M>::Reason::PRUNING);
       return false;
-    }*/
+    }
     auto terminal_node = check_terminal_node(current_state, turn, node);
     if (terminal_node.has_value()) {
       return true;
@@ -445,10 +445,10 @@ class MiniMax {
     node->set_value(value);
     node->set_is_final(is_final);
     //if (node->is_final()) {
-      zobrist[node_zobrist] = node;
+    // zobrist[node_zobrist] = node;
     //}
-    /*if (reason == SolutionTree<M>::Reason::ZOBRIST) {
-      for (const auto& [pos, child] : node->get_parent()->children) {
+    if (reason == SolutionTree<M>::Reason::ZOBRIST) {
+      for (auto& [pos, child] : node->get_parent()->children) {
         if (child == node) {
           child = zobrist[node_zobrist];
         }
@@ -457,7 +457,7 @@ class MiniMax {
       zobrist[node_zobrist]->zobrist_next = node;
     } else {
       zobrist[node_zobrist] = node;
-    }*/
+    }
     if (node->has_parent()) {
       for (auto sibling = zobrist[node_zobrist]; sibling != nullptr; sibling = sibling->zobrist_next) {
         update_parent_node(node, sibling->get_parent(), node_zobrist, value, reason, turn, is_final);

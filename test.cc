@@ -690,16 +690,20 @@ TEST(MiniMaxTest, CheckMaxCreated) {
   EXPECT_EQ(100, solution.real_count());
 }
 
-template<int M>
-bool validate_all_parents(const typename SolutionTree<M>::Node *node) {
-  for (const auto& child_pair : node->children) {
+template<int M, typename MM>
+bool validate_all_parents(const typename SolutionTree<M>::Node *parent, MM& minimax) {
+  for (const auto& child_pair : parent->children) {
     const auto child_node = child_pair.second;
-    if (child_node->get_parent() != node) {
+    if (child_node->get_parent() == parent) {
+      continue;
+    } else if (child_node->get_parent() == minimax.zobrist[child_node->get_zobrist()]->get_parent()) {
+      continue;
+    } else {
       return false;
     }
   }
-  return all_of(begin(node->children), end(node->children), [](const auto& child_pair) {
-    return validate_all_parents<M>(child_pair.second);
+  return all_of(begin(parent->children), end(parent->children), [&](const auto& child_pair) {
+    return validate_all_parents<M>(child_pair.second, minimax);
   });
 }
 
@@ -709,7 +713,7 @@ TEST(SolutionTreeTest, ValidateParents) {
   auto minimax = MiniMax(state, data);
   minimax.play(state, Turn::X);
   auto root = minimax.get_solution().get_root();
-  EXPECT_TRUE(validate_all_parents<decltype(minimax)::M>(root));
+  EXPECT_TRUE(validate_all_parents<decltype(minimax)::M>(root, minimax));
 }
 
 }
