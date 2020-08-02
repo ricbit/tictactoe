@@ -19,7 +19,7 @@ struct DebugConfig {
 };
 
 int main(int argc, char **argv) {
-  constexpr int N = 4;
+  constexpr int N = 3;
   constexpr int D = 2;
   BoardData<N, D> data;
   State state(data);

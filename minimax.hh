@@ -340,7 +340,7 @@ class MiniMax {
     constexpr int slice = 1;
     vector<BoardNode<N, D, M>> nodes;
     nodes.reserve(slice);
-    while (!traversal.empty() && nodes_visited < config.max_visited && nodes_created < config.max_created) {
+    while (!traversal.empty() && nodes_visited < config.max_visited && nodes_created < config.max_created) {      
       nodes.clear();
       for (int i = 0; i < slice && !traversal.empty(); i++) {
         nodes.emplace_back(traversal.pop_best());
@@ -356,10 +356,10 @@ class MiniMax {
   bool process_node(const BoardNode<N, D, M>& board_node) {
     auto& [current_state, turn, node] = board_node;
     report_progress(board_node);
-    if (node->some_parent_final()) {
+    /*if (node->some_parent_final()) {
       node->set_reason(SolutionTree<M>::Reason::PRUNING);
       return false;
-    }
+    }*/
     auto terminal_node = check_terminal_node(current_state, turn, node);
     if (terminal_node.has_value()) {
       return true;
@@ -444,33 +444,43 @@ class MiniMax {
     node->set_reason(reason);
     node->set_value(value);
     node->set_is_final(is_final);
-    if (node->is_final()) {
+    //if (node->is_final()) {
       zobrist[node_zobrist] = node;
-    }
+    //}
     /*if (reason == SolutionTree<M>::Reason::ZOBRIST) {
-      for (const auto& [pos, child] : node->get_parent->children) {
+      for (const auto& [pos, child] : node->get_parent()->children) {
         if (child == node) {
-
+          child = zobrist[node_zobrist];
         }
       }
+      node->zobrist_next = zobrist[node_zobrist]->zobrist_next;
+      zobrist[node_zobrist]->zobrist_next = node;
     } else {
-      zobrist[node_zobrist] = value;
+      zobrist[node_zobrist] = node;
     }*/
     if (node->has_parent()) {
-      auto parent_turn = flip(turn);
-      auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, node->get_parent(), parent_turn);
-      bool old_is_final = node->get_parent()->is_final();
-      bool should_update = new_parent_value.has_value() || parent_is_final != old_is_final;
-      if (should_update) {
-        bool is_early = new_parent_value.has_value() && parent_is_final && !old_is_final;
-        auto parent_reason = is_early ?
-            SolutionTree<M>::Reason::MINIMAX_EARLY : SolutionTree<M>::Reason::MINIMAX_COMPLETE;
-        auto updated_parent_value = new_parent_value.value_or(node->get_parent()->get_value());
-        unsafe_save_node(node->get_parent(), node->get_parent()->get_zobrist(),
-            updated_parent_value, parent_reason, flip(turn), parent_is_final);
+      for (auto sibling = zobrist[node_zobrist]; sibling != nullptr; sibling = sibling->zobrist_next) {
+        update_parent_node(node, sibling->get_parent(), node_zobrist, value, reason, turn, is_final);
       }
     }
     return value;
+  }
+
+  void update_parent_node(
+      SolutionTree<M>::Node *node, SolutionTree<M>::Node *parent, Zobrist node_zobrist,
+      BoardValue value, SolutionTree<M>::Reason reason, Turn turn, bool is_final = true) {
+    auto parent_turn = flip(turn);
+    auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, parent, parent_turn);
+    bool old_is_final = parent->is_final();
+    bool should_update = new_parent_value.has_value() || parent_is_final != old_is_final;
+    if (should_update) {
+      bool is_early = new_parent_value.has_value() && parent_is_final && !old_is_final;
+      auto parent_reason = is_early ?
+          SolutionTree<M>::Reason::MINIMAX_EARLY : SolutionTree<M>::Reason::MINIMAX_COMPLETE;
+      auto updated_parent_value = new_parent_value.value_or(parent->get_value());
+      unsafe_save_node(parent, parent->get_zobrist(),
+          updated_parent_value, parent_reason, flip(turn), parent_is_final);
+    }
   }
 
   BoardValue winner(Mark mark) {

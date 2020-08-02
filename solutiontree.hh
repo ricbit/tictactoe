@@ -66,6 +66,8 @@ class SolutionTree {
 
   struct RunTime {
     float work;
+    explicit RunTime(float work) : work(work) {
+    }
   };
 
   struct Node {
@@ -77,7 +79,7 @@ class SolutionTree {
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
-      zobrist_next = this;
+      zobrist_next = nullptr;
     }
     struct {
       uint8_t value : 2;
@@ -86,7 +88,8 @@ class SolutionTree {
       uint8_t is_root : 1;
       unsigned parent : bit_width(static_cast<unsigned>(M));
     } packed_values;
-    variant<RunTime, NodeCount> workspace = RunTime{.work = 0.0f};
+    RunTime workspace{0.0f};
+    NodeCount count = 0_nc;
     Children children;
     variant<Zobrist, Node*> zobrist;
     Node *zobrist_next;
@@ -263,6 +266,7 @@ class SolutionTree {
 
   template<int N, int D>
   void dump(const BoardData<N, D>& data, string filename) const {
+    cout << "dump" << endl;
     ofstream ofs(filename);
     ofs << N << " " << D << "\n";
     dump_node(ofs, root);
@@ -301,9 +305,9 @@ class SolutionTree {
 
   NodeCount update_count(Node *node) {
     if (node->children.empty()) {
-      return get<NodeCount>(node->workspace) = 1_nc;
+      return node->count = 1_nc;
     } else {
-      return get<NodeCount>(node->workspace) = accumulate(begin(node->children), end(node->children), 1_nc,
+      return node->count = accumulate(begin(node->children), end(node->children), 1_nc,
           [&](auto acc, const auto& child) {
         return NodeCount{acc + update_count(child.second)};
       });
@@ -319,6 +323,7 @@ class SolutionTree {
 
   bool validate(Node *node, Mark mark) const {
     if (!node->is_final()) {
+      cout << "Node is not final\n";
       return false;
     }
     if (node->children.empty()) {
@@ -332,17 +337,21 @@ class SolutionTree {
     }
     if (mark == Mark::X) {
       if (node->min_child() != node->get_value()) {
+        cout << "X is not min\n";
         return false;
       }
       if (node->get_value() == BoardValue::X_WIN && node->children.size() != 1) {
+        cout << "X_win is not unique\n";
         return false;
       }
     } else if (mark == Mark::O) {
       if (node->max_child() != node->get_value()) {
+        cout << "O is not max\n";
         return false;
       }
       if ((node->get_value() == BoardValue::O_WIN || node->get_value() == BoardValue::DRAW)
           && node->children.size() != 1) {
+        cout << node->get_value() << " is not unique\n";
         return false;
       }
     }
@@ -383,7 +392,7 @@ class SolutionTree {
     ofs << static_cast<int>(node->is_final()) << " ";
     ofs << static_cast<int>(node->proof) << " ";
     ofs << static_cast<int>(node->disproof) << " ";
-    ofs << get<NodeCount>(node->workspace) << " " << node->children.size() << " ";
+    ofs << node->count << " " << node->children.size() << " ";
     ofs << static_cast<int>(node->get_reason()) << " : ";
     for (const auto& [pos, p] : node->children) {
       ofs << pos << "  ";
