@@ -99,7 +99,7 @@ class SolutionTree {
     const Zobrist get_zobrist() const {
       struct Visitor {
         Zobrist operator()(const Zobrist& z) {
-          return z; 
+          return z;
         }
         Zobrist operator()(const Node *p) {
           return get<Zobrist>(p->zobrist);

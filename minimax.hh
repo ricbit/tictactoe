@@ -55,13 +55,6 @@ constexpr Outcome known_outcome<4, 3>() {
   return Outcome::X_WINS;
 }
 
-class IdentityHash {
- public:
-  size_t operator()(const Zobrist& zobrist) const noexcept {
-    return zobrist;
-  }
-};
-
 class DummyCout {
  public:
   template<typename T>
@@ -318,7 +311,7 @@ class MiniMax {
   Traversal traversal;
   mutex next_m;
   mutex node_m;
-  unordered_map<Zobrist, BoardValue, IdentityHash> zobrist;
+  unordered_map<Zobrist, typename SolutionTree<M>::Node*> zobrist;
   int nodes_visited = 0;
   int nodes_created = 1;
   constexpr static Config config = Config();
@@ -398,7 +391,7 @@ class MiniMax {
       return save_node(node, zob, winner(turn), SolutionTree<M>::Reason::WIN, turn);
     }
     if (auto has_zobrist = zobrist.find(zob); has_zobrist != zobrist.end()) {
-      return save_node(node, zob, has_zobrist->second, SolutionTree<M>::Reason::ZOBRIST, turn);
+      return save_node(node, zob, has_zobrist->second->get_value(), SolutionTree<M>::Reason::ZOBRIST, turn);
     }
     auto open_positions = current_state.get_open_positions(to_mark(turn));
     if (open_positions.none()) {
@@ -452,12 +445,16 @@ class MiniMax {
     node->set_value(value);
     node->set_is_final(is_final);
     if (node->is_final()) {
-      zobrist[node_zobrist] = value;
+      zobrist[node_zobrist] = node;
     }
-    /*if (reason != SolutionTree<M>::Reason::ZOBRIST) {
-      zobrist[node_zobrist] = value;
+    /*if (reason == SolutionTree<M>::Reason::ZOBRIST) {
+      for (const auto& [pos, child] : node->get_parent->children) {
+        if (child == node) {
+
+        }
+      }
     } else {
-      node->zobrist = zobrist[node_zobrist];
+      zobrist[node_zobrist] = value;
     }*/
     if (node->has_parent()) {
       auto parent_turn = flip(turn);
