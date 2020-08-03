@@ -91,7 +91,7 @@ class SolutionTree {
     RunTime workspace{0.0f};
     NodeCount count = 0_nc;
     Children children;
-    variant<Zobrist, Node*> zobrist;
+    Zobrist zobrist;
     Node *zobrist_next;
     ProofNumber proof = 1_pn;
     ProofNumber disproof = 1_pn;
@@ -100,15 +100,10 @@ class SolutionTree {
       return children.rbegin()->second;
     }
     const Zobrist get_zobrist() const {
-      struct Visitor {
-        Zobrist operator()(const Zobrist& z) {
-          return z;
-        }
-        Zobrist operator()(const Node *p) {
-          return get<Zobrist>(p->zobrist);
-        }
-      };
-      return visit(Visitor(), zobrist);
+      return zobrist;
+    }
+    void set_zobrist(Zobrist zob) {
+      zobrist = zob;;
     }
     const Node *get_parent() const {
       const Node *next = this;

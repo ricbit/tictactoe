@@ -694,11 +694,7 @@ template<int M, typename MM>
 bool validate_all_parents(const typename SolutionTree<M>::Node *parent, MM& minimax) {
   for (const auto& child_pair : parent->children) {
     const auto child_node = child_pair.second;
-    if (child_node->get_parent() == parent) {
-      continue;
-    } else if (child_node->get_parent() == minimax.zobrist[child_node->get_zobrist()]->get_parent()) {
-      continue;
-    } else {
+    if (child_node->get_parent() != parent && child_node != minimax.zobrist[child_node->get_zobrist()]) {
       return false;
     }
   }
