@@ -10,6 +10,12 @@ def read_boardvalues():
 def encode_result(result):
   return boardvalues[result].title()
 
+def pn(proof):
+  if proof == 1000000:
+    return "&infin;"
+  else:
+    return str(proof)
+
 def print_table(n, d, board, node, x_set, o_set, current, encode, depth):
     s = []
     s.append('<table class="border board">')
@@ -24,11 +30,11 @@ def print_table(n, d, board, node, x_set, o_set, current, encode, depth):
         elif pos in o_set:
           s.append("O")
         elif pos in children:
-          s.append('<a href="%s">%d</a><br>%s<br>%d&nbsp;-&nbsp;%d' %
+          s.append('<a href="%s">%d</a><br>%s<br>%s&nbsp;-&nbsp;%s' %
               ("/game/%s%d#%d" % (current, pos, depth + 1),
                node.children[pos].count,
                encode_result(node.children[pos].result),
-               node.children[pos].proof, node.children[pos].disproof))
+               pn(node.children[pos].proof), pn(node.children[pos].disproof)))
         else:
           s.append("&nbsp;")
         s.append("</td>")
@@ -46,9 +52,9 @@ def print_board(n, d, board, current, node, depth):
   x_set = set(p for i, p in enumerate(board) if i % 2 == 0)
   o_set = set(p for i, p in enumerate(board) if i % 2 == 1)
   s = [('<a name="%s"><p>Result: %s, current player: %s, reason: %s, is_final: %s' +
-       '<br>proof: %d disproof:%d</p></a>') % (
+       '<br>proof: %s disproof:%s</p></a>') % (
       depth, encode_result(node.result), current_player(depth), reasonmap[node.reason],
-      node.final, node.proof, node.disproof)]
+      node.final, pn(node.proof), pn(node.disproof))]
   if d == 2:
     s.extend(print_table(n, d, board, node, x_set, o_set,
       current, lambda i, j: j * n + i, depth))
