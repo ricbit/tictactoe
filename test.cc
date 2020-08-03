@@ -486,13 +486,14 @@ struct TestingNodes {
 template<int M>
 TestingNodes<M> build_tree(TestingTree tree) {
   TestingNodes<M> nodes;
+  Turn dont_care = Turn::X;
   nodes.nodes.reserve(1 + tree.children.size());
-  typename SolutionTree<M>::Node *parent = &nodes.nodes.emplace_back(nullptr, tree.children.size());
+  typename SolutionTree<M>::Node *parent = &nodes.nodes.emplace_back(nullptr, dont_care, tree.children.size());
   parent->set_value(tree.value);
   parent->set_is_final(tree.is_final);
   for_each(begin(tree.children), end(tree.children), [&](const auto& child_values) {
     const auto& [value, is_final] = child_values;
-    auto& child = nodes.nodes.emplace_back(parent, 0);
+    auto& child = nodes.nodes.emplace_back(parent, dont_care, 0);
     parent->children.emplace_back(0_pos, &*nodes.nodes.rbegin());
     child.set_value(value);
     child.set_is_final(is_final);

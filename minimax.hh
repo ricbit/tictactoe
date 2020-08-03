@@ -223,8 +223,8 @@ class PNSearch {
   }
  private:
   BoardNode<N, D, M> choose_best_pn_node() {
-    return search_or_node(root);
-    /*if (!descent.has_value()) {
+    //return search_or_node(root);
+    if (!descent.has_value()) {
       auto chosen_node = search_or_node(root);
       descent = chosen_node.node;
       return chosen_node;
@@ -236,7 +236,7 @@ class PNSearch {
       int size = (*descent)->children.size();
       descent = (*descent)->children[rand() % size].second;
       return choose(BoardNode<N, D, M>{(*descent)->rebuild_state(data), (*descent)->get_turn(), *descent});
-    }*/
+    }
   }
   void save_evolution() const {
     ofstream ofs("pnevolution.txt");

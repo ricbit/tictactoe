@@ -71,7 +71,7 @@ class SolutionTree {
   };
 
   struct Node {
-    Node(Node *parent_node, int children_size, Zobrist zobrist = Zobrist{0}) : zobrist(zobrist) {
+    Node(Node *parent_node, Turn turn, int children_size, Zobrist zobrist = Zobrist{0}) : zobrist(zobrist) {
       assert(parent_node < this);
       children.reserve(children_size);
       packed_values.parent = static_cast<unsigned>(distance(parent_node, this));
@@ -80,6 +80,8 @@ class SolutionTree {
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
       zobrist_next = nullptr;
+      disproof = turn == Turn::X ? 1_pn : ProofNumber{children_size};
+      proof = turn == Turn::X ? ProofNumber{children_size} : 1_pn;
     }
     struct {
       uint8_t value : 2;
@@ -93,8 +95,8 @@ class SolutionTree {
     Children children;
     Zobrist zobrist;
     Node *zobrist_next;
-    ProofNumber proof = 1_pn;
-    ProofNumber disproof = 1_pn;
+    ProofNumber proof;
+    ProofNumber disproof;
 
     Node *get_last_child() const {
       return children.rbegin()->second;
@@ -283,12 +285,12 @@ class SolutionTree {
   }
 
   Node *create_node(Node *parent, Turn turn, int children_size) {
-    return &nodes.emplace_back(parent, children_size);
+    return &nodes.emplace_back(parent, turn, children_size);
   }
 
   explicit SolutionTree(int board_size) {
     nodes.reserve(M);
-    nodes.emplace_back(nullptr, 0);
+    nodes.emplace_back(nullptr, Turn::X, 0);
     root = &nodes[0];
     root->set_is_root(true);
   }
