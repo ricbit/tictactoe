@@ -261,7 +261,6 @@ class SolutionTree {
 
   template<int N, int D>
   void dump(const BoardData<N, D>& data, string filename) const {
-    cout << "dump" << endl;
     ofstream ofs(filename);
     ofs << N << " " << D << "\n";
     dump_node(ofs, root);

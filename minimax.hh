@@ -265,7 +265,9 @@ class PNSearch {
       }
     }
     if (node->has_parent()) {
-      update_pn_value(node->get_parent(), flip(turn));
+      for (auto sibling = node; sibling != nullptr; sibling = sibling->zobrist_next) {
+        update_pn_value(sibling->get_parent(), flip(turn));
+      }
     }
   }
   BoardNode<N, D, M> choose(BoardNode<N, D, M> board_node) {
