@@ -282,7 +282,7 @@ class SolutionTree {
     update_count(root);
   }
 
-  Node *create_node(Node *parent, int children_size) {
+  Node *create_node(Node *parent, Turn turn, int children_size) {
     return &nodes.emplace_back(parent, children_size);
   }
 
