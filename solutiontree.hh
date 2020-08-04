@@ -103,7 +103,11 @@ class SolutionTree {
       return childrenx.emplace_back(pos, parent);
     }
     const Children get_children() const {
-      return childrenx;
+      Children copy_children;
+      for (auto& [pos, child] : childrenx) {
+        copy_children.emplace_back(pos, child);
+      }
+      return copy_children;
     }
     Node *get_last_child() const {
       return childrenx.rbegin()->second;
