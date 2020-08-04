@@ -454,11 +454,7 @@ class MiniMax {
     // zobrist[node_zobrist] = node;
     //}
     if (reason == SolutionTree<M>::Reason::ZOBRIST) {
-      for (auto& [pos, child] : node->get_parent()->children) {
-        if (child == node) {
-          child = zobrist[node_zobrist];
-        }
-      }
+      node->get_parent()->change_child_node(node, zobrist[node_zobrist]);
       node->zobrist_next = zobrist[node_zobrist]->zobrist_next;
       zobrist[node_zobrist]->zobrist_next = node;
     } else {
