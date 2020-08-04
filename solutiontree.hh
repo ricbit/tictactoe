@@ -81,6 +81,7 @@ class SolutionTree {
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
       zobrist_next = nullptr;
+      zobrist_first = nullptr;
       proof = turn == Turn::X ? 1_pn : ProofNumber{children_size};
       disproof = turn == Turn::X ? ProofNumber{children_size} : 1_pn;
     }
@@ -96,6 +97,7 @@ class SolutionTree {
     Children childrenx;
     Zobrist zobrist;
     Node *zobrist_next;
+    Node *zobrist_first;
     ProofNumber proof;
     ProofNumber disproof;
 
@@ -105,7 +107,11 @@ class SolutionTree {
     const Children get_children() const {
       Children copy_children;
       for (auto& [pos, child] : childrenx) {
-        copy_children.emplace_back(pos, child);
+        if (child->get_reason() == Reason::ZOBRIST) {
+          copy_children.emplace_back(pos, child->zobrist_first);
+        } else {
+          copy_children.emplace_back(pos, child);
+        }
       }
       return copy_children;
     }
@@ -321,10 +327,11 @@ class SolutionTree {
   Node* root;
 
   NodeCount update_count(Node *node) {
-    if (node->children.empty()) {
+    auto children = node->get_children();
+    if (children.empty()) {
       return node->count = 1_nc;
     } else {
-      return node->count = accumulate(begin(node->children), end(node->children), 1_nc,
+      return node->count = accumulate(begin(children), end(children), 1_nc,
           [&](auto acc, const auto& child) {
         return NodeCount{acc + update_count(child.second)};
       });
@@ -408,17 +415,18 @@ class SolutionTree {
   }
 
   void dump_node(ofstream& ofs, const Node* node) const {
+    auto children = node->get_children();
     ofs << static_cast<int>(node->get_value()) << " ";
     ofs << static_cast<int>(node->is_final()) << " ";
     ofs << static_cast<int>(node->proof) << " ";
     ofs << static_cast<int>(node->disproof) << " ";
-    ofs << node->count << " " << node->children.size() << " ";
+    ofs << node->count << " " << children.size() << " ";
     ofs << static_cast<int>(node->get_reason()) << " : ";
-    for (const auto& [pos, p] : node->children) {
+    for (const auto& [pos, p] : children) {
       ofs << pos << "  ";
     }
     ofs << "\n";
-    for (const auto& [pos, p] : node->children) {
+    for (const auto& [pos, p] : children) {
       dump_node(ofs, p);
     }
   }
