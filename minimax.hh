@@ -230,12 +230,13 @@ class PNSearch {
       descent = chosen_node.node;
       return chosen_node;
     } else {
-      if ((*descent)->children.empty()) {
+      if ((*descent)->get_children().empty()) {
         descent.reset();
         return pop_best();
       }
-      int size = (*descent)->children.size();
-      descent = (*descent)->children[rand() % size].second;
+      auto children = (*descent)->get_children();
+      int size = children.size();
+      descent = children[rand() % size].second;
       return choose(BoardNode<N, D, M>{(*descent)->rebuild_state(data), (*descent)->get_turn(), *descent});
     }
   }
@@ -246,7 +247,7 @@ class PNSearch {
     }
   }
   void update_pn_value(typename SolutionTree<M>::Node *node, Turn turn) {
-    auto children = node->get_children;
+    auto children = node->get_children();
     if (!children.empty()) {
       if (turn == Turn::O) {
         auto proof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
@@ -380,7 +381,7 @@ class MiniMax {
       }
       nodes_created++;
       const auto& child = child_state[i];
-      node->children.emplace_back(sorted[i].second,
+      node->emplace_child(sorted[i].second,
           solution.create_node(node, flip(turn), child.get_open_positions(to_mark(flip(turn))).count()));
       auto child_node = node->get_last_child();
       lock_guard lock(next_m);

@@ -99,6 +99,9 @@ class SolutionTree {
     ProofNumber proof;
     ProofNumber disproof;
 
+    auto& emplace_child(Position pos, Node *parent) {
+      return childrenx.emplace_back(pos, parent);
+    }
     const Children get_children() const {
       return childrenx;
     }
@@ -106,7 +109,7 @@ class SolutionTree {
       return childrenx.rbegin()->second;
     }
     void change_child_node(Node *old_child, Node *new_child) {
-      for (auto& [pos, child] : children) {
+      for (auto& [pos, child] : childrenx) {
         if (child == old_child) {
           child = new_child;
           return;
@@ -172,7 +175,7 @@ class SolutionTree {
       return false;
     }
     Position get_position() const {
-      for (const auto& [pos, child] : get_parent()->children) {
+      for (const auto& [pos, child] : get_parent()->get_children()) {
         if (child == this) {
           return pos;
         }
@@ -224,9 +227,10 @@ class SolutionTree {
       return highest_value;
     }
     bool has_final_children(BoardValue value) const {
-      return find_if(begin(childrenx), end(childrenx), [&](const auto& child) {
+      auto children = get_children();
+      return find_if(begin(children), end(children), [&](const auto& child) {
         return child.second->is_final() && child.second->get_value() == value;
-      }) != end(childrenx);
+      }) != end(children);
     }
     optional<BoardValue> max_child() const {
       return extreme_child([](const auto& a, const auto&b) {
@@ -241,7 +245,7 @@ class SolutionTree {
       if (!has_parent()) {
         return child_value;
       }
-      auto& children = get_parent()->children;
+      auto children = get_parent()->get_children();
       double final_nodes = count_if(begin(children), end(children), [&](const auto& child) {
         return child.second->is_final() && child.second != this;
       });
@@ -252,7 +256,8 @@ class SolutionTree {
     template<typename T>
     optional<BoardValue> extreme_child(T comp) const {
       optional<BoardValue> ans;
-      for (const auto& [pos, child] : childrenx) {
+      auto children = get_children();
+      for (const auto& [pos, child] : children) {
         if (child->get_value() != BoardValue::UNKNOWN) {
           if (ans.has_value()) {
             ans = comp(*ans, child->get_value()) ? *ans : child->get_value();
@@ -323,24 +328,26 @@ class SolutionTree {
   }
 
   NodeCount real_count(Node *node) const {
-    return accumulate(begin(node->children), end(node->children), 1_nc,
+    auto children = node->get_children();
+    return accumulate(begin(children), end(children), 1_nc,
         [&](auto acc, const auto& child) {
       return NodeCount{acc + real_count(child.second)};
     });
   }
 
   bool validate(Node *node, Mark mark) const {
+    auto children = node->get_children();
     if (!node->is_final()) {
       cout << "Node is not final\n";
       return false;
     }
-    if (node->children.empty()) {
+    if (children.empty()) {
       return true;
     }
     auto is_unknown = [](const auto &child) {
       return child.second->get_value() == BoardValue::UNKNOWN;
     };
-    if (any_of(begin(node->children), end(node->children), is_unknown)) {
+    if (any_of(begin(children), end(children), is_unknown)) {
       return node->get_value() == BoardValue::UNKNOWN;
     }
     if (mark == Mark::X) {
@@ -348,7 +355,7 @@ class SolutionTree {
         cout << "X is not min\n";
         return false;
       }
-      if (node->get_value() == BoardValue::X_WIN && node->children.size() != 1) {
+      if (node->get_value() == BoardValue::X_WIN && children.size() != 1) {
         cout << "X_win is not unique\n";
         return false;
       }
@@ -358,40 +365,41 @@ class SolutionTree {
         return false;
       }
       if ((node->get_value() == BoardValue::O_WIN || node->get_value() == BoardValue::DRAW)
-          && node->children.size() != 1) {
+          && children.size() != 1) {
         cout << node->get_value() << " is not unique\n";
         return false;
       }
     }
-    return all_of(begin(node->children), end(node->children), [&](const auto& child) {
+    return all_of(begin(children), end(children), [&](const auto& child) {
       return validate(child.second, flip(mark));
     });
   }
 
   void prune(Node *node, Mark mark) {
+    auto children = node->get_children();
     if (mark == Mark::X) {
-      if (node->get_value() == BoardValue::X_WIN && node->children.size() > 1) {
+      if (node->get_value() == BoardValue::X_WIN && children.size() > 1) {
         prune_children(node, BoardValue::X_WIN);
       }
     } else if (mark == Mark::O) {
       if ((node->get_value() == BoardValue::O_WIN || node->get_value() == BoardValue::DRAW)
-          && node->children.size() > 1) {
+          && children.size() > 1) {
         prune_children(node, *node->best_child_O());
       }
     }
-    for_each(begin(node->children), end(node->children), [&](const auto& child) {
+    for_each(begin(children), end(children), [&](const auto& child) {
       prune(child.second, flip(mark));
     });
   }
 
   void prune_children(Node *node, BoardValue goal) {
-    [[maybe_unused]] auto r = remove_if(begin(node->children), end(node->children), [&](const auto& child) {
+    [[maybe_unused]] auto r = remove_if(begin(node->childrenx), end(node->childrenx), [&](const auto& child) {
       return child.second->get_value() != goal || !child.second->is_final();
     });
-    auto it = begin(node->children);
-    if (it != end(node->children)) {
+    auto it = begin(node->childrenx);
+    if (it != end(node->childrenx)) {
       ++it;
-      node->children.erase(it, end(node->children));
+      node->childrenx.erase(it, end(node->childrenx));
     }
   }
 

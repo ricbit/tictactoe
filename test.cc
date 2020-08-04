@@ -494,7 +494,7 @@ TestingNodes<M> build_tree(TestingTree tree) {
   for_each(begin(tree.children), end(tree.children), [&](const auto& child_values) {
     const auto& [value, is_final] = child_values;
     auto& child = nodes.nodes.emplace_back(parent, dont_care, 0);
-    parent->children.emplace_back(0_pos, &*nodes.nodes.rbegin());
+    parent->emplace_child(0_pos, &*nodes.nodes.rbegin());
     child.set_value(value);
     child.set_is_final(is_final);
   });
@@ -670,7 +670,7 @@ TEST(MiniMaxTest, CheckOneNodeOfBFS) {
   minimax.play(state, Turn::X);
   auto& solution = minimax.get_solution();
   EXPECT_EQ(4, solution.real_count());
-  auto first_node = solution.get_root()->get_children()[0].second;
+  auto first_node = solution.get_root()->get_children().begin()->second;
   EXPECT_EQ(Turn::X, solution.get_root()->get_turn());
   EXPECT_EQ(Turn::O, first_node->get_turn());
 }
@@ -693,13 +693,14 @@ TEST(MiniMaxTest, CheckMaxCreated) {
 
 template<int M, typename MM>
 bool validate_all_parents(const typename SolutionTree<M>::Node *parent, MM& minimax) {
-  for (const auto& child_pair : parent->children) {
+  auto children = parent->get_children();
+  for (const auto& child_pair : children) {
     const auto child_node = child_pair.second;
     if (child_node->get_parent() != parent && child_node != minimax.zobrist[child_node->get_zobrist()]) {
       return false;
     }
   }
-  return all_of(begin(parent->children), end(parent->children), [&](const auto& child_pair) {
+  return all_of(begin(children), end(children), [&](const auto& child_pair) {
     return validate_all_parents<M>(child_pair.second, minimax);
   });
 }
