@@ -480,7 +480,7 @@ struct TestingTree {
 template<int M>
 struct TestingNodes {
   vector<typename SolutionTree<M>::Node> nodes;
-  SolutionTree<M>::Node *root;
+  typename SolutionTree<M>::Node *root;
 };
 
 template<int M>

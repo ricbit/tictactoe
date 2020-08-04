@@ -70,7 +70,8 @@ class SolutionTree {
     }
   };
 
-  struct Node {
+  class Node {
+   public:
     Node(Node *parent_node, Turn turn, int children_size, Zobrist zobrist = Zobrist{0}) : zobrist(zobrist) {
       assert(parent_node < this);
       children.reserve(children_size);
