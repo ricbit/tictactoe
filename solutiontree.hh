@@ -80,8 +80,8 @@ class SolutionTree {
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
       zobrist_next = nullptr;
-      disproof = turn == Turn::X ? 1_pn : ProofNumber{children_size};
-      proof = turn == Turn::X ? ProofNumber{children_size} : 1_pn;
+      proof = turn == Turn::X ? 1_pn : ProofNumber{children_size};
+      disproof = turn == Turn::X ? ProofNumber{children_size} : 1_pn;
     }
     struct {
       uint8_t value : 2;

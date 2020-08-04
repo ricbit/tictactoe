@@ -377,7 +377,7 @@ class MiniMax {
       nodes_created++;
       const auto& child = child_state[i];
       node->children.emplace_back(sorted[i].second,
-          solution.create_node(node, turn, child.get_open_positions(to_mark(flip(turn))).count()));
+          solution.create_node(node, flip(turn), child.get_open_positions(to_mark(flip(turn))).count()));
       auto child_node = node->children.rbegin()->second;
       lock_guard lock(next_m);
       traversal.push(BoardNode<N, D, M>{child, flip(turn), child_node});
