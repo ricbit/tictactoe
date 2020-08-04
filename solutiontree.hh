@@ -74,7 +74,7 @@ class SolutionTree {
    public:
     Node(Node *parent_node, Turn turn, int children_size, Zobrist zobrist = Zobrist{0}) : zobrist(zobrist) {
       assert(parent_node < this);
-      children.reserve(children_size);
+      childrenx.reserve(children_size);
       packed_values.parent = static_cast<unsigned>(distance(parent_node, this));
       packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
@@ -93,14 +93,17 @@ class SolutionTree {
     } packed_values;
     RunTime workspace{0.0f};
     NodeCount count = 0_nc;
-    Children children;
+    Children childrenx;
     Zobrist zobrist;
     Node *zobrist_next;
     ProofNumber proof;
     ProofNumber disproof;
 
+    const Children get_children() const {
+      return childrenx;
+    }
     Node *get_last_child() const {
-      return children.rbegin()->second;
+      return childrenx.rbegin()->second;
     }
     void change_child_node(Node *old_child, Node *new_child) {
       for (auto& [pos, child] : children) {
@@ -221,9 +224,9 @@ class SolutionTree {
       return highest_value;
     }
     bool has_final_children(BoardValue value) const {
-      return find_if(begin(children), end(children), [&](const auto& child) {
+      return find_if(begin(childrenx), end(childrenx), [&](const auto& child) {
         return child.second->is_final() && child.second->get_value() == value;
-      }) != end(children);
+      }) != end(childrenx);
     }
     optional<BoardValue> max_child() const {
       return extreme_child([](const auto& a, const auto&b) {
@@ -249,7 +252,7 @@ class SolutionTree {
     template<typename T>
     optional<BoardValue> extreme_child(T comp) const {
       optional<BoardValue> ans;
-      for (const auto& [pos, child] : children) {
+      for (const auto& [pos, child] : childrenx) {
         if (child->get_value() != BoardValue::UNKNOWN) {
           if (ans.has_value()) {
             ans = comp(*ans, child->get_value()) ? *ans : child->get_value();

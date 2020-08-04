@@ -670,7 +670,7 @@ TEST(MiniMaxTest, CheckOneNodeOfBFS) {
   minimax.play(state, Turn::X);
   auto& solution = minimax.get_solution();
   EXPECT_EQ(4, solution.real_count());
-  auto first_node = solution.get_root()->children[0].second;
+  auto first_node = solution.get_root()->get_children()[0].second;
   EXPECT_EQ(Turn::X, solution.get_root()->get_turn());
   EXPECT_EQ(Turn::O, first_node->get_turn());
 }

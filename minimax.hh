@@ -246,21 +246,22 @@ class PNSearch {
     }
   }
   void update_pn_value(typename SolutionTree<M>::Node *node, Turn turn) {
-    if (!node->children.empty()) {
+    auto children = node->get_children;
+    if (!children.empty()) {
       if (turn == Turn::O) {
-        auto proof = accumulate(begin(node->children), end(node->children), 0_pn, [](const auto& a, const auto& b) {
+        auto proof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
           return ProofNumber{a + b.second->proof};
         });
         node->proof = clamp(proof, 0_pn, INFTY);
-        node->disproof = min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+        node->disproof = min_element(begin(children), end(children), [](const auto &a, const auto& b) {
           return a.second->disproof < b.second->disproof;
         })->second->disproof;
       } else {
-        auto disproof = accumulate(begin(node->children), end(node->children), 0_pn, [](const auto& a, const auto& b) {
+        auto disproof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
           return ProofNumber{a + b.second->disproof};
         });
         node->disproof = clamp(disproof, 0_pn, INFTY);
-        node->proof = min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+        node->proof = min_element(begin(children), end(children), [](const auto &a, const auto& b) {
           return a.second->proof < b.second->proof;
         })->second->proof;
       }
@@ -275,18 +276,20 @@ class PNSearch {
     return board_node;
   }
   BoardNode<N, D, M> search_or_node(typename SolutionTree<M>::Node *node) {
-    if (node->children.empty()) {
+    auto children = node->get_children();
+    if (children.empty()) {
       return choose(BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node});
     }
-    return search_and_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+    return search_and_node(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
       return a.second->proof < b.second->proof;
     })->second);
   }
   BoardNode<N, D, M> search_and_node(typename SolutionTree<M>::Node *node) {
-    if (node->children.empty()) {
+    auto children = node->get_children();
+    if (children.empty()) {
       return choose(BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node});
     }
-    return search_or_node(min_element(begin(node->children), end(node->children), [](const auto &a, const auto& b) {
+    return search_or_node(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
       return a.second->disproof < b.second->disproof;
     })->second);
   }
@@ -379,7 +382,7 @@ class MiniMax {
       const auto& child = child_state[i];
       node->children.emplace_back(sorted[i].second,
           solution.create_node(node, flip(turn), child.get_open_positions(to_mark(flip(turn))).count()));
-      auto child_node = node->children.rbegin()->second;
+      auto child_node = node->get_last_child();
       lock_guard lock(next_m);
       traversal.push(BoardNode<N, D, M>{child, flip(turn), child_node});
     }
@@ -513,9 +516,10 @@ class MiniMax {
       const typename SolutionTree<M>::Node *parent,
       Turn parent_turn) {
     assert(child_value != BoardValue::UNKNOWN);
+    auto children = parent->get_children();
     auto new_value = parent_turn == Turn::X ? parent->best_child_X() : parent->best_child_O();
-    bool final_candidate = is_final_candidate(parent->children, new_value);
-    bool all_children_final = all_of(begin(parent->children), end(parent->children), [&](const auto& child) {
+    bool final_candidate = is_final_candidate(children, new_value);
+    bool all_children_final = all_of(begin(children), end(children), [&](const auto& child) {
       return child.second->is_final();
     });
     bool parent_is_final = all_children_final ||
