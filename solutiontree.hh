@@ -118,14 +118,6 @@ class SolutionTree {
     Node *get_last_child() const {
       return childrenx.rbegin()->second;
     }
-    void change_child_node(Node *old_child, Node *new_child) {
-      for (auto& [pos, child] : childrenx) {
-        if (child == old_child) {
-          child = new_child;
-          return;
-        }
-      }
-    }
     const Zobrist get_zobrist() const {
       return zobrist;
     }
