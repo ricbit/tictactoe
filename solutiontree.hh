@@ -18,7 +18,7 @@ class SolutionTree {
   class Children {
     vector<pair<Position, Node*>> children;
    public:
-    auto& emplace_back(Position pos, Node *parent) {
+    auto emplace_back(Position pos, Node *parent) {
       return children.emplace_back(pos, parent);
     }
     void reserve(int size) {
@@ -98,7 +98,7 @@ class SolutionTree {
     ProofNumber proof;
     ProofNumber disproof;
 
-    auto& emplace_child(Position pos, Node *parent) {
+    auto emplace_child(Position pos, Node *parent) {
       return childrenx.emplace_back(pos, parent);
     }
     const vector<pair<Position, Node*>> get_children() const {
