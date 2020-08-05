@@ -19,14 +19,14 @@ class SolutionTree {
     //vector<pair<Position, Node*>> children;
    public:
     Node *first = nullptr;
-    vector<Position> position;
+    vector<uint8_t> position;
     bitset<125> used;
     auto emplace_back(Position pos, Node *child) {
       if (position.empty()) {
         first = child;
       }
       used.set(position.size());
-      position.push_back(pos);
+      position.push_back(static_cast<uint8_t>(pos));
       return pair<Position, Node*>{pos, child};
     }
     void reserve(int size) {
@@ -84,7 +84,7 @@ class SolutionTree {
       vector<pair<Position, Node*>> copy_children;
       for (int i = 0; i < static_cast<int>(childrenx.used.size()); i++) {
         if (childrenx.used[i]) {
-          Position pos = childrenx.position[i];
+          Position pos = Position{childrenx.position[i]};
           Node *child = childrenx.first + i;
           if (child->get_reason() == Reason::ZOBRIST) {
             copy_children.emplace_back(pos, child->zobrist_first);

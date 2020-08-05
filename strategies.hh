@@ -99,9 +99,6 @@ class ChainingStrategy {
 
   optional<Position> search_current(const State<N, D>& current, Mark mark) {
     visited++;
-    if (visited > 10'000'000) {
-      return {};
-    }
     Print()(current);
     for (Line line : current.get_line_marks(MarkCount{N - 1}, mark)) {
       return current.get_xor_table(line);
