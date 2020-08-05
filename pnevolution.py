@@ -2,7 +2,7 @@ import matplotlib.pyplot as plot
 import pandas as pd
 
 pn = [x.split() for x in open("pnevolution.txt", "rt").readlines()]
-fig, (ax1, ax2) = plot.subplots(2)
+fig, (ax1, ax2, ax3) = plot.subplots(3)
 proof = [int(x[0]) for x in pn]
 disproof = [int(x[1]) for x in pn]
 pproof = pd.DataFrame(proof)
@@ -21,4 +21,8 @@ ax2.plot(upper_bound, label="upper bound")
 ax2.plot(lower_bound, label="lower bound")
 ax2.set(xlabel="Nodes visited", ylabel="Depth")
 ax2.legend()
+size = len(pn)
+zobrist = [float(x[3])/size*100 for x in pn]
+ax3.plot(zobrist)
+ax3.set(xlabel="Nodes visited", ylabel="Zobrist nodes (%)")
 plot.show()

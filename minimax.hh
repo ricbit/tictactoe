@@ -183,7 +183,8 @@ class RandomTraversal {
 template<int N, int D, int M>
 class PNSearch {
   optional<typename SolutionTree<M>::Node*> descent;
-  bag<tuple<ProofNumber, ProofNumber, int>> pn_evolution;
+  bag<tuple<ProofNumber, ProofNumber, int, int>> pn_evolution;
+  int running_zobrist = 0;
  public:
   explicit PNSearch(const BoardData<N, D>& data, typename SolutionTree<M>::Node *root) : data(data), root(root) {
   }
@@ -194,7 +195,6 @@ class PNSearch {
   }
   BoardNode<N, D, M> pop_best() {
     auto board_node = choose_best_pn_node();
-    pn_evolution.push_back({root->proof, root->disproof, board_node.node->get_depth()});
     return board_node;
   }
   bool empty() const {
@@ -205,6 +205,10 @@ class PNSearch {
     return is_final;
   }
   void retire(const BoardNode<N, D, M>& board_node, bool is_terminal) {
+    if (board_node.node->get_reason() == SolutionTree<M>::Reason::ZOBRIST) {
+      running_zobrist++;
+    }
+    pn_evolution.push_back({root->proof, root->disproof, board_node.node->get_depth(), running_zobrist});
     auto& node = board_node.node;
     if (is_terminal) {
       if (node->get_value() == BoardValue::X_WIN) {
@@ -243,7 +247,8 @@ class PNSearch {
   void save_evolution() const {
     ofstream ofs("pnevolution.txt");
     for (const auto& pn : pn_evolution) {
-      ofs << get<0>(pn) << " " << get<1>(pn) << " " << get<2>(pn) << "\n";
+      ofs << get<0>(pn) << " " << get<1>(pn) << " " << get<2>(pn) << " "
+          << get<3>(pn) << "\n";
     }
   }
   void update_pn_value(typename SolutionTree<M>::Node *node, Turn turn) {
