@@ -21,9 +21,6 @@ class SolutionTree {
     auto& emplace_back(Position pos, Node *parent) {
       return children.emplace_back(pos, parent);
     }
-    auto& operator[](int index) {
-      return children[index];
-    }
     void reserve(int size) {
       children.reserve(size);
     }
@@ -104,8 +101,8 @@ class SolutionTree {
     auto& emplace_child(Position pos, Node *parent) {
       return childrenx.emplace_back(pos, parent);
     }
-    const Children get_children() const {
-      Children copy_children;
+    const vector<pair<Position, Node*>> get_children() const {
+      vector<pair<Position, Node*>> copy_children;
       for (auto& [pos, child] : childrenx) {
         if (child->get_reason() == Reason::ZOBRIST) {
           copy_children.emplace_back(pos, child->zobrist_first);
