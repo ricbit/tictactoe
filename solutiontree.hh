@@ -48,10 +48,10 @@ class SolutionTree {
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
+      packed_values.proof = static_cast<unsigned>(turn == Turn::X ? 1_pn : ProofNumber{children_size});
+      packed_values.disproof = static_cast<unsigned>(turn == Turn::X ? ProofNumber{children_size} : 1_pn);
       zobrist_next = nullptr;
       zobrist_first = this;
-      proof = turn == Turn::X ? 1_pn : ProofNumber{children_size};
-      disproof = turn == Turn::X ? ProofNumber{children_size} : 1_pn;
     }
     struct {
       uint8_t value : 2;
@@ -59,14 +59,14 @@ class SolutionTree {
       uint8_t is_final : 1;
       uint8_t is_root : 1;
       unsigned parent : bit_width(static_cast<unsigned>(M));
+      unsigned proof : 16;
+      unsigned disproof : 16;
     } packed_values;
     float work = 0.0f;
     NodeCount count = 0_nc;
     Children childrenx;
     Node *zobrist_next;
     Node *zobrist_first;
-    ProofNumber proof;
-    ProofNumber disproof;
 
     auto emplace_child(Position pos, Node *parent) {
       return childrenx.emplace_back(pos, parent);
@@ -95,6 +95,18 @@ class SolutionTree {
       const Node *next = this;
       advance(next, -static_cast<signed>(packed_values.parent));
       return next;
+    }
+    ProofNumber get_disproof() const {
+      return static_cast<ProofNumber>(packed_values.disproof);
+    }
+    void set_disproof(ProofNumber disproof) {
+      packed_values.disproof = static_cast<unsigned>(disproof);
+    }
+    ProofNumber get_proof() const {
+      return static_cast<ProofNumber>(packed_values.proof);
+    }
+    void set_proof(ProofNumber proof) {
+      packed_values.proof = static_cast<unsigned>(proof);
     }
     Node *get_parent() {
       Node *next = this;
@@ -375,8 +387,8 @@ class SolutionTree {
     auto children = node->get_children();
     ofs << static_cast<int>(node->get_value()) << " ";
     ofs << static_cast<int>(node->is_final()) << " ";
-    ofs << static_cast<int>(node->proof) << " ";
-    ofs << static_cast<int>(node->disproof) << " ";
+    ofs << static_cast<int>(node->get_proof()) << " ";
+    ofs << static_cast<int>(node->get_disproof()) << " ";
     ofs << node->count << " " << children.size() << " ";
     ofs << static_cast<int>(node->get_reason()) << " : ";
     for (const auto& [pos, p] : children) {

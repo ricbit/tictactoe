@@ -200,7 +200,7 @@ class PNSearch {
   bool empty() const {
     bool is_final = root->is_final();
     if (is_final) {
-      assert(root->proof == 0 || root->disproof == 0);
+      assert(root->get_proof() == 0_pn || root->get_disproof() == 0_pn);
     }
     return is_final;
   }
@@ -208,15 +208,15 @@ class PNSearch {
     if (board_node.node->get_reason() == SolutionTree<M>::Reason::ZOBRIST) {
       running_zobrist++;
     }
-    pn_evolution.push_back({root->proof, root->disproof, board_node.node->get_depth(), running_zobrist});
+    pn_evolution.push_back({root->get_proof(), root->get_disproof(), board_node.node->get_depth(), running_zobrist});
     auto& node = board_node.node;
     if (is_terminal) {
       if (node->get_value() == BoardValue::X_WIN) {
-        node->proof = 0_pn;
-        node->disproof = INFTY;
+        node->set_proof(0_pn);
+        node->set_disproof(INFTY);
       } else if (node->get_value() == BoardValue::O_WIN || node->get_value() == BoardValue::DRAW) {
-        node->disproof = 0_pn;
-        node->proof = INFTY;
+        node->set_disproof(0_pn);
+        node->set_proof(INFTY);
       } else {
         assert(false);
       }
@@ -264,20 +264,20 @@ class PNSearch {
     if (!children.empty()) {
       if (turn == Turn::O) {
         auto proof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
-          return ProofNumber{a + b.second->proof};
+          return ProofNumber{a + b.second->get_proof()};
         });
-        node->proof = clamp(proof, 0_pn, INFTY);
-        node->disproof = min_element(begin(children), end(children), [](const auto &a, const auto& b) {
-          return a.second->disproof < b.second->disproof;
-        })->second->disproof;
+        node->set_proof(clamp(proof, 0_pn, INFTY));
+        node->set_disproof(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
+          return a.second->get_disproof() < b.second->get_disproof();
+        })->second->get_disproof());
       } else {
         auto disproof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
-          return ProofNumber{a + b.second->disproof};
+          return ProofNumber{a + b.second->get_disproof()};
         });
-        node->disproof = clamp(disproof, 0_pn, INFTY);
-        node->proof = min_element(begin(children), end(children), [](const auto &a, const auto& b) {
-          return a.second->proof < b.second->proof;
-        })->second->proof;
+        node->set_disproof(clamp(disproof, 0_pn, INFTY));
+        node->set_proof(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
+          return a.second->get_proof() < b.second->get_proof();
+        })->second->get_proof());
       }
     }
     if (node->has_parent()) {
@@ -295,7 +295,7 @@ class PNSearch {
       return choose(BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node});
     }
     return search_and_node(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
-      return a.second->proof < b.second->proof;
+      return a.second->get_proof() < b.second->get_proof();
     })->second);
   }
   BoardNode<N, D, M> search_and_node(typename SolutionTree<M>::Node *node) {
@@ -304,7 +304,7 @@ class PNSearch {
       return choose(BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node});
     }
     return search_or_node(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
-      return a.second->disproof < b.second->disproof;
+      return a.second->get_disproof() < b.second->get_disproof();
     })->second);
   }
   const BoardData<N, D>& data;
