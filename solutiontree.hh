@@ -40,7 +40,7 @@ class SolutionTree {
 
   class Node {
    public:
-    Node(Node *parent_node, Turn turn, int children_size, Zobrist zobrist = Zobrist{0}) : zobrist(zobrist) {
+    Node(Node *parent_node, Turn turn, int children_size) {
       assert(parent_node < this);
       childrenx.position.reserve(children_size);
       packed_values.parent = static_cast<unsigned>(distance(parent_node, this));
@@ -49,7 +49,7 @@ class SolutionTree {
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
       zobrist_next = nullptr;
-      zobrist_first = nullptr;
+      zobrist_first = this;
       proof = turn == Turn::X ? 1_pn : ProofNumber{children_size};
       disproof = turn == Turn::X ? ProofNumber{children_size} : 1_pn;
     }
@@ -63,7 +63,6 @@ class SolutionTree {
     float work = 0.0f;
     NodeCount count = 0_nc;
     Children childrenx;
-    Zobrist zobrist;
     Node *zobrist_next;
     Node *zobrist_first;
     ProofNumber proof;
@@ -91,12 +90,6 @@ class SolutionTree {
     Node *get_last_child() const {
       int last = childrenx.position.size() - 1;
       return childrenx.first + last;
-    }
-    const Zobrist get_zobrist() const {
-      return zobrist;
-    }
-    void set_zobrist(Zobrist zob) {
-      zobrist = zob;;
     }
     const Node *get_parent() const {
       const Node *next = this;

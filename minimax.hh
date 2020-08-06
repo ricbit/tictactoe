@@ -281,7 +281,7 @@ class PNSearch {
       }
     }
     if (node->has_parent()) {
-      for (auto sibling = node; sibling != nullptr; sibling = sibling->zobrist_next) {
+      for (auto sibling = node->zobrist_first; sibling != nullptr; sibling = sibling->zobrist_next) {
         update_pn_value(sibling->get_parent(), flip(turn));
       }
     }
@@ -455,28 +455,29 @@ class MiniMax {
     return {sorted, child_state};
   }
 
-  BoardValue save_node(typename SolutionTree<M>::Node *node, Zobrist node_zobrist,
+  BoardValue save_node(typename SolutionTree<M>::Node *node, optional<Zobrist> node_zobrist,
       BoardValue value, typename SolutionTree<M>::Reason reason, Turn turn, bool is_final = true) {
     const lock_guard lock(node_m);
     return unsafe_save_node(node, node_zobrist, value, reason, turn, is_final);
   }
 
-  BoardValue unsafe_save_node(typename SolutionTree<M>::Node *node, Zobrist node_zobrist,
+  BoardValue unsafe_save_node(typename SolutionTree<M>::Node *node, optional<Zobrist> node_zobrist,
       BoardValue value, typename SolutionTree<M>::Reason reason, Turn turn, bool is_final = true) {
     node->set_reason(reason);
     node->set_value(value);
     node->set_is_final(is_final);
-    node->set_zobrist(node_zobrist);
-    if (reason == SolutionTree<M>::Reason::ZOBRIST) {
-      node->zobrist_next = zobrist[node_zobrist]->zobrist_next;
-      node->zobrist_first = zobrist[node_zobrist];
-      zobrist[node_zobrist]->zobrist_next = node;
-    } else {
-      zobrist[node_zobrist] = node;
+    if (node_zobrist.has_value()) {
+      if (reason == SolutionTree<M>::Reason::ZOBRIST) {
+        node->zobrist_next = zobrist[*node_zobrist]->zobrist_next;
+        node->zobrist_first = zobrist[*node_zobrist];
+        zobrist[*node_zobrist]->zobrist_next = node;
+      } else {
+        zobrist[*node_zobrist] = node;
+      }
     }
     if (node->has_parent()) {
-      for (auto sibling = zobrist[node_zobrist]; sibling != nullptr; sibling = sibling->zobrist_next) {
-        update_parent_node(node, sibling->get_parent(), node_zobrist, value, reason, turn, is_final);
+      for (auto sibling = node->zobrist_first; sibling != nullptr; sibling = sibling->zobrist_next) {
+        update_parent_node(node, sibling->get_parent(), {}, value, reason, turn, is_final);
       }
     }
     return value;
@@ -494,7 +495,7 @@ class MiniMax {
       auto parent_reason = is_early ?
           SolutionTree<M>::Reason::MINIMAX_EARLY : SolutionTree<M>::Reason::MINIMAX_COMPLETE;
       auto updated_parent_value = new_parent_value.value_or(parent->get_value());
-      unsafe_save_node(parent, parent->get_zobrist(),
+      unsafe_save_node(parent, {},
           updated_parent_value, parent_reason, flip(turn), parent_is_final);
     }
   }

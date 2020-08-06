@@ -696,8 +696,11 @@ bool validate_all_parents(const typename SolutionTree<M>::Node *parent, MM& mini
   auto children = parent->get_children();
   for (const auto& child_pair : children) {
     const auto child_node = child_pair.second;
-    if (child_node->get_parent() != parent && child_node != minimax.zobrist[child_node->get_zobrist()]) {
-      return false;
+    if (child_node->get_parent() != parent) {
+      auto child_state = child_node->rebuild_state(minimax.data);
+      if (child_node != minimax.zobrist[child_state.get_zobrist()]) {
+        return false;
+      }
     }
   }
   return all_of(begin(children), end(children), [&](const auto& child_pair) {
