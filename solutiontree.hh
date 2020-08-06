@@ -42,15 +42,15 @@ class SolutionTree {
    public:
     Node(Node *parent_node, Turn turn, int children_size) {
       childrenx.position.reserve(children_size);
-      packed_values.parent = static_cast<unsigned>(distance(parent_node, this));
+      packed_values.parent = static_cast<signed>(distance(parent_node, this));
+      packed_values.zobrist_first = static_cast<signed>(0);
+      packed_values.zobrist_next = static_cast<signed>(0);
       packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
       packed_values.proof = static_cast<unsigned>(turn == Turn::X ? 1_pn : ProofNumber{children_size});
       packed_values.disproof = static_cast<unsigned>(turn == Turn::X ? ProofNumber{children_size} : 1_pn);
-      zobrist_next = nullptr;
-      zobrist_first = this;
     }
     constexpr static unsigned pointer_width = 1 + bit_width(static_cast<unsigned>(M));
     struct {
@@ -58,15 +58,15 @@ class SolutionTree {
       uint8_t reason : 4;
       uint8_t is_final : 1;
       uint8_t is_root : 1;
-      unsigned parent : pointer_width;
+      signed parent : pointer_width;
+      signed zobrist_first : pointer_width;      
+      signed zobrist_next : pointer_width;      
       unsigned proof : 16;
       unsigned disproof : 16;
     } packed_values;
     float work = 0.0f;
     NodeCount count = 0_nc;
     Children childrenx;
-    Node *zobrist_next;
-    Node *zobrist_first;
 
     auto emplace_child(Position pos, Node *parent) {
       return childrenx.emplace_back(pos, parent);
@@ -80,7 +80,7 @@ class SolutionTree {
             continue;
           }
           if (child->get_reason() == Reason::ZOBRIST) {
-            copy_children.emplace_back(pos, child->zobrist_first);
+            copy_children.emplace_back(pos, child->get_zobrist_first());
           } else {
             copy_children.emplace_back(pos, child);
           }
@@ -90,6 +90,29 @@ class SolutionTree {
     Node *get_last_child() const {
       int last = childrenx.position.size() - 1;
       return childrenx.first + last;
+    }
+    Node *get_zobrist_first() {
+      Node *next = this;
+      advance(next, -static_cast<signed>(packed_values.zobrist_first));
+      return next;      
+    }
+    Node *get_zobrist_next() {
+      if (packed_values.zobrist_next == 0) {
+        return nullptr;
+      }
+      Node *next = this;      
+      advance(next, -static_cast<signed>(packed_values.zobrist_next));
+      return next;      
+    }
+    void set_zobrist_first(Node *node) {
+      packed_values.zobrist_first = static_cast<signed>(distance(node, this));
+    }
+    void set_zobrist_next(Node *node) {
+      if (node == nullptr) {
+        packed_values.zobrist_next = 0;
+      } else {      
+        packed_values.zobrist_next = static_cast<signed>(distance(node, this));
+      }
     }
     const Node *get_parent() const {
       const Node *next = this;

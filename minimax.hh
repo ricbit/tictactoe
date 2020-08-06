@@ -281,7 +281,7 @@ class PNSearch {
       }
     }
     if (node->has_parent()) {
-      for (auto sibling = node->zobrist_first; sibling != nullptr; sibling = sibling->zobrist_next) {
+      for (auto sibling = node->get_zobrist_first(); sibling != nullptr; sibling = sibling->get_zobrist_next()) {
         update_pn_value(sibling->get_parent(), flip(turn));
       }
     }
@@ -468,15 +468,15 @@ class MiniMax {
     node->set_is_final(is_final);
     if (node_zobrist.has_value()) {
       if (reason == SolutionTree<M>::Reason::ZOBRIST) {
-        node->zobrist_next = zobrist[*node_zobrist]->zobrist_next;
-        node->zobrist_first = zobrist[*node_zobrist];
-        zobrist[*node_zobrist]->zobrist_next = node;
+        node->set_zobrist_next(zobrist[*node_zobrist]->get_zobrist_next());
+        node->set_zobrist_first(zobrist[*node_zobrist]);
+        zobrist[*node_zobrist]->set_zobrist_next(node);
       } else {
         zobrist[*node_zobrist] = node;
       }
     }
     if (node->has_parent()) {
-      for (auto sibling = node->zobrist_first; sibling != nullptr; sibling = sibling->zobrist_next) {
+      for (auto sibling = node->get_zobrist_first(); sibling != nullptr; sibling = sibling->get_zobrist_next()) {
         update_parent_node(node, sibling->get_parent(), {}, value, reason, turn, is_final);
       }
     }
