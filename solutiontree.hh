@@ -59,8 +59,8 @@ class SolutionTree {
       uint8_t is_final : 1;
       uint8_t is_root : 1;
       signed parent : pointer_width;
-      signed zobrist_first : pointer_width;      
-      signed zobrist_next : pointer_width;      
+      signed zobrist_first : pointer_width;
+      signed zobrist_next : pointer_width;
       unsigned proof : 16;
       unsigned disproof : 16;
     } packed_values;
@@ -94,15 +94,15 @@ class SolutionTree {
     Node *get_zobrist_first() {
       Node *next = this;
       advance(next, -static_cast<signed>(packed_values.zobrist_first));
-      return next;      
+      return next;
     }
     Node *get_zobrist_next() {
       if (packed_values.zobrist_next == 0) {
         return nullptr;
       }
-      Node *next = this;      
+      Node *next = this;
       advance(next, -static_cast<signed>(packed_values.zobrist_next));
-      return next;      
+      return next;
     }
     void set_zobrist_first(Node *node) {
       packed_values.zobrist_first = static_cast<signed>(distance(node, this));
@@ -110,7 +110,7 @@ class SolutionTree {
     void set_zobrist_next(Node *node) {
       if (node == nullptr) {
         packed_values.zobrist_next = 0;
-      } else {      
+      } else {
         packed_values.zobrist_next = static_cast<signed>(distance(node, this));
       }
     }

@@ -99,7 +99,7 @@ class ChainingStrategy {
 
   optional<Position> search_current(const State<N, D>& current, Mark mark) {
     visited++;
-    if (visited > 1'000'000) {
+    if (visited > 10'000'000) {
       return {};
     }
     Print()(current);
