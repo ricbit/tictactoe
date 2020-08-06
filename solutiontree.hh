@@ -41,7 +41,6 @@ class SolutionTree {
   class Node {
    public:
     Node(Node *parent_node, Turn turn, int children_size) {
-      assert(parent_node < this);
       childrenx.position.reserve(children_size);
       packed_values.parent = static_cast<unsigned>(distance(parent_node, this));
       packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
@@ -53,12 +52,13 @@ class SolutionTree {
       zobrist_next = nullptr;
       zobrist_first = this;
     }
+    constexpr static unsigned pointer_width = 1 + bit_width(static_cast<unsigned>(M));
     struct {
       uint8_t value : 2;
       uint8_t reason : 4;
       uint8_t is_final : 1;
       uint8_t is_root : 1;
-      unsigned parent : bit_width(static_cast<unsigned>(M));
+      unsigned parent : pointer_width;
       unsigned proof : 16;
       unsigned disproof : 16;
     } packed_values;
