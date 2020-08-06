@@ -400,7 +400,7 @@ class SolutionTree {
   void prune_children(Node *node, BoardValue goal) {
     for (int i = 0; i < static_cast<int>(node->childrenx.position.size()); i++) {
       Node *child = node->childrenx.first + i;
-      if (child->get_value() != goal || !child->is_final()) {
+      if (node->is_final() && (child->get_value() != goal || !child->is_final())) {
         child->set_reason(Reason::PRUNING);
       }
     }
