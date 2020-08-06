@@ -253,6 +253,14 @@ class PNSearch {
   }
   void update_pn_value(typename SolutionTree<M>::Node *node, Turn turn) {
     auto children = node->get_children();
+    if (node->is_final()) {
+      node->work = 1.0f;
+    } else {
+      float size = children.size();
+      node->work = accumulate(begin(children), end(children), 0.0f, [](const auto& a, const auto& b) {
+        return a + b.second->work;
+      }) / size;
+    }
     if (!children.empty()) {
       if (turn == Turn::O) {
         auto proof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
@@ -556,7 +564,8 @@ class MiniMax {
     if ((nodes_visited % 1000) == 0) {
       config.debug << "visited "s << nodes_visited << "\t"s;
       config.debug << "created "s << nodes_created << "\t"s;
-      double value = traversal.estimate_work(board_node.node);
+      //double value = traversal.estimate_work(board_node.node);
+      double value = solution.get_root()->work;
       ostringstream oss;
       oss << setprecision(2) << value * 100.0;
       config.debug << "done : "s << oss.str() << "%\n"s;

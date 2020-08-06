@@ -40,12 +40,6 @@ class SolutionTree {
     }
   };
 
-  struct RunTime {
-    float work;
-    explicit RunTime(float work) : work(work) {
-    }
-  };
-
   class Node {
    public:
     Node(Node *parent_node, Turn turn, int children_size, Zobrist zobrist = Zobrist{0}) : zobrist(zobrist) {
@@ -68,7 +62,7 @@ class SolutionTree {
       uint8_t is_root : 1;
       unsigned parent : bit_width(static_cast<unsigned>(M));
     } packed_values;
-    RunTime workspace{0.0f};
+    float work = 0.0f;
     NodeCount count = 0_nc;
     Children childrenx;
     Zobrist zobrist;
