@@ -286,13 +286,10 @@ class PNSearch {
       }
     }
   }
-  BoardNode<N, D, M> choose(BoardNode<N, D, M> board_node) {
-    return board_node;
-  }
   BoardNode<N, D, M> search_or_node(typename SolutionTree<M>::Node *node) {
     auto children = node->get_children();
     if (children.empty()) {
-      return choose(BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node});
+      return BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
     }
     return search_and_node(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
       return a.second->get_proof() < b.second->get_proof();
@@ -301,7 +298,7 @@ class PNSearch {
   BoardNode<N, D, M> search_and_node(typename SolutionTree<M>::Node *node) {
     auto children = node->get_children();
     if (children.empty()) {
-      return choose(BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node});
+      return BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
     }
     return search_or_node(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
       return a.second->get_disproof() < b.second->get_disproof();
