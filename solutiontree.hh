@@ -42,6 +42,7 @@ class SolutionTree {
       packed_values.parent = static_cast<signed>(distance(parent_node, this));
       packed_values.zobrist_first = static_cast<signed>(0);
       packed_values.zobrist_next = static_cast<signed>(0);
+      packed_values.first_child = static_cast<signed>(0);
       packed_values.count = static_cast<unsigned>(0);
       packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
@@ -57,20 +58,20 @@ class SolutionTree {
       uint8_t reason : 4;
       uint8_t is_final : 1;
       uint8_t is_root : 1;
+      unsigned count : nodes_width;
       signed parent : pointer_width;
       signed zobrist_first : pointer_width;
       signed zobrist_next : pointer_width;
-      unsigned count : nodes_width;
+      signed first_child : pointer_width;
       unsigned proof : 16;
       unsigned disproof : 16;
     } packed_values;
     float work = 0.0f;
-    Node *first_child = nullptr;
     Children childrenx;
 
     auto emplace_child(Position pos, Node *child) {
       if (childrenx.empty()) {
-        first_child = child;
+        packed_values.first_child = distance(child, this);
       }
       childrenx.emplace_back(pos);
       return make_pair(pos, child);
@@ -79,7 +80,7 @@ class SolutionTree {
       vector<pair<Position, Node*>> copy_children;
       for (int i = 0; i < static_cast<int>(childrenx.size()); i++) {
           Position pos = Position{childrenx[i]};
-          Node *child = first_child + i;
+          Node *child = get_first_child() + i;
           if (child->get_reason() == Reason::PRUNING) {
             continue;
           }
@@ -93,7 +94,12 @@ class SolutionTree {
     }
     Node *get_last_child() const {
       int last = childrenx.size() - 1;
-      return first_child + last;
+      return get_first_child() + last;
+    }
+    Node *get_first_child() const {
+      Node *next = const_cast<Node *>(this);
+      advance(next, -static_cast<signed>(packed_values.first_child));
+      return next;
     }
     Node *get_zobrist_first() {
       Node *next = this;
@@ -410,7 +416,7 @@ class SolutionTree {
 
   void prune_children(Node *node, BoardValue goal) {
     for (int i = 0; i < static_cast<int>(node->childrenx.size()); i++) {
-      Node *child = node->first_child + i;
+      Node *child = node->get_first_child() + i;
       if (node->is_final() && (child->get_value() != goal || !child->is_final())) {
         child->set_reason(Reason::PRUNING);
       }
