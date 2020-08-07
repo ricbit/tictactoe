@@ -45,6 +45,7 @@ class SolutionTree {
       packed_values.parent = static_cast<signed>(distance(parent_node, this));
       packed_values.zobrist_first = static_cast<signed>(0);
       packed_values.zobrist_next = static_cast<signed>(0);
+      packed_values.count = static_cast<unsigned>(0);
       packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
       packed_values.is_final = static_cast<uint8_t>(false);
@@ -52,7 +53,8 @@ class SolutionTree {
       packed_values.proof = static_cast<unsigned>(turn == Turn::X ? 1_pn : ProofNumber{children_size});
       packed_values.disproof = static_cast<unsigned>(turn == Turn::X ? ProofNumber{children_size} : 1_pn);
     }
-    constexpr static unsigned pointer_width = 1 + bit_width(static_cast<unsigned>(M));
+    constexpr static unsigned nodes_width = bit_width(static_cast<unsigned>(M));
+    constexpr static unsigned pointer_width = 1 + nodes_width;
     struct {
       uint8_t value : 2;
       uint8_t reason : 4;
@@ -61,11 +63,11 @@ class SolutionTree {
       signed parent : pointer_width;
       signed zobrist_first : pointer_width;
       signed zobrist_next : pointer_width;
+      unsigned count : nodes_width;
       unsigned proof : 16;
       unsigned disproof : 16;
     } packed_values;
     float work = 0.0f;
-    NodeCount count = 0_nc;
     Children childrenx;
 
     auto emplace_child(Position pos, Node *parent) {
@@ -135,6 +137,13 @@ class SolutionTree {
       Node *next = this;
       advance(next, -static_cast<signed>(packed_values.parent));
       return next;
+    }
+    NodeCount get_count() const {
+      return static_cast<NodeCount>(packed_values.count);
+    }
+    NodeCount set_count(NodeCount count) {
+      packed_values.count = static_cast<unsigned>(count);
+      return count;
     }
     BoardValue get_value() const {
       return static_cast<BoardValue>(packed_values.value);
@@ -323,12 +332,12 @@ class SolutionTree {
   NodeCount update_count(Node *node) {
     auto children = node->get_children();
     if (children.empty()) {
-      return node->count = 1_nc;
+      return node->set_count(1_nc);
     } else {
-      return node->count = accumulate(begin(children), end(children), 1_nc,
+      return node->set_count(accumulate(begin(children), end(children), 1_nc,
           [&](auto acc, const auto& child) {
         return NodeCount{acc + update_count(child.second)};
-      });
+      }));
     }
   }
 
@@ -412,7 +421,7 @@ class SolutionTree {
     ofs << static_cast<int>(node->is_final()) << " ";
     ofs << static_cast<int>(node->get_proof()) << " ";
     ofs << static_cast<int>(node->get_disproof()) << " ";
-    ofs << node->count << " " << children.size() << " ";
+    ofs << node->get_count() << " " << children.size() << " ";
     ofs << static_cast<int>(node->get_reason()) << " : ";
     for (const auto& [pos, p] : children) {
       ofs << pos << "  ";

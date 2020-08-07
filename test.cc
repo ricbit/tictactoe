@@ -691,6 +691,16 @@ TEST(MiniMaxTest, CheckMaxCreated) {
   EXPECT_EQ(100, solution.real_count());
 }
 
+TEST(MiniMaxTest, WriteOutputFile) {
+  BoardData<3, 2> data;
+  State state(data);
+  auto minimax = MiniMax<3, 2, BFS<3, 2, ConfigBFSMax::max_created>, ConfigBFSMax>(state, data);
+  minimax.play(state, Turn::X);
+  auto& solution = minimax.get_solution();
+  solution.update_count();
+  solution.dump(data, "/dev/null");
+}
+
 template<int M, typename MM>
 bool validate_all_parents(const typename SolutionTree<M>::Node *parent, MM& minimax) {
   auto children = parent->get_children();
