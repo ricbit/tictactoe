@@ -267,17 +267,13 @@ class PNSearch {
           return ProofNumber{a + b.second->get_proof()};
         });
         node->set_proof(clamp(proof, 0_pn, INFTY));
-        node->set_disproof(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
-          return a.second->get_disproof() < b.second->get_disproof();
-        })->second->get_disproof());
+        node->set_disproof(min_disproof(children)->get_disproof());
       } else {
         auto disproof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
           return ProofNumber{a + b.second->get_disproof()};
         });
         node->set_disproof(clamp(disproof, 0_pn, INFTY));
-        node->set_proof(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
-          return a.second->get_proof() < b.second->get_proof();
-        })->second->get_proof());
+        node->set_proof(min_proof(children)->get_proof());
       }
     }
     if (node->has_parent()) {
@@ -291,18 +287,26 @@ class PNSearch {
     if (children.empty()) {
       return BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
     }
-    return search_and_node(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
-      return a.second->get_proof() < b.second->get_proof();
-    })->second);
+    return search_and_node(min_proof(children));
   }
   BoardNode<N, D, M> search_and_node(typename SolutionTree<M>::Node *node) {
     auto children = node->get_children();
     if (children.empty()) {
       return BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
     }
-    return search_or_node(min_element(begin(children), end(children), [](const auto &a, const auto& b) {
+    return search_or_node(min_disproof(children));
+  }
+  template<typename C>
+  auto min_proof(const C& children) {
+    return min_element(begin(children), end(children), [](const auto &a, const auto& b) {
+      return a.second->get_proof() < b.second->get_proof();
+    })->second;
+  }
+  template<typename C>
+  auto min_disproof(const C& children) {
+    return min_element(begin(children), end(children), [](const auto &a, const auto& b) {
       return a.second->get_disproof() < b.second->get_disproof();
-    })->second);
+    })->second;
   }
   const BoardData<N, D>& data;
   typename SolutionTree<M>::Node *root;
