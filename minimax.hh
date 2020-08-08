@@ -332,6 +332,7 @@ class MiniMax {
   int nodes_visited = 0;
   int nodes_created = 1;
   int running_zobrist = 0;
+  int running_final = 0;
   ofstream ofevolution;
   constexpr static Config config = Config();
 
@@ -371,7 +372,7 @@ class MiniMax {
         }
         if (config.should_log_evolution) {
           ofevolution << solution.get_root()->get_proof() << " " <<  solution.get_root()->get_disproof() << " "
-                      << node.node->get_depth() << " " << running_zobrist << "\n";
+                      << node.node->get_depth() << " " << running_zobrist << " " << running_final << "\n";
         }
         traversal.retire(node, is_terminal);
       });
@@ -471,6 +472,9 @@ class MiniMax {
       BoardValue value, typename SolutionTree<M>::Reason reason, Turn turn, bool is_final = true) {
     node->set_reason(reason);
     node->set_value(value);
+    if (!node->is_final() && is_final) {
+      running_final++;
+    }
     node->set_is_final(is_final);
     if (node_zobrist.has_value()) {
       if (reason == SolutionTree<M>::Reason::ZOBRIST) {

@@ -23,6 +23,9 @@ ax2.set(xlabel="Nodes visited", ylabel="Depth")
 ax2.legend()
 size = len(pn)
 zobrist = [float(x[3])/size*100 for x in pn]
-ax3.plot(zobrist)
-ax3.set(xlabel="Nodes visited", ylabel="Zobrist nodes (%)")
+final = [float(x[4])/size*100 for x in pn]
+ax3.plot(zobrist, label="Zobrist")
+ax3.plot(final, label="Final")
+ax3.set(xlabel="Nodes visited", ylabel="Percentage of nodes")
+ax3.legend()
 plot.show()
