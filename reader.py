@@ -29,6 +29,22 @@ def read_line(f, node):
     read_line(f, child_node)
     node.children[childpos] = child_node
 
+def yield_file(filename):
+  f = open(filename, "rt")
+  n, d = map(int, f.readline().split())
+  while line := f.readline():
+    p = parser.match(line)
+    (result, final, proof, disproof, count, size, reason, children) = [p.group(x) for x in range(1, 9)]
+    node = Node()
+    node.result = int(result)
+    node.count = int(count)
+    node.reason = int(reason)
+    node.final = bool(int(final))
+    node.proof = int(proof)
+    node.disproof = int(disproof)
+    node.children = list(map(int, children.split()))
+    yield node
+
 def read_file(filename):
   f = open(filename, "rt")
   n, d = map(int, f.readline().split())

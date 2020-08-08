@@ -74,3 +74,7 @@ callminimax : minimax
 
 cpd :
 	/home/ricbit/src/pmd-bin-6.25.0/bin/run.sh cpd --exclude test.cc --files . --language cpp --minimum-tokens 10
+
+branch :
+	tail solution.txt -n+2 | awk '{print NF - 8}' | sort -g | uniq -c
+
