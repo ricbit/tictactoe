@@ -660,6 +660,7 @@ struct ConfigBFSOne {
   constexpr static NodeCount max_visited = 1_nc;
   constexpr static NodeCount max_created = 100_nc;
   DummyCout debug;
+  bool should_log_evolution = false;
   bool should_prune = false;
 };
 
@@ -679,6 +680,7 @@ struct ConfigBFSMax {
   constexpr static NodeCount max_visited = 1'000'000_nc;
   constexpr static NodeCount max_created = 100_nc;
   DummyCout debug;
+  bool should_log_evolution = false;
   bool should_prune = false;
 };
 

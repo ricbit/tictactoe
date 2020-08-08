@@ -13,15 +13,13 @@ class SolutionTree {
     #include "reason.hh"
   };
 
-  class Node;
-
   class Children {
     vector<uint8_t> position;
    public:
     void emplace_back(Position pos) {
       position.push_back(static_cast<uint8_t>(pos));
     }
-    Position operator[](int index) const{
+    Position operator[](int index) const {
       return Position{position[index]};
     }
     void reserve(int size) {

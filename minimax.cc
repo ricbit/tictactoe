@@ -16,11 +16,12 @@ struct DebugConfig {
   constexpr static NodeCount max_created = 1'000'000_nc;
   ostream& debug = cout;
   bool should_prune = true;
+  bool should_log_evolution = true;
 };
 
 int main(int argc, char **argv) {
   constexpr int N = 4;
-  constexpr int D = 3;
+  constexpr int D = 2;
   BoardData<N, D> data;
   State state(data);
   cout << "sizeof(SolutionTree::Node) = " << sizeof(SolutionTree<MiniMax<N, D>::M>::Node) << "\n";

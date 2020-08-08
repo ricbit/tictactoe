@@ -65,6 +65,14 @@ class DummyCout {
   const DummyCout& operator<<(T& x) const {
     return *this;
   }
+  template<typename T>
+  DummyCout& operator<<(const T& x) {
+    return *this;
+  }
+  template<typename T>
+  DummyCout& operator<<(T& x) {
+    return *this;
+  }
 };
 
 struct DefaultConfig {
@@ -72,6 +80,7 @@ struct DefaultConfig {
   constexpr static NodeCount max_created = 1'000'000_nc;
   DummyCout debug;
   bool should_prune = true;
+  bool should_log_evolution = false;
 };
 
 template<int N, int D, int M>
@@ -183,13 +192,8 @@ class RandomTraversal {
 template<int N, int D, int M>
 class PNSearch {
   optional<typename SolutionTree<M>::Node*> descent;
-  bag<tuple<ProofNumber, ProofNumber, int, int>> pn_evolution;
-  int running_zobrist = 0;
  public:
   explicit PNSearch(const BoardData<N, D>& data, typename SolutionTree<M>::Node *root) : data(data), root(root) {
-  }
-  ~PNSearch() {
-    save_evolution();
   }
   void push(BoardNode<N, D, M> board_node) {
   }
@@ -205,10 +209,6 @@ class PNSearch {
     return is_final;
   }
   void retire(const BoardNode<N, D, M>& board_node, bool is_terminal) {
-    if (board_node.node->get_reason() == SolutionTree<M>::Reason::ZOBRIST) {
-      running_zobrist++;
-    }
-    pn_evolution.push_back({root->get_proof(), root->get_disproof(), board_node.node->get_depth(), running_zobrist});
     auto& node = board_node.node;
     if (is_terminal) {
       if (node->get_value() == BoardValue::X_WIN) {
@@ -243,13 +243,6 @@ class PNSearch {
       descent = children[rand() % size].second;
       return choose(BoardNode<N, D, M>{(*descent)->rebuild_state(data), (*descent)->get_turn(), *descent});
     }*/
-  }
-  void save_evolution() const {
-    ofstream ofs("pnevolution.txt");
-    for (const auto& pn : pn_evolution) {
-      ofs << get<0>(pn) << " " << get<1>(pn) << " " << get<2>(pn) << " "
-          << get<3>(pn) << "\n";
-    }
   }
   void update_pn_value(typename SolutionTree<M>::Node *node, Turn turn) {
     auto children = node->get_children();
@@ -321,9 +314,12 @@ class MiniMax {
   constexpr static Position board_size = BoardData<N, D>::board_size;
 
   MiniMax(
-    const State<N, D>& state,
-    const BoardData<N, D>& data)
-    :  state(state), data(data), solution(board_size), traversal(data, solution.get_root()) {
+      const State<N, D>& state,
+      const BoardData<N, D>& data)
+      :  state(state), data(data), solution(board_size), traversal(data, solution.get_root()) {
+    if constexpr (config.should_log_evolution) {
+      ofevolution.open("pnevolution.txt");
+    }
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
@@ -335,6 +331,8 @@ class MiniMax {
   unordered_map<Zobrist, typename SolutionTree<M>::Node*> zobrist;
   int nodes_visited = 0;
   int nodes_created = 1;
+  int running_zobrist = 0;
+  ofstream ofevolution;
   constexpr static Config config = Config();
 
   optional<BoardValue> play(State<N, D>& current_state, Turn turn) {
@@ -368,6 +366,13 @@ class MiniMax {
       }
       for_each(begin(nodes), end(nodes), [&](auto node) {
         bool is_terminal = process_node(node);
+        if (node.node->get_reason() == SolutionTree<M>::Reason::ZOBRIST) {
+          running_zobrist++;
+        }
+        if (config.should_log_evolution) {
+          ofevolution << solution.get_root()->get_proof() << " " <<  solution.get_root()->get_disproof() << " "
+                      << node.node->get_depth() << " " << running_zobrist << "\n";
+        }
         traversal.retire(node, is_terminal);
       });
     }
