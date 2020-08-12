@@ -391,23 +391,31 @@ class MiniMax {
     if (terminal_node.has_value()) {
       return true;
     }
+    auto children = build_children(board_node);
+    for (auto& child : children) {
+      traversal.push(child);
+    }
+    return false;
+  }
 
+  bag<BoardNode<N, D, M>> build_children(const BoardNode<N, D, M>& board_node) {
+    auto& [current_state, turn, node] = board_node;
     auto open_positions = current_state.get_open_positions(to_mark(turn));
     auto [sorted, child_state] = get_children(current_state, turn, open_positions);
     int size = sorted.size();
+    bag<BoardNode<N, D, M>> children;
     for (int i = size - 1; i >= 0; i--) {
       if (nodes_created == config.max_created) {
-        return false;
+        return children;
       }
       nodes_created++;
       const auto& child = child_state[i];
       node->emplace_child(sorted[i].second,
           solution.create_node(node, flip(turn), child.get_open_positions(to_mark(flip(turn))).count()));
       auto child_node = node->get_last_child();
-      lock_guard lock(next_m);
-      traversal.push(BoardNode<N, D, M>{child, flip(turn), child_node});
+      children.push_back(BoardNode<N, D, M>{child, flip(turn), child_node});
     }
-    return false;
+    return children;
   }
 
   optional<BoardValue> check_terminal_node(
