@@ -305,6 +305,80 @@ class PNSearch {
   typename SolutionTree<M>::Node *root;
 };
 
+template<int N, int D, typename Config = DefaultConfig>
+class ChildrenBuilder {
+ public:
+  constexpr static NodeCount M = Config::max_created;
+  constexpr static Config config = Config();
+
+  bag<BoardNode<N, D, M>> build_children(
+      const BoardNode<N, D, M>& board_node, SolutionTree<M>& solution, int& nodes_created) {
+    auto& [current_state, turn, node] = board_node;
+    auto open_positions = current_state.get_open_positions(to_mark(turn));
+    auto [sorted, child_state] = get_children(current_state, turn, open_positions);
+    int size = sorted.size();
+    bag<BoardNode<N, D, M>> children;
+    for (int i = size - 1; i >= 0; i--) {
+      if (nodes_created == config.max_created) {
+        return children;
+      }
+      nodes_created++;
+      const auto& child = child_state[i];
+      node->emplace_child(sorted[i].second,
+          solution.create_node(node, flip(turn), child.get_open_positions(to_mark(flip(turn))).count()));
+      auto child_node = node->get_last_child();
+      children.push_back(BoardNode<N, D, M>{child, flip(turn), child_node});
+    }
+    return children;
+  }
+
+ private:
+  template<typename B>
+  pair<vector<pair<int, Position>>, bag<State<N, D>>> get_children(
+      const State<N, D>& current_state, Turn turn, B open_positions) {
+    vector<pair<int, Position>> sorted;
+    bag<State<N, D>> child_state;
+
+    auto s = ForcingMove<N, D>(current_state);
+    auto forcing = s.check(to_mark(turn), open_positions);
+    if (forcing.first.has_value()) {
+      assert(forcing.second != to_mark(turn));
+      child_state.emplace_back(current_state);
+      State<N, D>& cloned = *child_state.begin();
+      bool game_ended = cloned.play(*forcing.first, to_mark(turn));
+      assert(!game_ended);
+      int dummy_score = 1;
+      sorted = {{dummy_score, *forcing.first}};
+    } else {
+      child_state.reserve(open_positions.count());
+      sorted = get_sorted_positions(current_state, open_positions);
+      for (const auto& [score, pos] : sorted) {
+        child_state.emplace_back(current_state);
+        child_state.rbegin()->play(pos, to_mark(turn));
+      }
+    }
+    return {sorted, child_state};
+  }
+
+  template<typename B>
+  vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state, const B& open) {
+    vector<pair<int, Position>> paired;
+    paired.reserve(open.count());
+    uniform_positions(paired, open, current_state);
+    return paired;
+  }
+
+  template<typename B>
+  void uniform_positions(vector<pair<int, Position>>& paired,
+      const B& open, const State<N, D>& current_state) {
+    for (Position pos : open.all()) {
+      paired.push_back(make_pair(
+          current_state.get_current_accumulation(pos), pos));
+    }
+    sort(rbegin(paired), rend(paired));
+  }
+};
+
 template<int N, int D,
     typename Traversal = DFS<N, D, DefaultConfig::max_created>,
     typename Config = DefaultConfig,
@@ -312,6 +386,8 @@ template<int N, int D,
 class MiniMax {
  public:
   constexpr static Position board_size = BoardData<N, D>::board_size;
+  constexpr static NodeCount M = Config::max_created;
+  constexpr static Config config = Config();
 
   MiniMax(
       const State<N, D>& state,
@@ -323,7 +399,6 @@ class MiniMax {
   }
   const State<N, D>& state;
   const BoardData<N, D>& data;
-  constexpr static NodeCount M = Config::max_created;
   SolutionTree<M> solution;
   Traversal traversal;
   mutex next_m;
@@ -334,7 +409,6 @@ class MiniMax {
   int running_zobrist = 0;
   int running_final = 0;
   ofstream ofevolution;
-  constexpr static Config config = Config();
 
   optional<BoardValue> play(State<N, D>& current_state, Turn turn) {
     auto ans = queue_play(BoardNode<N, D, M>{current_state, turn, solution.get_root()});
@@ -391,31 +465,12 @@ class MiniMax {
     if (terminal_node.has_value()) {
       return true;
     }
-    auto children = build_children(board_node);
+    ChildrenBuilder<N, D, Config> builder;
+    auto children = builder.build_children(board_node, solution, nodes_created);
     for (auto& child : children) {
       traversal.push(child);
     }
     return false;
-  }
-
-  bag<BoardNode<N, D, M>> build_children(const BoardNode<N, D, M>& board_node) {
-    auto& [current_state, turn, node] = board_node;
-    auto open_positions = current_state.get_open_positions(to_mark(turn));
-    auto [sorted, child_state] = get_children(current_state, turn, open_positions);
-    int size = sorted.size();
-    bag<BoardNode<N, D, M>> children;
-    for (int i = size - 1; i >= 0; i--) {
-      if (nodes_created == config.max_created) {
-        return children;
-      }
-      nodes_created++;
-      const auto& child = child_state[i];
-      node->emplace_child(sorted[i].second,
-          solution.create_node(node, flip(turn), child.get_open_positions(to_mark(flip(turn))).count()));
-      auto child_node = node->get_last_child();
-      children.push_back(BoardNode<N, D, M>{child, flip(turn), child_node});
-    }
-    return children;
   }
 
   optional<BoardValue> check_terminal_node(
@@ -441,33 +496,6 @@ class MiniMax {
       return save_node(node, zob, *forced, SolutionTree<M>::Reason::FORCED_WIN, turn);
     }
     return {};
-  }
-
-  template<typename B>
-  pair<vector<pair<int, Position>>, bag<State<N, D>>> get_children(
-      const State<N, D>& current_state, Turn turn, B open_positions) {
-    vector<pair<int, Position>> sorted;
-    bag<State<N, D>> child_state;
-
-    auto s = ForcingMove<N, D>(current_state);
-    auto forcing = s.check(to_mark(turn), open_positions);
-    if (forcing.first.has_value()) {
-      assert(forcing.second != to_mark(turn));
-      child_state.emplace_back(current_state);
-      State<N, D>& cloned = *child_state.begin();
-      bool game_ended = cloned.play(*forcing.first, to_mark(turn));
-      assert(!game_ended);
-      int dummy_score = 1;
-      sorted = {{dummy_score, *forcing.first}};
-    } else {
-      child_state.reserve(open_positions.count());
-      sorted = get_sorted_positions(current_state, open_positions);
-      for (const auto& [score, pos] : sorted) {
-        child_state.emplace_back(current_state);
-        child_state.rbegin()->play(pos, to_mark(turn));
-      }
-    }
-    return {sorted, child_state};
   }
 
   BoardValue save_node(typename SolutionTree<M>::Node *node, optional<Zobrist> node_zobrist,
@@ -559,24 +587,6 @@ class MiniMax {
     } else {
       return {{}, parent_is_final};
     }
-  }
-
-  template<typename B>
-  vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state, const B& open) {
-    vector<pair<int, Position>> paired;
-    paired.reserve(open.count());
-    uniform_positions(paired, open, current_state);
-    return paired;
-  }
-
-  template<typename B>
-  void uniform_positions(vector<pair<int, Position>>& paired,
-      const B& open, const State<N, D>& current_state) {
-    for (Position pos : open.all()) {
-      paired.push_back(make_pair(
-          current_state.get_current_accumulation(pos), pos));
-    }
-    sort(rbegin(paired), rend(paired));
   }
 
   void report_progress(const BoardNode<N, D, M>& board_node) {
