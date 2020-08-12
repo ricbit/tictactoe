@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   constexpr int D = 2;
   BoardData<N, D> data;
   State state(data);
-  cout << "sizeof(SolutionTree::Node) = " << sizeof(SolutionTree<MiniMax<N, D>::M>::Node) << "\n";
+  cout << "sizeof(Node) = " << sizeof(Node<MiniMax<N, D>::M>) << "\n";
   auto minimax = MiniMax<N, D, PNSearch<N, D, DebugConfig::max_created>, DebugConfig>(state, data);
   auto result = minimax.play(state, Turn::X);
   cout << *result << "\n";

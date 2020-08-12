@@ -55,119 +55,10 @@ constexpr Outcome known_outcome<4, 3>() {
   return Outcome::X_WINS;
 }
 
-class DummyCout {
- public:
-  template<typename T>
-  const DummyCout& operator<<(const T& x) const {
-    return *this;
-  }
-  template<typename T>
-  const DummyCout& operator<<(T& x) const {
-    return *this;
-  }
-  template<typename T>
-  DummyCout& operator<<(const T& x) {
-    return *this;
-  }
-  template<typename T>
-  DummyCout& operator<<(T& x) {
-    return *this;
-  }
-};
-
-struct DefaultConfig {
-  constexpr static NodeCount max_visited = 1'000'000_nc;
-  constexpr static NodeCount max_created = 1'000'000_nc;
-  DummyCout debug;
-  bool should_prune = true;
-  bool should_log_evolution = false;
-};
-
-template<int N, int D, int M>
-struct BoardNode {
-  State<N, D> current_state;
-  Turn turn;
-  typename SolutionTree<M>::Node *node;
-};
-
-template<int N, int D, typename Config = DefaultConfig>
-class ChildrenBuilder {
- public:
-  constexpr static NodeCount M = Config::max_created;
-  constexpr static Config config = Config();
-
-  bag<BoardNode<N, D, M>> build_children(
-      const BoardNode<N, D, M>& board_node, SolutionTree<M>& solution, int& nodes_created) {
-    auto& [current_state, turn, node] = board_node;
-    auto open_positions = current_state.get_open_positions(to_mark(turn));
-    auto [sorted, child_state] = get_children(current_state, turn, open_positions);
-    int size = sorted.size();
-    bag<BoardNode<N, D, M>> children;
-    for (int i = size - 1; i >= 0; i--) {
-      if (nodes_created == config.max_created) {
-        return children;
-      }
-      nodes_created++;
-      const auto& child = child_state[i];
-      node->emplace_child(sorted[i].second,
-          solution.create_node(node, flip(turn), child.get_open_positions(to_mark(flip(turn))).count()));
-      auto child_node = node->get_last_child();
-      children.push_back(BoardNode<N, D, M>{child, flip(turn), child_node});
-    }
-    return children;
-  }
-
- private:
-  template<typename B>
-  pair<vector<pair<int, Position>>, bag<State<N, D>>> get_children(
-      const State<N, D>& current_state, Turn turn, B open_positions) {
-    vector<pair<int, Position>> sorted;
-    bag<State<N, D>> child_state;
-
-    auto s = ForcingMove<N, D>(current_state);
-    auto forcing = s.check(to_mark(turn), open_positions);
-    if (forcing.first.has_value()) {
-      assert(forcing.second != to_mark(turn));
-      child_state.emplace_back(current_state);
-      State<N, D>& cloned = *child_state.begin();
-      bool game_ended = cloned.play(*forcing.first, to_mark(turn));
-      assert(!game_ended);
-      int dummy_score = 1;
-      sorted = {{dummy_score, *forcing.first}};
-    } else {
-      child_state.reserve(open_positions.count());
-      sorted = get_sorted_positions(current_state, open_positions);
-      for (const auto& [score, pos] : sorted) {
-        child_state.emplace_back(current_state);
-        child_state.rbegin()->play(pos, to_mark(turn));
-      }
-    }
-    return {sorted, child_state};
-  }
-
-  template<typename B>
-  vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state, const B& open) {
-    vector<pair<int, Position>> paired;
-    paired.reserve(open.count());
-    uniform_positions(paired, open, current_state);
-    return paired;
-  }
-
-  template<typename B>
-  void uniform_positions(vector<pair<int, Position>>& paired,
-      const B& open, const State<N, D>& current_state) {
-    for (Position pos : open.all()) {
-      paired.push_back(make_pair(
-          current_state.get_current_accumulation(pos), pos));
-    }
-    sort(rbegin(paired), rend(paired));
-  }
-};
-
 template<int N, int D, int M>
 class DFS {
  public:
-  explicit DFS(const BoardData<N, D>& data, typename SolutionTree<M>::Node *root) : data(data), root(root) {
+  explicit DFS(const BoardData<N, D>& data, Node<M> *root) : data(data), root(root) {
   }
   void push_node(BoardNode<N, D, M> node) {
     next.push(node);
@@ -191,19 +82,19 @@ class DFS {
   void retire(const BoardNode<N, D, M>& node, bool is_terminal) {
     // empty
   }
-  float estimate_work(const typename SolutionTree<M>::Node *node) {
+  float estimate_work(const Node<M> *node) {
     return node->estimate_work();
   }
  private:
   stack<BoardNode<N, D, M>> next;
   const BoardData<N, D>& data;
-  typename SolutionTree<M>::Node *root;
+  Node<M> *root;
 };
 
 template<int N, int D, int M>
 class BFS {
  public:
-  explicit BFS(const BoardData<N, D>& data, typename SolutionTree<M>::Node *root) : data(data), root(root) {
+  explicit BFS(const BoardData<N, D>& data, Node<M> *root) : data(data), root(root) {
   }
   void push_node(BoardNode<N, D, M> node) {
     next.push(node.node);
@@ -227,13 +118,13 @@ class BFS {
   void retire(const BoardNode<N, D, M>& node, bool is_terminal) {
     // empty
   }
-  float estimate_work(const typename SolutionTree<M>::Node *node) {
+  float estimate_work(const Node<M> *node) {
     return node->estimate_work();
   }
  private:
-  queue<typename SolutionTree<M>::Node*> next;
+  queue<Node<M>*> next;
   const BoardData<N, D>& data;
-  typename SolutionTree<M>::Node *root;
+  Node<M> *root;
 };
 
 template<typename T>
@@ -253,9 +144,9 @@ auto CompareBoardNode = [](const auto& a, const auto& b) {
 
 template<int N, int D, int M>
 class PNSearch {
-  optional<typename SolutionTree<M>::Node*> descent;
+  optional<Node<M>*> descent;
  public:
-  explicit PNSearch(const BoardData<N, D>& data, typename SolutionTree<M>::Node *root) : data(data), root(root) {
+  explicit PNSearch(const BoardData<N, D>& data, Node<M> *root) : data(data), root(root) {
   }
   void push_node(BoardNode<N, D, M> board_node) {
   }
@@ -293,7 +184,7 @@ class PNSearch {
     }
     update_pn_value(node, board_node.turn);
   }
-  float estimate_work(const typename SolutionTree<M>::Node *node) {
+  float estimate_work(const Node<M> *node) {
     return node->estimate_work();
   }
  private:
@@ -314,7 +205,7 @@ class PNSearch {
       return choose(BoardNode<N, D, M>{(*descent)->rebuild_state(data), (*descent)->get_turn(), *descent});
     }*/
   }
-  void update_pn_value(typename SolutionTree<M>::Node *node, Turn turn) {
+  void update_pn_value(Node<M> *node, Turn turn) {
     auto children = node->get_children();
     if (node->is_final()) {
       node->work = 1.0f;
@@ -345,14 +236,14 @@ class PNSearch {
       }
     }
   }
-  BoardNode<N, D, M> search_or_node(typename SolutionTree<M>::Node *node) {
+  BoardNode<N, D, M> search_or_node(Node<M> *node) {
     auto children = node->get_children();
     if (children.empty()) {
       return BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
     }
     return search_and_node(min_proof(children));
   }
-  BoardNode<N, D, M> search_and_node(typename SolutionTree<M>::Node *node) {
+  BoardNode<N, D, M> search_and_node(Node<M> *node) {
     auto children = node->get_children();
     if (children.empty()) {
       return BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
@@ -372,7 +263,7 @@ class PNSearch {
     })->second;
   }
   const BoardData<N, D>& data;
-  typename SolutionTree<M>::Node *root;
+  Node<M> *root;
 };
 
 template<int N, int D,
@@ -399,7 +290,7 @@ class MiniMax {
   Traversal traversal;
   mutex next_m;
   mutex node_m;
-  unordered_map<Zobrist, typename SolutionTree<M>::Node*> zobrist;
+  unordered_map<Zobrist, Node<M>*> zobrist;
   int nodes_visited = 0;
   int nodes_created = 1;
   int running_zobrist = 0;
@@ -437,7 +328,7 @@ class MiniMax {
       }
       for_each(begin(nodes), end(nodes), [&](auto node) {
         bool is_terminal = process_node(node);
-        if (node.node->get_reason() == SolutionTree<M>::Reason::ZOBRIST) {
+        if (node.node->get_reason() == Reason::ZOBRIST) {
           running_zobrist++;
         }
         if (config.should_log_evolution) {
@@ -454,7 +345,7 @@ class MiniMax {
     auto& [current_state, turn, node] = board_node;
     report_progress(board_node);
     if (node->some_parent_final()) {
-      node->set_reason(SolutionTree<M>::Reason::PRUNING);
+      node->set_reason(Reason::PRUNING);
       return false;
     }
     auto terminal_node = check_terminal_node(current_state, turn, node);
@@ -466,38 +357,38 @@ class MiniMax {
   }
 
   optional<BoardValue> check_terminal_node(
-      const State<N, D>& current_state, Turn turn, typename SolutionTree<M>::Node *node) {
+      const State<N, D>& current_state, Turn turn, Node<M> *node) {
     Zobrist zob = current_state.get_zobrist();
     if (nodes_visited > config.max_visited) {
-      return save_node(node, zob, BoardValue::UNKNOWN, SolutionTree<M>::Reason::OUT_OF_NODES, turn);
+      return save_node(node, zob, BoardValue::UNKNOWN, Reason::OUT_OF_NODES, turn);
     }
     if (current_state.get_win_state()) {
-      return save_node(node, zob, winner(turn), SolutionTree<M>::Reason::WIN, turn);
+      return save_node(node, zob, winner(turn), Reason::WIN, turn);
     }
     if (auto has_zobrist = zobrist.find(zob); has_zobrist != zobrist.end()) {
-      return save_node(node, zob, has_zobrist->second->get_value(), SolutionTree<M>::Reason::ZOBRIST, turn);
+      return save_node(node, zob, has_zobrist->second->get_value(), Reason::ZOBRIST, turn);
     }
     auto open_positions = current_state.get_open_positions(to_mark(turn));
     if (open_positions.none()) {
-      return save_node(node, zob, BoardValue::DRAW, SolutionTree<M>::Reason::DRAW, turn);
+      return save_node(node, zob, BoardValue::DRAW, Reason::DRAW, turn);
     }
     if (auto forced = check_chaining_strategy(current_state, turn); forced.has_value()) {
-      return save_node(node, zob, *forced, SolutionTree<M>::Reason::CHAINING, turn);
+      return save_node(node, zob, *forced, Reason::CHAINING, turn);
     }
     if (auto forced = check_forced_win(current_state, turn, open_positions); forced.has_value()) {
-      return save_node(node, zob, *forced, SolutionTree<M>::Reason::FORCED_WIN, turn);
+      return save_node(node, zob, *forced, Reason::FORCED_WIN, turn);
     }
     return {};
   }
 
-  BoardValue save_node(typename SolutionTree<M>::Node *node, optional<Zobrist> node_zobrist,
-      BoardValue value, typename SolutionTree<M>::Reason reason, Turn turn, bool is_final = true) {
+  BoardValue save_node(Node<M> *node, optional<Zobrist> node_zobrist,
+      BoardValue value, Reason reason, Turn turn, bool is_final = true) {
     const lock_guard lock(node_m);
     return unsafe_save_node(node, node_zobrist, value, reason, turn, is_final);
   }
 
-  BoardValue unsafe_save_node(typename SolutionTree<M>::Node *node, optional<Zobrist> node_zobrist,
-      BoardValue value, typename SolutionTree<M>::Reason reason, Turn turn, bool is_final = true) {
+  BoardValue unsafe_save_node(Node<M> *node, optional<Zobrist> node_zobrist,
+      BoardValue value, Reason reason, Turn turn, bool is_final = true) {
     node->set_reason(reason);
     node->set_value(value);
     if (!node->is_final() && is_final) {
@@ -505,7 +396,7 @@ class MiniMax {
     }
     node->set_is_final(is_final);
     if (node_zobrist.has_value()) {
-      if (reason == SolutionTree<M>::Reason::ZOBRIST) {
+      if (reason == Reason::ZOBRIST) {
         node->set_zobrist_next(zobrist[*node_zobrist]->get_zobrist_next());
         node->set_zobrist_first(zobrist[*node_zobrist]);
         zobrist[*node_zobrist]->set_zobrist_next(node);
@@ -522,8 +413,8 @@ class MiniMax {
   }
 
   void update_parent_node(
-      typename SolutionTree<M>::Node *node, typename SolutionTree<M>::Node *parent, Zobrist node_zobrist,
-      BoardValue value, typename SolutionTree<M>::Reason reason, Turn turn, bool is_final = true) {
+      Node<M> *node, Node<M> *parent, Zobrist node_zobrist,
+      BoardValue value, Reason reason, Turn turn, bool is_final = true) {
     auto parent_turn = flip(turn);
     auto [new_parent_value, parent_is_final] = get_updated_parent_value(value, parent, parent_turn);
     bool old_is_final = parent->is_final();
@@ -531,7 +422,7 @@ class MiniMax {
     if (should_update) {
       bool is_early = new_parent_value.has_value() && parent_is_final && !old_is_final;
       auto parent_reason = is_early ?
-          SolutionTree<M>::Reason::MINIMAX_EARLY : SolutionTree<M>::Reason::MINIMAX_COMPLETE;
+          Reason::MINIMAX_EARLY : Reason::MINIMAX_COMPLETE;
       auto updated_parent_value = new_parent_value.value_or(parent->get_value());
       unsafe_save_node(parent, {},
           updated_parent_value, parent_reason, flip(turn), parent_is_final);
@@ -563,7 +454,7 @@ class MiniMax {
 
   pair<optional<BoardValue>, bool> get_updated_parent_value(
       optional<BoardValue> child_value,
-      const typename SolutionTree<M>::Node *parent,
+      const Node<M> *parent,
       Turn parent_turn) {
     assert(child_value != BoardValue::UNKNOWN);
     auto children = parent->get_children();

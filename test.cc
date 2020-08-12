@@ -479,8 +479,8 @@ struct TestingTree {
 
 template<int M>
 struct TestingNodes {
-  vector<typename SolutionTree<M>::Node> nodes;
-  typename SolutionTree<M>::Node *root;
+  vector<Node<M>> nodes;
+  Node<M> *root;
 };
 
 template<int M>
@@ -488,7 +488,7 @@ TestingNodes<M> build_tree(TestingTree tree) {
   TestingNodes<M> nodes;
   Turn dont_care = Turn::X;
   nodes.nodes.reserve(1 + tree.children.size());
-  typename SolutionTree<M>::Node *parent = &nodes.nodes.emplace_back(nullptr, dont_care, tree.children.size());
+  Node<M> *parent = &nodes.nodes.emplace_back(nullptr, dont_care, tree.children.size());
   parent->set_value(tree.value);
   parent->set_is_final(tree.is_final);
   for_each(begin(tree.children), end(tree.children), [&](const auto& child_values) {
@@ -704,7 +704,7 @@ TEST(MiniMaxTest, WriteOutputFile) {
 }
 
 template<int M, typename MM>
-bool validate_all_parents(const typename SolutionTree<M>::Node *parent, MM& minimax) {
+bool validate_all_parents(const Node<M> *parent, MM& minimax) {
   auto children = parent->get_children();
   for (const auto& child_pair : children) {
     const auto child_node = child_pair.second;
