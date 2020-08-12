@@ -114,10 +114,6 @@ class Node {
       }
       return copy_children;
     }
-    Node *get_last_child() const {
-      int last = childrenx.size() - 1;
-      return get_first_child() + last;
-    }
     Node *get_first_child() const {
       Node *next = const_cast<Node *>(this);
       advance(next, -static_cast<signed>(packed_values.first_child));
@@ -340,10 +336,9 @@ class ChildrenBuilder {
       }
       nodes_created++;
       const auto& child = child_state[i];
-      node->emplace_child(sorted[i].second,
+      const auto& child_node = node->emplace_child(sorted[i].second,
           solution.create_node(node, flip(turn), child.get_open_positions(to_mark(flip(turn))).count()));
-      auto child_node = node->get_last_child();
-      children.push_back(BoardNode<N, D, M>{child, flip(turn), child_node});
+      children.push_back(BoardNode<N, D, M>{child, flip(turn), child_node.second});
     }
     return children;
   }
@@ -369,8 +364,8 @@ class ChildrenBuilder {
       child_state.reserve(open_positions.count());
       sorted = get_sorted_positions(current_state, open_positions);
       for (const auto& [score, pos] : sorted) {
-        child_state.emplace_back(current_state);
-        child_state.rbegin()->play(pos, to_mark(turn));
+        auto& last_child = child_state.emplace_back(current_state);
+        last_child.play(pos, to_mark(turn));
       }
     }
     return {sorted, child_state};
