@@ -169,8 +169,16 @@ class DFS {
  public:
   explicit DFS(const BoardData<N, D>& data, typename SolutionTree<M>::Node *root) : data(data), root(root) {
   }
-  void push(BoardNode<N, D, M> node) {
+  void push_node(BoardNode<N, D, M> node) {
     next.push(node);
+  }
+  template<typename S, typename Config>
+  void push_parent(BoardNode<N, D, M> board_node, S& solution, int &nodes_created, Config& config) {
+    ChildrenBuilder<N, D, Config> builder;
+    auto children = builder.build_children(board_node, solution, nodes_created);
+    for (auto& child : children) {
+      push_node(child);
+    }
   }
   BoardNode<N, D, M> pop_best() {
     BoardNode<N, D, M> node = next.top();
@@ -197,8 +205,16 @@ class BFS {
  public:
   explicit BFS(const BoardData<N, D>& data, typename SolutionTree<M>::Node *root) : data(data), root(root) {
   }
-  void push(BoardNode<N, D, M> node) {
+  void push_node(BoardNode<N, D, M> node) {
     next.push(node.node);
+  }
+  template<typename S, typename Config>
+  void push_parent(BoardNode<N, D, M> board_node, S& solution, int &nodes_created, Config& config) {
+    ChildrenBuilder<N, D, Config> builder;
+    auto children = builder.build_children(board_node, solution, nodes_created);
+    for (auto& child : children) {
+      push_node(child);
+    }
   }
   BoardNode<N, D, M> pop_best() {
     auto node = next.front();
@@ -241,7 +257,15 @@ class PNSearch {
  public:
   explicit PNSearch(const BoardData<N, D>& data, typename SolutionTree<M>::Node *root) : data(data), root(root) {
   }
-  void push(BoardNode<N, D, M> board_node) {
+  void push_node(BoardNode<N, D, M> board_node) {
+  }
+  template<typename S, typename Config>
+  void push_parent(BoardNode<N, D, M> board_node, S& solution, int &nodes_created, Config& config) {
+    ChildrenBuilder<N, D, Config> builder;
+    auto children = builder.build_children(board_node, solution, nodes_created);
+    for (auto& child : children) {
+      push_node(child);
+    }
   }
   BoardNode<N, D, M> pop_best() {
     auto board_node = choose_best_pn_node();
@@ -402,7 +426,7 @@ class MiniMax {
   }
 
   optional<BoardValue> queue_play(BoardNode<N, D, M> root) {
-    traversal.push(root);
+    traversal.push_node(root);
     constexpr int slice = 1;
     vector<BoardNode<N, D, M>> nodes;
     nodes.reserve(slice);
@@ -437,11 +461,7 @@ class MiniMax {
     if (terminal_node.has_value()) {
       return true;
     }
-    ChildrenBuilder<N, D, Config> builder;
-    auto children = builder.build_children(board_node, solution, nodes_created);
-    for (auto& child : children) {
-      traversal.push(child);
-    }
+    traversal.push_parent(board_node, solution, nodes_created, config);
     return false;
   }
 
