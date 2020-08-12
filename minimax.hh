@@ -162,34 +162,6 @@ auto CompareBoardNode = [](const auto& a, const auto& b) {
 };
 
 template<int N, int D, int M>
-class RandomTraversal {
- public:
-  explicit RandomTraversal(const BoardData<N, D>& data, typename SolutionTree<M>::Node *root)
-      : data(data), root(root) {
-  }
-  void push(BoardNode<N, D, M> node) {
-    next.insert(node);
-  }
-  BoardNode<N, D, M> pop_best() {
-    BoardNode<N, D, M> node = move(next.extract(next.begin()).value());
-    return node;
-  }
-  bool empty() const {
-    return next.empty();
-  }
-  void retire(const BoardNode<N, D, M>& node, bool is_terminal) {
-    // empty
-  }
-  float estimate_work(const typename SolutionTree<M>::Node *node) {
-    return node->estimate_work();
-  }
- private:
-  set<BoardNode<N, D, M>, decltype(CompareBoardNode)> next;
-  const BoardData<N, D>& data;
-  typename SolutionTree<M>::Node *root;
-};
-
-template<int N, int D, int M>
 class PNSearch {
   optional<typename SolutionTree<M>::Node*> descent;
  public:
