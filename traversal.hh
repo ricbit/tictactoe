@@ -96,21 +96,6 @@ class BFS {
   Node<M> *root;
 };
 
-template<typename T>
-uint64_t shuffle_bits(T val) {
-  uint64_t a = reinterpret_cast<uint64_t>(val);
-  uint64_t ans = 0;
-  for (int i = 0; i < 64; i++) {
-    ans = (ans << 1) | (a & 1);
-    a >>= 1;
-  }
-  return ans;
-}
-
-auto CompareBoardNode = [](const auto& a, const auto& b) {
-  return shuffle_bits(a.node) < shuffle_bits(b.node);
-};
-
 template<int N, int D, int M>
 class PNSearch {
   optional<Node<M>*> descent;
