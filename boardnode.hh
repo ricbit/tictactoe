@@ -88,10 +88,16 @@ class Node {
       unsigned proof : 16;
       unsigned disproof : 16;
     } packed_values;
+    bool children_built = false;
     float work = 0.0f;
     Children childrenx;
 
+    bool has_children() const {
+      return children_built;
+    }
+
     auto emplace_child(Position pos, Node *child) {
+      children_built = true;
       if (childrenx.empty()) {
         packed_values.first_child = distance(child, this);
       }
@@ -99,6 +105,7 @@ class Node {
       return make_pair(pos, child);
     }
     const vector<pair<Position, Node*>> get_children() const {
+      assert(children_built);
       vector<pair<Position, Node*>> copy_children;
       for (int i = 0; i < static_cast<int>(childrenx.size()); i++) {
         Position pos = Position{childrenx[i]};

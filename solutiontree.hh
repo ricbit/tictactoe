@@ -69,6 +69,9 @@ class SolutionTree {
   }
 
   NodeCount real_count(Node<M> *node) const {
+    if (!node->has_children()) {
+      return 1_nc;
+    }
     auto children = node->get_children();
     return accumulate(begin(children), end(children), 1_nc,
         [&](auto acc, const auto& child) {
@@ -77,17 +80,17 @@ class SolutionTree {
   }
 
   bool validate(Node<M> *node, Mark mark) const {
-    auto children = node->get_children();
     if (!node->is_final()) {
       cout << "Node<M> is not final\n";
       return false;
     }
-    if (children.empty()) {
+    if (!node->has_children()) {
       return true;
     }
     auto is_unknown = [](const auto &child) {
       return child.second->get_value() == BoardValue::UNKNOWN;
     };
+    auto children = node->get_children();
     if (any_of(begin(children), end(children), is_unknown)) {
       return node->get_value() == BoardValue::UNKNOWN;
     }
@@ -117,6 +120,9 @@ class SolutionTree {
   }
 
   void prune(Node<M> *node, Mark mark) {
+    if (!node->has_children()) {
+      return;
+    }
     auto children = node->get_children();
     if (mark == Mark::X) {
       if (node->get_value() == BoardValue::X_WIN && children.size() > 1) {
