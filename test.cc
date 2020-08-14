@@ -705,6 +705,9 @@ TEST(MiniMaxTest, WriteOutputFile) {
 
 template<int M, typename MM>
 bool validate_all_parents(const Node<M> *parent, MM& minimax) {
+  if (!parent->has_children()) {
+    return true;
+  }
   auto children = parent->get_children();
   for (const auto& child_pair : children) {
     const auto child_node = child_pair.second;

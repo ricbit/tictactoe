@@ -57,10 +57,10 @@ class SolutionTree {
   Node<M>* root;
 
   NodeCount update_count(Node<M> *node) {
-    auto children = node->get_children();
-    if (children.empty()) {
+    if (!node->has_children()) {
       return node->set_count(1_nc);
     } else {
+      auto children = node->get_children();
       return node->set_count(accumulate(begin(children), end(children), 1_nc,
           [&](auto acc, const auto& child) {
         return NodeCount{acc + update_count(child.second)};
@@ -148,8 +148,16 @@ class SolutionTree {
     }
   }
 
+  auto maybe_get_children(const Node<M>* node) const {
+     if (node->has_children()) {
+       return node->get_children();
+     } else {
+       return vector<pair<Position, Node<M>*>>{};
+     }
+  }
+
   void dump_node(ofstream& ofs, const Node<M>* node) const {
-    auto children = node->get_children();
+    auto children = maybe_get_children(node);
     ofs << static_cast<int>(node->get_value()) << " ";
     ofs << static_cast<int>(node->is_final()) << " ";
     ofs << static_cast<int>(node->get_proof()) << " ";

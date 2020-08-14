@@ -160,16 +160,17 @@ class PNSearch {
     }*/
   }
   void update_pn_value(Node<M> *node, Turn turn) {
-    auto children = node->get_children();
-    if (node->is_final()) {
+    if (node->is_final() || !node->has_children()) {
       node->work = 1.0f;
     } else {
+      auto children = node->get_children();
       float size = children.size();
       node->work = accumulate(begin(children), end(children), 0.0f, [](const auto& a, const auto& b) {
         return a + b.second->work;
       }) / size;
     }
-    if (!children.empty()) {
+    if (node->has_children()) {
+      auto children = node->get_children();
       if (turn == Turn::O) {
         auto proof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
           return ProofNumber{a + b.second->get_proof()};
@@ -191,17 +192,17 @@ class PNSearch {
     }
   }
   BoardNode<N, D, M> search_or_node(Node<M> *node) {
-    auto children = node->get_children();
-    if (children.empty()) {
+    if (!node->has_children()) {
       return BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
     }
+    auto children = node->get_children();
     return search_and_node(min_proof(children));
   }
   BoardNode<N, D, M> search_and_node(Node<M> *node) {
-    auto children = node->get_children();
-    if (children.empty()) {
+    if (!node->has_children()) {
       return BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
     }
+    auto children = node->get_children();
     return search_or_node(min_disproof(children));
   }
   template<typename C>
