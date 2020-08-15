@@ -7,6 +7,59 @@
 #include "state.hh"
 #include "boardnode.hh"
 
+template<int N, int D, int M>
+class DotDumper {
+ public:
+  DotDumper(const Node<M>* root, const BoardData<N, D>& data, string filename)
+      : ofs(filename), data(data), root(root) {
+  }
+  void dump() {
+    collect_names(root);
+    ofs << "digraph {\n";
+    for (const auto& [node, node_name] : name) {
+      ofs << "N" << node_name << " " << to_html(node) << " ;\n";
+    }
+    draw_edges(root);
+    ofs << "}";
+  }
+ private:
+  string to_html(const Node<M>* node) {
+    ostringstream oss;
+    oss << "[label=\"";
+    oss << "p " << node->get_proof() << " d " << node->get_disproof();
+    oss << "\" ";
+    if (node->is_final()) {
+      oss << "color=red";
+    }
+    oss << " ]";
+    return oss.str();
+  }
+  void draw_edges(const Node<M>* node) {
+    if (node->has_children()) {
+      for (const auto& [pos, child] : node->get_children()) {
+        ofs << "N" << name[node] << " -> N" << name[child] << ";\n";
+        draw_edges(child);
+      }
+    } else {
+      ofs << "N" << name[node] << " -> X" << name[node] << ";\n";
+      ofs << "X" << name[node] << " [shape=box];\n";
+    }
+  }
+  void collect_names(const Node<M>* node) {
+    name[node] = current++;
+    if (node->has_children()) {
+      for (const auto& child : node->get_children()) {
+        collect_names(child.second);
+      }
+    }
+  }
+  ofstream ofs;
+  const BoardData<N, D>& data;
+  const Node<M>* root;
+  int current = 0;
+  unordered_map<const Node<M>*, int> name;
+};
+
 template<int M>
 class SolutionTree {
  public:
@@ -23,6 +76,12 @@ class SolutionTree {
     ofstream ofs(filename);
     ofs << N << " " << D << "\n";
     dump_node(ofs, root);
+  }
+
+  template<int N, int D>
+  void dump_dot(const BoardData<N, D>& data, string filename) const {
+    DotDumper dd(root, data, filename);
+    dd.dump();
   }
 
   bool validate() const {
