@@ -36,6 +36,42 @@ enum class Reason {
 #include "reason.hh"
 };
 
+ostream& operator<<(ostream& oss, const Reason& value) {
+  switch (value) {
+    case Reason::MINIMAX_EARLY:
+      oss << "MINIMAX_EARLY"s;
+      break;
+    case Reason::MINIMAX_COMPLETE:
+      oss << "MINIMAX_COMPLETE"s;
+      break;
+    case Reason::OUT_OF_NODES:
+      oss << "OUT_OF_NODES"s;
+      break;
+    case Reason::ZOBRIST:
+      oss << "ZOBRIST"s;
+      break;
+    case Reason::DRAW:
+      oss << "DRAW"s;
+      break;
+    case Reason::FORCED_WIN:
+      oss << "FORCED_WIN"s;
+      break;
+    case Reason::WIN:
+      oss << "WIN"s;
+      break;
+    case Reason::PRUNING:
+      oss << "PRUNING"s;
+      break;
+    case Reason::CHAINING:
+      oss << "PRUNING"s;
+      break;
+    case Reason::UNKNOWN:
+      oss << "UNKNOWN"s;
+      break;
+    }
+  return oss;
+}
+
 class Children {
   vector<uint8_t> position;
   public:
