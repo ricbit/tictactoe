@@ -41,7 +41,7 @@ testcompile : test.cc ${HEADERS}
 
 singletest : test.cc ${HEADERS}
 	g++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
-	./singletest --gtest_filter=StateTest.Defens* > sym.txt
+	./singletest --gtest_filter=MiniMaxTest.Check32PNS* > sym.txt
 
 testc : test.cc ${HEADERS}
 	clang++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread

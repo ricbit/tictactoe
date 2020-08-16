@@ -114,9 +114,9 @@ class MiniMax {
     while (!traversal.empty() && nodes_visited < config.max_visited && nodes_created < config.max_created) {
       nodes.clear();
       for (int i = 0; i < slice && !traversal.empty(); i++) {
-        nodes.emplace_back(traversal.pop_best());
+        nodes.emplace_back(traversal.pop_best(solution, nodes_created, config));
       }
-      for_each(begin(nodes), end(nodes), [&](auto node) {
+      for_each(begin(nodes), end(nodes), [&](auto& node) {
         bool is_terminal = process_node(node);
         if (node.node->get_reason() == Reason::ZOBRIST) {
           running_zobrist++;
@@ -173,7 +173,6 @@ class MiniMax {
 
   BoardValue save_node(Node<M> *node, optional<Zobrist> node_zobrist,
       BoardValue value, Reason reason, Turn turn, bool is_final = true) {
-    const lock_guard lock(node_m);
     return unsafe_save_node(node, node_zobrist, value, reason, turn, is_final);
   }
 

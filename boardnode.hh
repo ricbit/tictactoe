@@ -106,6 +106,7 @@ class Node {
       packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
+      packed_values.is_eval = static_cast<uint8_t>(false);
       packed_values.proof = static_cast<unsigned>(turn == Turn::X ? 1_pn : ProofNumber{children_size});
       packed_values.disproof = static_cast<unsigned>(turn == Turn::X ? ProofNumber{children_size} : 1_pn);
     }
@@ -118,6 +119,7 @@ class Node {
       uint8_t reason : 4;
       uint8_t is_final : 1;
       uint8_t is_root : 1;
+      uint8_t is_eval : 1;
       unsigned count : nodes_width;
       signed parent : pointer_width;
       signed zobrist_first : pointer_width;
@@ -233,6 +235,12 @@ class Node {
     }
     const BoardValue get_parent_value() const {
       return has_parent() ? get_parent()->get_value() : BoardValue::UNKNOWN;
+    }
+    bool is_eval() const {
+      return packed_values.is_eval;
+    }
+    void set_is_eval(bool is_eval) {
+      packed_values.is_eval = is_eval;
     }
     bool is_root() const {
       return packed_values.is_root;
@@ -397,6 +405,8 @@ class ChildrenBuilder {
 
     auto s = ForcingMove<N, D>(current_state);
     auto forcing = s.check(to_mark(turn), open_positions);
+    /*current_state.print();
+    cout << endl;*/
     if (forcing.first.has_value()) {
       assert(forcing.second != to_mark(turn));
       child_state.emplace_back(current_state);
