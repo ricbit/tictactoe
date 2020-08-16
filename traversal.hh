@@ -45,12 +45,12 @@ class DFS {
   BoardNode<N, D, M> pop_best(SolutionTree<M>& solution, int& nodes_created, Config& config) {
     BoardNode<N, D, M> node = next.top();
     next.pop();
-    if (step < 100) {
+    /*if (step < 100) {
       ostringstream oss;
       oss << "step" << step++ << ".dot";
       DotDumper dd(solution.get_root(), data, oss.str());
       dd.dump();
-    }
+    }*/
     return node;
   }
   bool empty() const {
@@ -149,12 +149,12 @@ class PNSearch {
     } else {
       update_pn_value(node, board_node.turn);
     }
-    if (step < 100) {
+    /*if (step < 100) {
       ostringstream oss;
       oss << "step" << step++ << ".dot";
       DotDumper dd(root, data, oss.str());
       dd.dump();
-    }
+    }*/
   }
   float estimate_work(const Node<M> *node) {
     return node->estimate_work();
@@ -162,22 +162,9 @@ class PNSearch {
  private:
   template<typename Config>
   BoardNode<N, D, M> choose_best_pn_node(SolutionTree<M>& solution, int& nodes_created, Config& config) {
-    return search_or_node(root, solution, nodes_created, config);
-    /*if (!descent.has_value()) {
-      auto chosen_node = search_or_node(root);
-      descent = chosen_node.node;
-      return chosen_node;
-    } else {
-      if ((*descent)->get_children().empty()) {
-        descent.reset();
-        return pop_best();
-      }
-      auto children = (*descent)->get_children();
-      int size = children.size();
-      descent = children[rand() % size].second;
-      return choose(BoardNode<N, D, M>{(*descent)->rebuild_state(data), (*descent)->get_turn(), *descent});
-    }*/
+    return search_any_node(root, solution, nodes_created, config, true);
   }
+
   void update_pn_value(Node<M> *node, Turn turn) {
     if (node->is_final() || !node->has_children()) {
       node->work = 1.0f;
@@ -212,8 +199,10 @@ class PNSearch {
       }
     }
   }
+
   template<typename Config>
-  BoardNode<N, D, M> search_or_node(Node<M>* node, SolutionTree<M>& solution, int& nodes_created, Config& config) {
+  BoardNode<N, D, M> search_any_node(
+      Node<M>* node, SolutionTree<M>& solution, int& nodes_created, Config& config, bool or_node) {
     if (!node->is_eval()) {
       auto board_node = BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
       node->set_is_eval(true);
@@ -225,23 +214,13 @@ class PNSearch {
       builder.build_children(board_node, solution, nodes_created);
     }
     auto children = node->get_children();
-    return search_and_node(min_proof(children), solution, nodes_created, config);
-  }
-  template<typename Config>
-  BoardNode<N, D, M> search_and_node(Node<M>* node, SolutionTree<M>& solution, int& nodes_created, Config& config) {
-    if (!node->is_eval()) {
-      auto board_node = BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
-      node->set_is_eval(true);
-      return board_node;
+    if (or_node) {
+      return search_any_node(min_proof(children), solution, nodes_created, config, false);
+    } else {
+      return search_any_node(min_disproof(children), solution, nodes_created, config, true);
     }
-    if (!node->has_children()) {
-      auto board_node = BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
-      ChildrenBuilder<N, D, Config> builder;
-      builder.build_children(board_node, solution, nodes_created);
-    }
-    auto children = node->get_children();
-    return search_or_node(min_disproof(children), solution, nodes_created, config);
   }
+
   template<typename C>
   auto min_proof(const C& children) {
     return min_element(begin(children), end(children), [](const auto &a, const auto& b) {
