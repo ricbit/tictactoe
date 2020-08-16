@@ -36,7 +36,7 @@ class DFS {
   template<typename S, typename Config>
   void push_parent(BoardNode<N, D, M> board_node, S& solution, int &nodes_created, Config& config) {
     ChildrenBuilder<N, D, Config> builder;
-    auto children = builder.build_children(board_node, solution, nodes_created);
+    auto children = builder.build_children(board_node, solution, nodes_created, CreationType::ALL_NODES);
     for (auto& child : children) {
       push_node(child);
     }
@@ -79,7 +79,7 @@ class BFS {
   template<typename S, typename Config>
   void push_parent(BoardNode<N, D, M> board_node, S& solution, int &nodes_created, Config& config) {
     ChildrenBuilder<N, D, Config> builder;
-    auto children = builder.build_children(board_node, solution, nodes_created);
+    auto children = builder.build_children(board_node, solution, nodes_created, CreationType::ALL_NODES);
     for (auto& child : children) {
       push_node(child);
     }
@@ -211,7 +211,8 @@ class PNSearch {
     if (!node->has_children()) {
       auto board_node = BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
       ChildrenBuilder<N, D, Config> builder;
-      builder.build_children(board_node, solution, nodes_created);
+      CreationType type = or_node ? CreationType::OR_NODE : CreationType::AND_NODE;
+      builder.build_children(board_node, solution, nodes_created, type);
     }
     auto children = node->get_children();
     if (or_node) {

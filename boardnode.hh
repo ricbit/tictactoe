@@ -351,6 +351,12 @@ struct BoardNode {
   Node<M> *node;
 };
 
+enum class CreationType {
+  OR_NODE,
+  AND_NODE,
+  ALL_NODES
+};
+
 template<int N, int D, typename Config = DefaultConfig>
 class ChildrenBuilder {
  public:
@@ -359,7 +365,7 @@ class ChildrenBuilder {
 
   template<typename S>
   bag<BoardNode<N, D, M>> build_children(
-      const BoardNode<N, D, M>& board_node, S& solution, int& nodes_created) {
+      const BoardNode<N, D, M>& board_node, S& solution, int& nodes_created, CreationType type) {
     auto& [current_state, turn, node] = board_node;
     auto open_positions = current_state.get_open_positions(to_mark(turn));
     auto [sorted, child_state] = get_children(current_state, turn, open_positions);
