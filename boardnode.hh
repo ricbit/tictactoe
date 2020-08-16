@@ -72,31 +72,11 @@ ostream& operator<<(ostream& oss, const Reason& value) {
   return oss;
 }
 
-class Children {
-  vector<uint8_t> position;
-  public:
-  void emplace_back(Position pos) {
-    position.push_back(static_cast<uint8_t>(pos));
-  }
-  Position operator[](int index) const {
-    return Position{position[index]};
-  }
-  void reserve(int size) {
-    position.reserve(size);
-  }
-  bool empty() const {
-    return position.empty();
-  }
-  auto size() const {
-    return position.size();
-  }
-};
-
 template<int M>
 class Node {
   public:
     Node(Node *parent_node, Turn turn, int children_size) {
-      childrenx.reserve(children_size);
+      position.reserve(children_size);
       packed_values.parent = static_cast<signed>(distance(parent_node, this));
       packed_values.zobrist_first = static_cast<signed>(0);
       packed_values.zobrist_next = static_cast<signed>(0);
@@ -130,7 +110,7 @@ class Node {
     } packed_values;
     bool children_built = false;
     float work = 0.0f;
-    Children childrenx;
+    vector<uint8_t> position;
 
     bool has_children() const {
       return children_built;
@@ -138,17 +118,17 @@ class Node {
 
     auto emplace_child(Position pos, Node *child) {
       children_built = true;
-      if (childrenx.empty()) {
+      if (position.empty()) {
         packed_values.first_child = distance(child, this);
       }
-      childrenx.emplace_back(pos);
+      position.emplace_back(static_cast<uint8_t>(pos));
       return make_pair(pos, child);
     }
     const vector<pair<Position, Node*>> get_children() const {
       assert(children_built);
       vector<pair<Position, Node*>> copy_children;
-      for (int i = 0; i < static_cast<int>(childrenx.size()); i++) {
-        Position pos = Position{childrenx[i]};
+      for (int i = 0; i < static_cast<int>(position.size()); i++) {
+        Position pos = Position{position[i]};
         Node *child = get_first_child() + i;
         if (child->get_reason() == Reason::PRUNING) {
           continue;
