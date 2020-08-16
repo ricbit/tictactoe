@@ -25,8 +25,8 @@ class DotDumper {
  private:
   string to_html(const Node<M>* node) {
     ostringstream oss;
-    oss << "[label=\"";
-    oss << "p " << node->get_proof() << " d " << node->get_disproof();
+    oss << "[label=\"" << node->get_value() << "\n" << node->get_reason() << "\n";
+    oss << " p " << node->get_proof() << " d " << node->get_disproof();
     oss << "\" ";
     if (node->is_final()) {
       oss << "color=red";
