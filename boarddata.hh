@@ -31,8 +31,6 @@ SEMANTIC_INDEX(Crossing, cross)
 SEMANTIC_INDEX(ProofNumber, pn)
 SEMANTIC_INDEX(NodeCount, nc)
 
-constexpr ProofNumber INFTY = 1'000'000_pn;
-
 enum class Direction {
   equal,
   up,

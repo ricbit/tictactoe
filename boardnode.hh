@@ -111,6 +111,8 @@ class Node {
     }
     constexpr static unsigned nodes_width = bit_width(static_cast<unsigned>(M));
     constexpr static unsigned pointer_width = 1 + nodes_width;
+    constexpr static unsigned proof_width = 16;
+    constexpr static ProofNumber INFTY = ProofNumber{(1u << proof_width) - 1};
     struct {
       uint8_t value : 2;
       uint8_t reason : 4;
@@ -121,8 +123,8 @@ class Node {
       signed zobrist_first : pointer_width;
       signed zobrist_next : pointer_width;
       signed first_child : pointer_width;
-      unsigned proof : 16;
-      unsigned disproof : 16;
+      unsigned proof : proof_width;
+      unsigned disproof : proof_width;
     } packed_values;
     bool children_built = false;
     float work = 0.0f;

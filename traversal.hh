@@ -131,10 +131,10 @@ class PNSearch {
     if (is_terminal) {
       if (node->get_value() == BoardValue::X_WIN) {
         node->set_proof(0_pn);
-        node->set_disproof(INFTY);
+        node->set_disproof(Node<M>::INFTY);
       } else if (node->get_value() == BoardValue::O_WIN || node->get_value() == BoardValue::DRAW) {
         node->set_disproof(0_pn);
-        node->set_proof(INFTY);
+        node->set_proof(Node<M>::INFTY);
       } else {
         assert(false);
       }
@@ -182,13 +182,13 @@ class PNSearch {
         auto proof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
           return ProofNumber{a + b.second->get_proof()};
         });
-        node->set_proof(clamp(proof, 0_pn, INFTY));
+        node->set_proof(clamp(proof, 0_pn, Node<M>::INFTY));
         node->set_disproof(min_disproof(children)->get_disproof());
       } else {
         auto disproof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
           return ProofNumber{a + b.second->get_disproof()};
         });
-        node->set_disproof(clamp(disproof, 0_pn, INFTY));
+        node->set_disproof(clamp(disproof, 0_pn, Node<M>::INFTY));
         node->set_proof(min_proof(children)->get_proof());
       }
     }
