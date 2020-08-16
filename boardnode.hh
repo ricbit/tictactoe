@@ -63,7 +63,7 @@ ostream& operator<<(ostream& oss, const Reason& value) {
       oss << "PRUNING"s;
       break;
     case Reason::CHAINING:
-      oss << "PRUNING"s;
+      oss << "CHAINING"s;
       break;
     case Reason::UNKNOWN:
       oss << "UNKNOWN"s;

@@ -99,6 +99,9 @@ class BFS {
 template<int N, int D, int M>
 class PNSearch {
   optional<Node<M>*> descent;
+  int step = 0;
+  const BoardData<N, D>& data;
+  Node<M> *root;
  public:
   explicit PNSearch(const BoardData<N, D>& data, Node<M> *root) : data(data), root(root) {
   }
@@ -137,6 +140,10 @@ class PNSearch {
       }
     }
     update_pn_value(node, board_node.turn);
+    ostringstream oss;
+    oss << "step" << step++ << ".dot";
+    DotDumper dd(root, data, oss.str());
+    dd.dump();
   }
   float estimate_work(const Node<M> *node) {
     return node->estimate_work();
@@ -217,8 +224,6 @@ class PNSearch {
       return a.second->get_disproof() < b.second->get_disproof();
     })->second;
   }
-  const BoardData<N, D>& data;
-  Node<M> *root;
 };
 
 #endif
