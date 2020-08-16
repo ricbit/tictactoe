@@ -75,6 +75,12 @@ ostream& operator<<(ostream& oss, const Reason& value) {
 template<int M>
 class Node {
   public:
+    static ProofNumber initial_proof(Turn turn, int children_size) {
+      return turn == Turn::X ? 1_pn : ProofNumber{children_size};
+    }
+    static ProofNumber initial_disproof(Turn turn, int children_size) {
+      return turn == Turn::X ? ProofNumber{children_size} : 1_pn;
+    }
     Node(Node *parent_node, Turn turn, int children_size) {
       position.reserve(children_size);
       packed_values.parent = static_cast<signed>(distance(parent_node, this));
@@ -87,8 +93,8 @@ class Node {
       packed_values.is_final = static_cast<uint8_t>(false);
       packed_values.is_root = static_cast<uint8_t>(false);
       packed_values.is_eval = static_cast<uint8_t>(false);
-      packed_values.proof = static_cast<unsigned>(turn == Turn::X ? 1_pn : ProofNumber{children_size});
-      packed_values.disproof = static_cast<unsigned>(turn == Turn::X ? ProofNumber{children_size} : 1_pn);
+      packed_values.proof = static_cast<unsigned>(initial_proof(turn, children_size));
+      packed_values.disproof = static_cast<unsigned>(initial_disproof(turn, children_size));
     }
     constexpr static unsigned nodes_width = bit_width(static_cast<unsigned>(M));
     constexpr static unsigned pointer_width = 1 + nodes_width;
