@@ -111,6 +111,7 @@ class Node {
     bool children_built = false;
     float work = 0.0f;
     vector<uint8_t> position;
+    vector<Node<M>*> children;
 
     bool has_children() const {
       return children_built;
@@ -122,6 +123,7 @@ class Node {
         packed_values.first_child = distance(child, this);
       }
       position.emplace_back(static_cast<uint8_t>(pos));
+      children.push_back(child);
       return make_pair(pos, child);
     }
     const vector<pair<Position, Node*>> get_children() const {
@@ -129,7 +131,7 @@ class Node {
       vector<pair<Position, Node*>> copy_children;
       for (int i = 0; i < static_cast<int>(position.size()); i++) {
         Position pos = Position{position[i]};
-        Node *child = get_first_child() + i;
+        Node *child = children[i];
         if (child->get_reason() == Reason::PRUNING) {
           continue;
         }
