@@ -167,11 +167,6 @@ class MiniMax {
 
   BoardValue save_node(Node<M> *node, optional<Zobrist> node_zobrist,
       BoardValue value, Reason reason, Turn turn, bool is_final = true) {
-    return unsafe_save_node(node, node_zobrist, value, reason, turn, is_final);
-  }
-
-  BoardValue unsafe_save_node(Node<M> *node, optional<Zobrist> node_zobrist,
-      BoardValue value, Reason reason, Turn turn, bool is_final = true) {
     node->set_reason(reason);
     node->set_value(value);
     if (!node->is_final() && is_final) {
@@ -207,8 +202,7 @@ class MiniMax {
       auto parent_reason = is_early ?
           Reason::MINIMAX_EARLY : Reason::MINIMAX_COMPLETE;
       auto updated_parent_value = new_parent_value.value_or(parent->get_value());
-      unsafe_save_node(parent, {},
-          updated_parent_value, parent_reason, flip(turn), parent_is_final);
+      save_node(parent, {}, updated_parent_value, parent_reason, flip(turn), parent_is_final);
     }
   }
 
