@@ -13,7 +13,7 @@
 
 struct DebugConfig {
   constexpr static NodeCount max_visited = 10'000'000_nc;
-  constexpr static NodeCount max_created = 1'000'000_nc;
+  constexpr static NodeCount max_created = 10'000'000_nc;
   ostream& debug = cout;
   bool should_prune = true;
   bool should_log_evolution = true;
@@ -21,7 +21,7 @@ struct DebugConfig {
 
 int main(int argc, char **argv) {
   constexpr int N = 4;
-  constexpr int D = 2;
+  constexpr int D = 3;
   BoardData<N, D> data;
   State state(data);
   cout << "sizeof(Node) = " << sizeof(Node<MiniMax<N, D>::M>) << "\n";

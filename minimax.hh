@@ -78,8 +78,6 @@ class MiniMax {
   const BoardData<N, D>& data;
   SolutionTree<M> solution;
   Traversal traversal;
-  mutex next_m;
-  mutex node_m;
   unordered_map<Zobrist, Node<M>*> zobrist;
   int nodes_visited = 0;
   int nodes_created = 1;
@@ -108,27 +106,23 @@ class MiniMax {
 
   optional<BoardValue> queue_play(BoardNode<N, D, M> root) {
     traversal.push_node(root);
-    constexpr int slice = 1;
-    vector<BoardNode<N, D, M>> nodes;
-    nodes.reserve(slice);
     while (!traversal.empty() && nodes_visited < config.max_visited && nodes_created < config.max_created) {
-      nodes.clear();
-      for (int i = 0; i < slice && !traversal.empty(); i++) {
-        nodes.emplace_back(traversal.pop_best(solution, nodes_created, config));
-      }
-      for_each(begin(nodes), end(nodes), [&](auto& node) {
-        bool is_terminal = process_node(node);
-        if (node.node->get_reason() == Reason::ZOBRIST) {
-          running_zobrist++;
-        }
-        if (config.should_log_evolution) {
-          ofevolution << solution.get_root()->get_proof() << " " <<  solution.get_root()->get_disproof() << " "
-                      << node.node->get_depth() << " " << running_zobrist << " " << running_final << "\n";
-        }
-        traversal.retire(node, is_terminal);
-      });
+      auto board_node = traversal.pop_best(solution, nodes_created, config);
+      bool is_terminal = process_node(board_node);
+      log_stats(board_node);
+      traversal.retire(board_node, is_terminal);
     }
     return root.node->get_value();
+  }
+
+  void log_stats(const BoardNode<N, D, M>& node) {
+    if (node.node->get_reason() == Reason::ZOBRIST) {
+      running_zobrist++;
+    }
+    if (config.should_log_evolution) {
+      ofevolution << solution.get_root()->get_proof() << " " <<  solution.get_root()->get_disproof() << " "
+                  << node.node->get_depth() << " " << running_zobrist << " " << running_final << "\n";
+    }
   }
 
   bool process_node(const BoardNode<N, D, M>& board_node) {
