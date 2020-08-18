@@ -392,8 +392,7 @@ class ChildrenBuilder {
 
  private:
   template<typename B>
-  pair<vector<pair<int, Position>>, bag<State<N, D>>> get_children(
-      const State<N, D>& current_state, Turn turn, B open_positions) {
+  auto get_children(const State<N, D>& current_state, Turn turn, B open_positions) {
     vector<pair<int, Position>> sorted;
     bag<State<N, D>> child_state;
 
@@ -417,7 +416,7 @@ class ChildrenBuilder {
         last_child.play(pos, to_mark(turn));
       }
     }
-    return {sorted, child_state};
+    return make_pair(sorted, child_state);
   }
 
   template<typename B>
