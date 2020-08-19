@@ -81,7 +81,8 @@ class Node {
     static ProofNumber initial_disproof(Turn turn, int children_size) {
       return turn == Turn::X ? ProofNumber{children_size} : 1_pn;
     }
-    Node(Node *parent_node, Turn turn, int children_size) : children_size(children_size) {
+    Node(Node *parent_node, Turn turn, int children_size)
+        : children_size(children_size), children(children_size, nullptr) {
       position.reserve(children_size);
       packed_values.parent = static_cast<signed>(distance(parent_node, this));
       packed_values.zobrist_first = static_cast<signed>(0);
@@ -129,8 +130,8 @@ class Node {
       if (position.empty()) {
         packed_values.first_child = distance(child, this);
       }
+      children[position.size()] = child;
       position.emplace_back(static_cast<uint8_t>(pos));
-      children.push_back(child);
       assert(children.size() <= children_size);
       return make_pair(pos, child);
     }
@@ -373,6 +374,9 @@ struct Embryo {
   Turn turn;
   int children_size;
   State<N, D> state;
+  Embryo(Position pos, Node<M>* parent, Turn turn, int children_size, State<N, D> state)
+      : pos(pos), parent(parent), turn(turn), children_size(children_size), state(state) {
+  }
 };
 
 template<int N, int D, typename Config = DefaultConfig>
