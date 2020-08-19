@@ -363,29 +363,46 @@ enum class CreationType {
   ALL_NODES
 };
 
+template<int N, int D, int M>
+struct Embryo {
+  Position pos;
+  Node<M>* parent;
+  Turn turn;
+  int children_size;
+  State<N, D> state;
+};
+
 template<int N, int D, typename Config = DefaultConfig>
 class ChildrenBuilder {
  public:
   constexpr static NodeCount M = Config::max_created;
   constexpr static Config config = Config();
 
-  template<typename S>
-  bag<BoardNode<N, D, M>> build_children(
-      const BoardNode<N, D, M>& board_node, S& solution, int& nodes_created, CreationType type) {
+  bag<Embryo<N, D, M>> get_embryos(const BoardNode<N, D, M>& board_node) {
     auto& [current_state, turn, node] = board_node;
     auto open_positions = current_state.get_open_positions(to_mark(turn));
     auto [sorted, child_state] = get_children(current_state, turn, open_positions);
     int size = sorted.size();
-    bag<BoardNode<N, D, M>> children;
+    bag<Embryo<N, D, M>> children;
     for (int i = size - 1; i >= 0; i--) {
+      auto children_size = child_state[i].get_open_positions(to_mark(flip(turn))).count();
+      children.emplace_back(sorted[i].second, node, flip(turn), children_size, child_state[i]);
+    }
+    return children;
+  }
+
+  template<typename S>
+  auto build_children(S& solution, int& nodes_created, bag<Embryo<N, D, M>>& embryos) {
+    bag<BoardNode<N, D, M>> children;
+    for (auto& embryo : embryos) {
       if (nodes_created == config.max_created) {
         return children;
       }
       nodes_created++;
-      const auto& child = child_state[i];
-      const auto& child_node = node->emplace_child(sorted[i].second,
-          solution.create_node(node, flip(turn), child.get_open_positions(to_mark(flip(turn))).count()));
-      children.push_back(BoardNode<N, D, M>{child, flip(turn), child_node.second});
+      const auto& child = embryo.state;
+      const auto& child_node = embryo.parent->emplace_child(embryo.pos,
+        solution.create_node(embryo.parent, embryo.turn, embryo.children_size));
+      children.push_back(BoardNode<N, D, M>{child, embryo.turn, child_node.second});
     }
     return children;
   }
