@@ -106,7 +106,7 @@ class SolutionTree {
 
   explicit SolutionTree(int board_size) {
     nodes.reserve(M);
-    nodes.emplace_back(nullptr, Turn::X, 0);
+    nodes.emplace_back(nullptr, Turn::X, board_size);
     root = &nodes[0];
     root->set_is_root(true);
   }

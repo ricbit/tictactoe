@@ -81,7 +81,7 @@ class Node {
     static ProofNumber initial_disproof(Turn turn, int children_size) {
       return turn == Turn::X ? ProofNumber{children_size} : 1_pn;
     }
-    Node(Node *parent_node, Turn turn, int children_size) {
+    Node(Node *parent_node, Turn turn, int children_size) : children_size(children_size) {
       position.reserve(children_size);
       packed_values.parent = static_cast<signed>(distance(parent_node, this));
       packed_values.zobrist_first = static_cast<signed>(0);
@@ -114,6 +114,7 @@ class Node {
       unsigned proof : proof_width;
       unsigned disproof : proof_width;
     } packed_values;
+    unsigned children_size;
     bool children_built = false;
     float work = 0.0f;
     vector<uint8_t> position;
@@ -130,8 +131,10 @@ class Node {
       }
       position.emplace_back(static_cast<uint8_t>(pos));
       children.push_back(child);
+      assert(children.size() <= children_size);
       return make_pair(pos, child);
     }
+
     const vector<pair<Position, Node*>> get_children() const {
       assert(children_built);
       vector<pair<Position, Node*>> copy_children;
@@ -383,12 +386,12 @@ class ChildrenBuilder {
     auto open_positions = current_state.get_open_positions(to_mark(turn));
     auto [sorted, child_state] = get_children(current_state, turn, open_positions);
     int size = sorted.size();
-    bag<Embryo<N, D, M>> children;
+    bag<Embryo<N, D, M>> embryos;
     for (int i = size - 1; i >= 0; i--) {
       auto children_size = child_state[i].get_open_positions(to_mark(flip(turn))).count();
-      children.emplace_back(sorted[i].second, node, flip(turn), children_size, child_state[i]);
+      embryos.emplace_back(sorted[i].second, node, flip(turn), children_size, child_state[i]);
     }
-    return children;
+    return embryos;
   }
 
   template<typename S>
