@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   State state(data);
   cout << "sizeof(Node) = " << sizeof(Node<MiniMax<N, D>::M>) << "\n";
   //auto minimax = MiniMax<N, D, DFS<N, D, DebugConfig::max_created>, DebugConfig>(state, data);
-  auto minimax = MiniMax<N, D, PNSearch<N, D, DebugConfig::max_created>, DebugConfig>(state, data);
+  auto minimax = MiniMax<N, D, DFS<N, D, DebugConfig::max_created>, DebugConfig>(state, data);
   auto result = minimax.play(state, Turn::X);
   cout << *result << "\n";
   if (!minimax.get_solution().validate()) {

@@ -394,12 +394,12 @@ class ChildrenBuilder {
   bag<Embryo<N, D, M>> get_embryos(const BoardNode<N, D, M>& board_node) {
     auto& [current_state, turn, node] = board_node;
     auto open_positions = current_state.get_open_positions(to_mark(turn));
-    auto [sorted, child_state] = get_children(current_state, turn, open_positions);
-    int size = sorted.size();
+    auto children = get_children(current_state, turn, open_positions);
     bag<Embryo<N, D, M>> embryos;
-    for (int i = size - 1; i >= 0; i--) {
-      auto children_size = child_state[i].get_open_positions(to_mark(flip(turn))).count();
-      embryos.emplace_back(sorted[i].second, node, flip(turn), children_size, child_state[i]);
+
+    for (auto& [position, child_state] : children) {
+      auto children_size = child_state.get_open_positions(to_mark(flip(turn))).count();
+      embryos.emplace_back(position, node, flip(turn), children_size, child_state);
     }
     return embryos;
   }
@@ -423,8 +423,7 @@ class ChildrenBuilder {
  private:
   template<typename B>
   auto get_children(const State<N, D>& current_state, Turn turn, B open_positions) {
-    vector<pair<int, Position>> sorted;
-    bag<State<N, D>> child_state;
+    bag<pair<Position, State<N, D>>> child_state;
 
     auto s = ForcingMove<N, D>(current_state);
     auto forcing = s.check(to_mark(turn), open_positions);
@@ -432,41 +431,19 @@ class ChildrenBuilder {
     cout << endl;*/
     if (forcing.first.has_value()) {
       assert(forcing.second != to_mark(turn));
-      child_state.emplace_back(current_state);
-      State<N, D>& cloned = *child_state.begin();
+      child_state.emplace_back(make_pair(*forcing.first, current_state));
+      State<N, D>& cloned = child_state.begin()->second;
       bool game_ended = cloned.play(*forcing.first, to_mark(turn));
       assert(!game_ended);
-      int dummy_score = 1;
-      sorted = {{dummy_score, *forcing.first}};
     } else {
       child_state.reserve(open_positions.count());
-      sorted = get_sorted_positions(current_state, open_positions);
-      for (const auto& [score, pos] : sorted) {
-        auto& last_child = child_state.emplace_back(current_state);
-        last_child.play(pos, to_mark(turn));
+      for (auto position : open_positions) {
+        auto& last_child = child_state.emplace_back(make_pair(position, current_state));
+        last_child.second.play(position, to_mark(turn));
       }
     }
-    return make_pair(sorted, child_state);
-  }
-
-  template<typename B>
-  vector<pair<int, Position>> get_sorted_positions(const State<N, D>& current_state, const B& open) {
-    vector<pair<int, Position>> paired;
-    paired.reserve(open.count());
-    uniform_positions(paired, open, current_state);
-    return paired;
-  }
-
-  template<typename B>
-  void uniform_positions(vector<pair<int, Position>>& paired,
-      const B& open, const State<N, D>& current_state) {
-    for (Position pos : open.all()) {
-      paired.push_back(make_pair(
-          current_state.get_current_accumulation(pos), pos));
-    }
-    sort(rbegin(paired), rend(paired));
+    return child_state;
   }
 };
-
 
 #endif
