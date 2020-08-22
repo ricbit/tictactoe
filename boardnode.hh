@@ -376,12 +376,14 @@ enum class CreationType {
 template<int N, int D, int M>
 struct Embryo {
   Position pos;
+  LineCount accumulation_point;
   Node<M>* parent;
   Turn turn;
   int children_size;
   State<N, D> state;
-  Embryo(Position pos, Node<M>* parent, Turn turn, int children_size, State<N, D> state)
-      : pos(pos), parent(parent), turn(turn), children_size(children_size), state(state) {
+  Embryo(Position pos, LineCount accumulation_point, Node<M>* parent, Turn turn, int children_size, State<N, D> state)
+      : pos(pos), accumulation_point(accumulation_point),
+        parent(parent), turn(turn), children_size(children_size), state(state) {
   }
 };
 
@@ -397,9 +399,9 @@ class ChildrenBuilder {
     auto children = get_children(current_state, turn, open_positions);
     bag<Embryo<N, D, M>> embryos;
 
-    for (auto& [position, child_state] : children) {
+    for (auto& [position, current_accumulation, child_state] : children) {
       auto children_size = child_state.get_open_positions(to_mark(flip(turn))).count();
-      embryos.emplace_back(position, node, flip(turn), children_size, child_state);
+      embryos.emplace_back(position, current_accumulation, node, flip(turn), children_size, child_state);
     }
     return embryos;
   }
@@ -423,7 +425,7 @@ class ChildrenBuilder {
  private:
   template<typename B>
   auto get_children(const State<N, D>& current_state, Turn turn, B open_positions) {
-    bag<pair<Position, State<N, D>>> child_state;
+    bag<tuple<Position, LineCount, State<N, D>>> child_state;
 
     auto s = ForcingMove<N, D>(current_state);
     auto forcing = s.check(to_mark(turn), open_positions);
@@ -431,15 +433,17 @@ class ChildrenBuilder {
     cout << endl;*/
     if (forcing.first.has_value()) {
       assert(forcing.second != to_mark(turn));
-      child_state.emplace_back(make_pair(*forcing.first, current_state));
-      State<N, D>& cloned = child_state.begin()->second;
+      LineCount dummy_count = 0_lcount;
+      child_state.emplace_back(*forcing.first, dummy_count, current_state);
+      State<N, D>& cloned = get<2>(*child_state.begin());
       bool game_ended = cloned.play(*forcing.first, to_mark(turn));
       assert(!game_ended);
     } else {
       child_state.reserve(open_positions.count());
       for (auto position : open_positions) {
-        auto& last_child = child_state.emplace_back(make_pair(position, current_state));
-        last_child.second.play(position, to_mark(turn));
+        auto& last_child = child_state.emplace_back(
+            position, current_state.get_current_accumulation(position), current_state);
+        get<2>(last_child).play(position, to_mark(turn));
       }
     }
     return child_state;
