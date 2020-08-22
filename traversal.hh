@@ -38,14 +38,12 @@ class DFS {
     ChildrenBuilder<N, D, Config> builder;
     auto embryos = builder.get_embryos(board_node);
     auto children = builder.build_children(solution, nodes_created, embryos);
-    vector<pair<Position, BoardNode<N, D, M>*>> pointers;
+    vector<pair<LineCount, BoardNode<N, D, M>*>> pointers;
     for (int i = 0; i < static_cast<int>(children.size()); i++) {
-      pointers.emplace_back(embryos[i].pos, &children[i]);
+      pointers.emplace_back(embryos[i].accumulation_point, &children[i]);
     }
     sort(begin(pointers), end(pointers), [](const auto& a, const auto& b) {
-      const auto& a_state = a.second->current_state;
-      const auto& b_state = b.second->current_state;
-      return a_state.get_current_accumulation(a.first) < b_state.get_current_accumulation(b.first);
+      return a.first < b.first;
     });
     for (auto& child : pointers) {
       push_node(*child.second);
