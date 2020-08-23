@@ -21,12 +21,12 @@ struct DebugConfig {
 
 int main(int argc, char **argv) {
   constexpr int N = 4;
-  constexpr int D = 2;
+  constexpr int D = 3;
   BoardData<N, D> data;
   State state(data);
   cout << "sizeof(Node) = " << sizeof(Node<MiniMax<N, D>::M>) << "\n";
   //auto minimax = MiniMax<N, D, DFS<N, D, DebugConfig::max_created>, DebugConfig>(state, data);
-  auto minimax = MiniMax<N, D, DFS<N, D, DebugConfig::max_created>, DebugConfig>(state, data);
+  auto minimax = MiniMax<N, D, PNSearch<N, D, DebugConfig::max_created>, DebugConfig>(state, data);
   auto result = minimax.play(state, Turn::X);
   cout << *result << "\n";
   if (!minimax.get_solution().validate()) {

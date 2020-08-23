@@ -234,14 +234,27 @@ class PNSearch {
 
   template<typename C>
   auto min_proof(const C& children) {
-    return min_element(begin(children), end(children), [](const auto &a, const auto& b) {
-      return a.second->get_proof() < b.second->get_proof();
+    return min_element(begin(children), end(children), [&](const auto &a, const auto& b) {
+      auto a_proof = a.second->get_proof();
+      auto b_proof = b.second->get_proof();
+      if (a_proof != b_proof) {
+        return a_proof < b_proof;
+      }
+      auto parent = a.second->get_parent()->rebuild_state(data);
+      return parent.get_current_accumulation(a.first) > parent.get_current_accumulation(b.first);
     })->second;
   }
   template<typename C>
   auto min_disproof(const C& children) {
-    return min_element(begin(children), end(children), [](const auto &a, const auto& b) {
-      return a.second->get_disproof() < b.second->get_disproof();
+    return min_element(begin(children), end(children), [&](const auto &a, const auto& b) {
+      //return a.second->get_disproof() < b.second->get_disproof();
+      auto a_disproof = a.second->get_disproof();
+      auto b_disproof = b.second->get_disproof();
+      if (a_disproof != b_disproof) {
+        return a_disproof < b_disproof;
+      }
+      auto parent = a.second->get_parent()->rebuild_state(data);
+      return parent.get_current_accumulation(a.first) > parent.get_current_accumulation(b.first);
     })->second;
   }
 };
