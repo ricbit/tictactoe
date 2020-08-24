@@ -193,16 +193,16 @@ class PNSearch {
       if (!children.empty()) {
         if (turn == Turn::O) {
           auto proof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
-              return ProofNumber{a + b.second->get_proof()};
-              });
+            return ProofNumber{a + b.second->get_proof()};
+          });
           node->set_proof(clamp(proof, 0_pn, Node<M>::INFTY));
-          node->set_disproof(min_disproof(children)->get_disproof());
+          node->set_disproof(min_disproof(node, children)->get_disproof());
         } else {
           auto disproof = accumulate(begin(children), end(children), 0_pn, [](const auto& a, const auto& b) {
-              return ProofNumber{a + b.second->get_disproof()};
-              });
+            return ProofNumber{a + b.second->get_disproof()};
+          });
           node->set_disproof(clamp(disproof, 0_pn, Node<M>::INFTY));
-          node->set_proof(min_proof(children)->get_proof());
+          node->set_proof(min_proof(node, children)->get_proof());
         }
       }
     }
@@ -230,34 +230,34 @@ class PNSearch {
     }
     auto children = node->get_children();
     if (or_node) {
-      return search_any_node(min_proof(children), solution, nodes_created, config, false);
+      return search_any_node(min_proof(node, children), solution, nodes_created, config, false);
     } else {
-      return search_any_node(min_disproof(children), solution, nodes_created, config, true);
+      return search_any_node(min_disproof(node, children), solution, nodes_created, config, true);
     }
   }
 
   template<typename C>
-  auto min_proof(const C& children) {
-    return min_value(children, [](const auto& node) {
+  auto min_proof(Node<M>* parent, const C& children) {
+    return min_value(parent, children, [](const auto& node) {
       return node->get_proof();
     });
   }
   template<typename C>
-  auto min_disproof(const C& children) {
-    return min_value(children, [](const auto& node) {
+  auto min_disproof(Node<M>* parent, const C& children) {
+    return min_value(parent, children, [](const auto& node) {
       return node->get_disproof();
     });
   }
   template<typename C, typename T>
-  auto min_value(const C& children, const T& pluck) {
+  auto min_value(Node<M>* parent, const C& children, const T& pluck) {
+    auto parent_state = parent->rebuild_state(data);
     return min_element(begin(children), end(children), [&](const auto &a, const auto& b) {
       auto a_value = pluck(a.second);
       auto b_value = pluck(b.second);
       if (a_value != b_value) {
         return a_value < b_value;
       }
-      auto parent = a.second->get_parent()->rebuild_state(data);
-      return parent.get_current_accumulation(a.first) > parent.get_current_accumulation(b.first);
+      return parent_state.get_current_accumulation(a.first) > parent_state.get_current_accumulation(b.first);
     })->second;
   }
 };
