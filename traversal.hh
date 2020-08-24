@@ -174,7 +174,7 @@ class PNSearch {
     return search_any_node(root, solution, nodes_created, config, true);
   }
 
-  void update_pn_value(Node<M> *node, Turn turn) {
+  void update_work(Node<M>* node) {
     if (node->is_final() || !node->has_children()) {
       node->work = 1.0f;
     } else {
@@ -184,6 +184,10 @@ class PNSearch {
         return a + b.second->work;
       }) / size;
     }
+  }
+
+  void update_pn_value(Node<M> *node, Turn turn) {
+    update_work(node);
     if (node->has_children()) {
       auto children = node->get_children();
       if (!children.empty()) {
