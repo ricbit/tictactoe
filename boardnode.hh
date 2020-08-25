@@ -390,7 +390,12 @@ class ChildrenBuilder {
   bag<Embryo<N, D, M>> get_embryos(const BoardNode<N, D, M>& board_node) {
     auto& [current_state, turn, node] = board_node;
     auto open_positions = current_state.get_open_positions(to_mark(turn));
-    auto children = get_children(current_state, turn, open_positions);
+    vector<Position> sorted_positions;
+    for (const auto pos : open_positions) {
+      sorted_positions.push_back(pos);
+    }
+    sort(begin(sorted_positions), end(sorted_positions));
+    auto children = get_children(current_state, turn, open_positions, sorted_positions);
     bag<Embryo<N, D, M>> embryos;
 
     for (auto& [position, current_accumulation, child_state] : children) {
@@ -418,7 +423,7 @@ class ChildrenBuilder {
 
  private:
   template<typename B>
-  auto get_children(const State<N, D>& current_state, Turn turn, B open_positions) {
+  auto get_children(const State<N, D>& current_state, Turn turn, B open_positions, vector<Position>& sorted) {
     bag<tuple<Position, LineCount, State<N, D>>> child_state;
 
     auto s = ForcingMove<N, D>(current_state);
@@ -433,8 +438,8 @@ class ChildrenBuilder {
       bool game_ended = cloned.play(*forcing.first, to_mark(turn));
       assert(!game_ended);
     } else {
-      child_state.reserve(open_positions.count());
-      for (auto position : open_positions) {
+      child_state.reserve(sorted.size());
+      for (auto position : sorted) {
         auto& last_child = child_state.emplace_back(
             position, current_state.get_current_accumulation(position), current_state);
         get<2>(last_child).play(position, to_mark(turn));
