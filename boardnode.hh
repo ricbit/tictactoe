@@ -375,10 +375,12 @@ struct Embryo {
   Turn turn;
   int children_size;
   State<N, D> state;
-  Node<M>* child;
-  Embryo(Position pos, LineCount accumulation_point, Node<M>* parent, Turn turn, int children_size, State<N, D> state)
+  Node<M>* self;
+  Embryo(Position pos, LineCount accumulation_point, Node<M>* parent, Turn turn, int children_size,
+         State<N, D> state, Node<M>* self)
       : pos(pos), accumulation_point(accumulation_point),
-        parent(parent), turn(turn), children_size(children_size), state(state) {
+        parent(parent), turn(turn), children_size(children_size),
+        state(state), self(self) {
   }
 };
 
@@ -399,9 +401,11 @@ class ChildrenBuilder {
     auto children = get_children(current_state, turn, open_positions, sorted_positions);
     bag<Embryo<N, D, M>> embryos;
 
-    for (auto& [position, current_accumulation, child_state] : children) {
+    for (int i = 0; i < static_cast<int>(children.size()); i++) {
+      auto& [position, current_accumulation, child_state] = children[i];
       auto children_size = child_state.get_open_positions(to_mark(flip(turn))).count();
-      embryos.emplace_back(position, current_accumulation, node, flip(turn), children_size, child_state);
+      embryos.emplace_back(
+          position, current_accumulation, node, flip(turn), children_size, child_state, node->children[i]);
     }
     return embryos;
   }
