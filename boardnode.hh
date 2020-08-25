@@ -367,12 +367,6 @@ struct BoardNode {
   Node<M> *node;
 };
 
-enum class CreationType {
-  OR_NODE,
-  AND_NODE,
-  ALL_NODES
-};
-
 template<int N, int D, int M>
 struct Embryo {
   Position pos;

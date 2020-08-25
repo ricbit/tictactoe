@@ -224,7 +224,6 @@ class PNSearch {
     if (!node->has_children()) {
       auto board_node = BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
       ChildrenBuilder<N, D, Config> builder;
-      //CreationType type = or_node ? CreationType::OR_NODE : CreationType::AND_NODE;
       auto embryos = builder.get_embryos(board_node);
       builder.build_children(solution, nodes_created, embryos);
     }
