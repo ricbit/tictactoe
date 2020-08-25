@@ -375,6 +375,7 @@ struct Embryo {
   Turn turn;
   int children_size;
   State<N, D> state;
+  Node<M>* child;
   Embryo(Position pos, LineCount accumulation_point, Node<M>* parent, Turn turn, int children_size, State<N, D> state)
       : pos(pos), accumulation_point(accumulation_point),
         parent(parent), turn(turn), children_size(children_size), state(state) {
@@ -433,6 +434,7 @@ class ChildrenBuilder {
     if (forcing.first.has_value()) {
       assert(forcing.second != to_mark(turn));
       LineCount dummy_count = 0_lcount;
+      child_state.clear();
       child_state.emplace_back(*forcing.first, dummy_count, current_state);
       State<N, D>& cloned = get<2>(*child_state.begin());
       bool game_ended = cloned.play(*forcing.first, to_mark(turn));
