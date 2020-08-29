@@ -87,7 +87,6 @@ class Node {
     packed_values.parent = static_cast<signed>(distance(parent_node, this));
     packed_values.zobrist_first = static_cast<signed>(0);
     packed_values.zobrist_next = static_cast<signed>(0);
-    packed_values.first_child = static_cast<signed>(0);
     packed_values.count = static_cast<unsigned>(0);
     packed_values.value = static_cast<uint8_t>(BoardValue::UNKNOWN);
     packed_values.reason = static_cast<uint8_t>(Reason::UNKNOWN);
@@ -111,7 +110,6 @@ class Node {
     signed parent : pointer_width;
     signed zobrist_first : pointer_width;
     signed zobrist_next : pointer_width;
-    signed first_child : pointer_width;
     unsigned proof : proof_width;
     unsigned disproof : proof_width;
   } packed_values;
@@ -127,9 +125,6 @@ class Node {
 
   auto emplace_child(Position pos, Node *child) {
     children_built = true;
-    if (position.empty()) {
-      packed_values.first_child = distance(child, this);
-    }
     children[position.size()] = child;
     position.emplace_back(static_cast<uint8_t>(pos));
     assert(children.size() <= children_size);
@@ -153,10 +148,8 @@ class Node {
     }
     return copy_children;
   }
-  Node *get_first_child() const {
-    Node *next = const_cast<Node *>(this);
-    advance(next, -static_cast<signed>(packed_values.first_child));
-    return next;
+  Node *get_child(int child) const {
+    return children[child];
   }
   Node *get_zobrist_first() {
     Node *next = this;
