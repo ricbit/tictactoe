@@ -384,17 +384,17 @@ struct Embryo {
   Turn turn;
   int children_size;
   State<N, D> state;
-  Node<M>* self;
+  Node<M>** self;
   ProofNumber proof;
   ProofNumber disproof;
   Embryo(Position pos, LineCount accumulation_point, Node<M>* parent, Turn turn, int children_size,
-         State<N, D> state, Node<M>* self)
+         State<N, D> state, Node<M>** self)
       : pos(pos), accumulation_point(accumulation_point),
         parent(parent), turn(turn), children_size(children_size),
         state(state), self(self) {
-    if (self != nullptr) {
-      proof = self->get_proof();
-      disproof = self->get_disproof();
+    if (*self != nullptr) {
+      proof = (*self)->get_proof();
+      disproof = (*self)->get_disproof();
     } else {
       proof = Node<M>::initial_proof(turn, children_size);
       disproof = Node<M>::initial_disproof(turn, children_size);
@@ -424,7 +424,7 @@ class ChildrenBuilder {
       auto& [position, current_accumulation, child_state] = embryo_info[i];
       auto children_size = child_state.get_open_positions(to_mark(flip(turn))).count();
       auto& embryo = embryos.emplace_back(
-          position, current_accumulation, node, flip(turn), children_size, child_state, node->children[i]);
+          position, current_accumulation, node, flip(turn), children_size, child_state, &node->children[i]);
       if (node->children[i] != nullptr) {
         embryo.proof = node->children[i]->get_proof();
         embryo.disproof = node->children[i]->get_disproof();
@@ -457,6 +457,7 @@ class ChildrenBuilder {
     const auto& child = embryo.state;
     const auto& child_node = embryo.parent->emplace_child(embryo.pos,
         solution.create_node(embryo.parent, embryo.turn, embryo.children_size));
+    *embryo.self = child_node.second;
     return BoardNode<N, D, M>{child, embryo.turn, child_node.second};
   }
 
