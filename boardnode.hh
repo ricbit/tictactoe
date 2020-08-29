@@ -119,14 +119,30 @@ class Node {
   vector<uint8_t> position;
   vector<Node<M>*> children;
 
+  bool has_position() const {
+    return !position.empty();
+  }
+
+  void add_position(Position pos) {
+    position.push_back(pos);
+  }
+
   bool has_children() const {
     return children_built;
   }
 
+  int get_position_index(Position pos) {
+    for (int i = 0; i < static_cast<int>(position.size()); i++) {
+      if (position[i] == pos) {
+        return i;
+      }
+    }
+    assert(false);
+  }
+
   auto emplace_child(Position pos, Node *child) {
     children_built = true;
-    children[position.size()] = child;
-    position.emplace_back(static_cast<uint8_t>(pos));
+    children[get_position_index(pos)] = child;
     assert(children.size() <= children_size);
     return make_pair(pos, child);
   }
@@ -409,6 +425,11 @@ class ChildrenBuilder {
       auto children_size = child_state.get_open_positions(to_mark(flip(turn))).count();
       embryos.emplace_back(
           position, current_accumulation, node, flip(turn), children_size, child_state, node->children[i]);
+    }
+    if (node->has_position()) {
+      for (auto& embryo : embryos) {
+        node->add_position(embryo.pos);
+      }
     }
     return embryos;
   }
