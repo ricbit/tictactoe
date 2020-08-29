@@ -416,12 +416,12 @@ class ChildrenBuilder {
       sorted_positions.push_back(pos);
     }
     sort(begin(sorted_positions), end(sorted_positions));
-    bag<tuple<Position, LineCount, State<N, D>>> children =
-        get_children(current_state, turn, open_positions, sorted_positions);
+    bag<tuple<Position, LineCount, State<N, D>>> embryo_info =
+        get_embryo_info(current_state, turn, open_positions, sorted_positions);
     bag<Embryo<N, D, M>> embryos;
 
-    for (int i = 0; i < static_cast<int>(children.size()); i++) {
-      auto& [position, current_accumulation, child_state] = children[i];
+    for (int i = 0; i < static_cast<int>(embryo_info.size()); i++) {
+      auto& [position, current_accumulation, child_state] = embryo_info[i];
       auto children_size = child_state.get_open_positions(to_mark(flip(turn))).count();
       auto& embryo = embryos.emplace_back(
           position, current_accumulation, node, flip(turn), children_size, child_state, node->children[i]);
@@ -456,7 +456,7 @@ class ChildrenBuilder {
 
  private:
   template<typename B>
-  auto get_children(const State<N, D>& current_state, Turn turn, B open_positions, vector<Position>& sorted) {
+  auto get_embryo_info(const State<N, D>& current_state, Turn turn, B open_positions, vector<Position>& sorted) {
     bag<tuple<Position, LineCount, State<N, D>>> child_state;
 
     auto s = ForcingMove<N, D>(current_state);
