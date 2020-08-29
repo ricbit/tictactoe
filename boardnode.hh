@@ -376,11 +376,20 @@ struct Embryo {
   int children_size;
   State<N, D> state;
   Node<M>* self;
+  ProofNumber proof;
+  ProofNumber disproof;
   Embryo(Position pos, LineCount accumulation_point, Node<M>* parent, Turn turn, int children_size,
          State<N, D> state, Node<M>* self)
       : pos(pos), accumulation_point(accumulation_point),
         parent(parent), turn(turn), children_size(children_size),
         state(state), self(self) {
+    if (self != nullptr) {
+      proof = self->get_proof();
+      disproof = self->get_disproof();
+    } else {
+      proof = Node<M>::initial_proof(turn, children_size);
+      disproof = Node<M>::initial_disproof(turn, children_size);
+    }
   }
 };
 
@@ -398,7 +407,8 @@ class ChildrenBuilder {
       sorted_positions.push_back(pos);
     }
     sort(begin(sorted_positions), end(sorted_positions));
-    auto children = get_children(current_state, turn, open_positions, sorted_positions);
+    bag<tuple<Position, LineCount, State<N, D>>> children =
+        get_children(current_state, turn, open_positions, sorted_positions);
     bag<Embryo<N, D, M>> embryos;
 
     for (int i = 0; i < static_cast<int>(children.size()); i++) {

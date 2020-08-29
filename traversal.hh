@@ -221,10 +221,10 @@ class PNSearch {
       node->set_is_eval(true);
       return board_node;
     }
+    auto board_node = BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
+    ChildrenBuilder<N, D, Config> builder;
+    auto embryos = builder.get_embryos(board_node);
     if (!node->has_children()) {
-      auto board_node = BoardNode<N, D, M>{node->rebuild_state(data), node->get_turn(), node};
-      ChildrenBuilder<N, D, Config> builder;
-      auto embryos = builder.get_embryos(board_node);
       builder.build_children(solution, nodes_created, embryos);
     }
     auto children = node->get_children();
