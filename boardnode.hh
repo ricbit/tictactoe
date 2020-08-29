@@ -423,10 +423,14 @@ class ChildrenBuilder {
     for (int i = 0; i < static_cast<int>(children.size()); i++) {
       auto& [position, current_accumulation, child_state] = children[i];
       auto children_size = child_state.get_open_positions(to_mark(flip(turn))).count();
-      embryos.emplace_back(
+      auto& embryo = embryos.emplace_back(
           position, current_accumulation, node, flip(turn), children_size, child_state, node->children[i]);
+      if (node->children[i] != nullptr) {
+        embryo.proof = node->children[i]->get_proof();
+        embryo.disproof = node->children[i]->get_disproof();
+      }
     }
-    if (node->has_position()) {
+    if (!node->has_position()) {
       for (auto& embryo : embryos) {
         node->add_position(embryo.pos);
       }
