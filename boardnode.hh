@@ -441,17 +441,23 @@ class ChildrenBuilder {
   template<typename S>
   auto build_children(S& solution, int& nodes_created, bag<Embryo<N, D, M>>& embryos) {
     bag<BoardNode<N, D, M>> children;
-    for (auto& embryo : embryos) {
+    for (int i = 0; i < static_cast<int>(embryos.size()); i++) {
       if (nodes_created == config.max_created) {
         return children;
       }
       nodes_created++;
-      const auto& child = embryo.state;
-      const auto& child_node = embryo.parent->emplace_child(embryo.pos,
-        solution.create_node(embryo.parent, embryo.turn, embryo.children_size));
-      children.push_back(BoardNode<N, D, M>{child, embryo.turn, child_node.second});
+      children.push_back(build_children(solution, embryos, i));
     }
     return children;
+  }
+
+  template<typename S>
+  auto build_children(S& solution, bag<Embryo<N, D, M>>& embryos, int index) {
+    auto& embryo = embryos[index];
+    const auto& child = embryo.state;
+    const auto& child_node = embryo.parent->emplace_child(embryo.pos,
+        solution.create_node(embryo.parent, embryo.turn, embryo.children_size));
+    return BoardNode<N, D, M>{child, embryo.turn, child_node.second};
   }
 
  private:
