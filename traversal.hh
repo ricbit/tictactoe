@@ -227,12 +227,30 @@ class PNSearch {
     if (!node->has_children()) {
       builder.build_children(solution, nodes_created, embryos);
     }
-    auto children = node->get_children();
+    auto get_proof = [](const auto& embryo) {
+      return embryo.proof;
+    };
+    auto get_disproof = [](const auto& embryo) {
+      return embryo.disproof;
+    };
+    auto selected_embryo = or_node ?
+        min_embryo(embryos, get_proof) :
+        min_embryo(embryos, get_disproof);
+    return search_any_node(*selected_embryo.self, solution, nodes_created, config, false);
+    /*auto children = node->get_children();
     if (or_node) {
       return search_any_node(min_proof(node, children), solution, nodes_created, config, false);
     } else {
       return search_any_node(min_disproof(node, children), solution, nodes_created, config, true);
-    }
+    }*/
+  }
+
+  template<typename T>
+  auto min_embryo(bag<Embryo<N, D, M>>& embryos, T pluck) {
+    assert(!embryos.empty());
+    return *min_element(begin(embryos), end(embryos), [&](const auto &a, const auto &b) {
+      return pluck(a) < pluck(b);
+    });
   }
 
   template<typename C>
