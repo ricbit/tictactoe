@@ -97,7 +97,7 @@ class State {
   }
 
   Zobrist get_zobrist() const {
-    return zobrist;
+    return get_best_zobrist();
   }
 
   bool play(initializer_list<Side> pos, Mark mark) {
@@ -182,6 +182,25 @@ class State {
   }
 
  private:
+  Zobrist get_best_zobrist() const {
+    vector<Zobrist> all_zobrists(data.symmetries_size());
+    const auto& sym = data.symmetries();
+    transform(execution::par_unseq, begin(sym), end(sym), begin(all_zobrists), [&](const auto& symmetry) {
+      return rotate_zobrist(symmetry);
+    });
+    return *min_element(begin(all_zobrists), end(all_zobrists));
+  }
+
+  Zobrist rotate_zobrist(const vector<Position>& symmetry) const {
+    Zobrist new_zobrist{0};
+    for (Position pos = 0_pos; pos < board_size; ++pos) {
+      if (board[pos] == Mark::O || board[pos] == Mark::X) {
+        new_zobrist ^= data.get_zobrist(symmetry[pos], board[pos]);
+      }
+    }
+    return new_zobrist;
+  }
+
   const BoardData<N, D>& data;
   sarray<Position, Mark, board_size> board;
   sarray<Line, Position, line_size> xor_table;

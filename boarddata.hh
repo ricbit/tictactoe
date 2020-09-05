@@ -827,6 +827,10 @@ class BoardData {
     return sym.symmetries().size();
   }
 
+  const vector<vector<Position>> symmetries() const {
+    return sym.symmetries();
+  }
+
   const CrossingArray& crossings() const {
     return geom.crossings();
   }
