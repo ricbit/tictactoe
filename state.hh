@@ -97,7 +97,8 @@ class State {
   }
 
   Zobrist get_zobrist() const {
-    return get_best_zobrist();
+    // return get_best_zobrist();
+    return zobrist;
   }
 
   bool play(initializer_list<Side> pos, Mark mark) {

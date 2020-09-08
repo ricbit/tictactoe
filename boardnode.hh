@@ -455,7 +455,7 @@ class ChildrenBuilder {
   auto build_children(S& solution, bag<Embryo<N, D, M>>& embryos, int index) {
     auto& embryo = embryos[index];
     const auto& child = embryo.state;
-    const auto& child_node = embryo.parent->emplace_child(embryo.pos,
+    const pair<Position, Node<M>*>& child_node = embryo.parent->emplace_child(embryo.pos,
         solution.create_node(embryo.parent, embryo.turn, embryo.children_size));
     *embryo.self = child_node.second;
     return BoardNode<N, D, M>{child, embryo.turn, child_node.second};

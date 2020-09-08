@@ -227,7 +227,7 @@ class PNSearch {
     if (!node->has_children()) {
       builder.build_children(solution, nodes_created, embryos);
     }
-    /*auto get_proof = [](const auto& embryo) {
+    auto get_proof = [](const auto& embryo) {
       return embryo.proof;
     };
     auto get_disproof = [](const auto& embryo) {
@@ -236,13 +236,8 @@ class PNSearch {
     auto selected_embryo = or_node ?
         min_embryo(embryos, get_proof) :
         min_embryo(embryos, get_disproof);
-    return search_any_node(*selected_embryo.self, solution, nodes_created, config, false);*/
-    auto children = node->get_children();
-    if (or_node) {
-      return search_any_node(min_proof(node, children), solution, nodes_created, config, false);
-    } else {
-      return search_any_node(min_disproof(node, children), solution, nodes_created, config, true);
-    }
+    // return parent_state.get_current_accumulation(a.first) > parent_state.get_current_accumulation(b.first);*/
+    return search_any_node(*selected_embryo.self, solution, nodes_created, config, !or_node);
   }
 
   template<typename T>
@@ -259,22 +254,25 @@ class PNSearch {
       return node->get_proof();
     });
   }
+
   template<typename C>
   auto min_disproof(Node<M>* parent, const C& children) {
     return min_value(parent, children, [](const auto& node) {
       return node->get_disproof();
     });
   }
+
   template<typename C, typename T>
   auto min_value(Node<M>* parent, const C& children, const T& pluck) {
-    auto parent_state = parent->rebuild_state(data);
+    //auto parent_state = parent->rebuild_state(data);
     return min_element(begin(children), end(children), [&](const auto &a, const auto& b) {
       auto a_value = pluck(a.second);
       auto b_value = pluck(b.second);
-      if (a_value != b_value) {
+      /*if (a_value != b_value) {
         return a_value < b_value;
       }
-      return parent_state.get_current_accumulation(a.first) > parent_state.get_current_accumulation(b.first);
+      return parent_state.get_current_accumulation(a.first) > parent_state.get_current_accumulation(b.first);*/
+      return a_value < b_value;
     })->second;
   }
 };
