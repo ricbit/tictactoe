@@ -14,7 +14,25 @@ class DagNode;
 template<int N, int D>
 class SolutionDag;
 
-using NodeP = DagNode*;
+class NodeP {
+ public:
+  explicit NodeP(DagNode *node) : node(node) {
+  }
+
+  DagNode& operator*() {
+    return *node;
+  }
+
+  DagNode& operator*() const {
+    return *node;
+  }
+
+  bool empty() const {
+    return node == nullptr;
+  }
+ private:
+  DagNode * const node;
+};
 
 struct Child {
   const NodeP parent;
@@ -25,12 +43,20 @@ class DagNode {
  public:
   template<int N, int D>
   DagNode(const State<N, D>& state, const NodeP parent) {
+    if (!parent.empty()) {
+      parents.push_back(parent);
+    }
   }
+
   NodeP get_child(const ChildIndex index) {
     return children[index];
   }
+
+  const auto get_parents() const {
+    return parents;
+  }
  private:
-  svector<ParentIndex, NodeP> parent;
+  svector<ParentIndex, NodeP> parents;
   svector<ChildIndex, NodeP> children;
 };
 
@@ -39,14 +65,18 @@ class SolutionDag {
  public:
   SolutionDag(const BoardData<N, D>& data, NodeIndex max_nodes) : data(data) {
     nodes.reserve(max_nodes);
-    nodes.push_back(DagNode{State<N, D>{data}, nullptr});
+    nodes.push_back(DagNode{State<N, D>{data}, NodeP{nullptr}});
   }
-  DagNode& get_node(const NodeP node) const {
+
+  DagNode& get_node(const NodeP node) {
+    return *node;
   }
+
   DagNode& get_child(const Child child) {
   }
+
   NodeP get_root() {
-    return &nodes[0_nind];
+    return NodeP{&nodes[0_nind]};
   }
  private:
   const BoardData<N, D>& data;
