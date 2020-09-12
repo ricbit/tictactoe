@@ -736,7 +736,8 @@ TEST(SolutionTreeTest, ValidateParents) {
 TEST(SolutionDagTest, CreateSolutionDag) {
   BoardData<3, 2> data;
   State state(data);
-  node::SolutionDag solution(data, 10);
+  using namespace node;
+  SolutionDag solution(data, 10_nind);
 }
 
 }

@@ -37,7 +37,7 @@ class DagNode {
 template<int N, int D>
 class SolutionDag {
  public:
-  SolutionDag(const BoardData<N, D>& data, int max_nodes) : data(data) {
+  SolutionDag(const BoardData<N, D>& data, NodeIndex max_nodes) : data(data) {
     nodes.reserve(max_nodes);
     nodes.push_back(DagNode{State<N, D>{data}, nullptr});
   }
