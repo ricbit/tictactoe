@@ -46,7 +46,7 @@ singletest : test.cc ${HEADERS}
 
 testc : test.cc ${HEADERS}
 	clang++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPTTEST} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
-	./test
+	./testc
 
 asm :
 	g++ -std=c++2a tictactoe.cc -o $@ -O1 -Wall -g -S -masm=intel
@@ -55,7 +55,7 @@ spaces :
 	for i in `ls *.hh *.cc *.py Makefile`; do sed -i "s/\s\+$$//g" $$i ; done
 
 clean :
-	rm -f test asm tictactoe
+	rm -f test asm tictactoe testc minimax minimaxc
 
 cppcheck :
 	cppcheck --enable=style,warning tictactoe.cc heatmap.cc minimax.cc test.cc

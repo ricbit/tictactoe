@@ -63,6 +63,7 @@ class DagNode {
   const ChildIndex children_size() const {
     return static_cast<ChildIndex>(children.size());
   }
+
  private:
   svector<ChildIndex, NodeP> children;
   svector<ParentIndex, NodeP> parents;
@@ -88,6 +89,19 @@ class SolutionDag {
   NodeP get_root() {
     return NodeP{&nodes[0_nind]};
   }
+
+  const auto get_parents(const NodeP node) const {
+    return (*node).get_parents();
+  }
+
+  const ChildIndex children_size(const NodeP node) const {
+    return static_cast<ChildIndex>((*node).children_size());
+  }
+
+  const bag<Position> get_positions(const NodeP node) const {
+    return {};
+  }
+
  private:
   const BoardData<N, D>& data;
   svector<NodeIndex, DagNode> nodes;
