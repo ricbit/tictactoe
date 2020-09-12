@@ -1,26 +1,35 @@
+#ifndef NODE_HH
+#define NODE_HH
+
+#include "state.hh"
+
+namespace node {
 
 SEMANTIC_INDEX(ChildIndex, cind)
 SEMANTIC_INDEX(ParentIndex, pind)
-SEMANTIC_INDEX(NodeIndex, node)
+SEMANTIC_INDEX(NodeIndex, nind)
 
 class DagNode;
+
+template<int N, int D>
 class SolutionDag;
+
 using NodeP = DagNode*;
 
 struct Child {
   const NodeP parent;
   const ChildIndex index;
-}
+};
 
-template<int N, int D>
 class DagNode {
  public:
+  template<int N, int D>
   DagNode(const State<N, D>& state, const NodeP parent) {
   }
   NodeP get_child(const ChildIndex index) {
     return children[index];
   }
- private
+ private:
   svector<ParentIndex, NodeP> parent;
   svector<ChildIndex, NodeP> children;
 };
@@ -30,14 +39,14 @@ class SolutionDag {
  public:
   SolutionDag(const BoardData<N, D>& data, int max_nodes) : data(data) {
     nodes.reserve(max_nodes);
-    nodes.emplace_back(State<N, D>{data}, nullptr);
+    nodes.push_back(DagNode{State<N, D>{data}, nullptr});
   }
   DagNode& get_node(const NodeP node) const {
- }
+  }
   DagNode& get_child(const Child child) {
   }
-  const NodeP get_root() const {
-    return &nodes[0];
+  NodeP get_root() {
+    return &nodes[0_nind];
   }
  private:
   const BoardData<N, D>& data;
@@ -45,3 +54,6 @@ class SolutionDag {
   unordered_map<Zobrist, NodeP> zobrist_map;
 };
 
+}
+
+#endif

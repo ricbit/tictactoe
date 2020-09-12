@@ -1,4 +1,5 @@
 #include "minimax.hh"
+#include "node.hh"
 #include "gtest/gtest.h"
 
 namespace {
@@ -730,6 +731,12 @@ TEST(SolutionTreeTest, ValidateParents) {
   minimax.play(state, Turn::X);
   auto root = minimax.get_solution().get_root();
   EXPECT_TRUE(validate_all_parents<decltype(minimax)::M>(root, minimax));
+}
+
+TEST(SolutionDagTest, CreateSolutionDag) {
+  BoardData<3, 2> data;
+  State state(data);
+  node::SolutionDag solution(data, 10);
 }
 
 }

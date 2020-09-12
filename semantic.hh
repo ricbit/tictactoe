@@ -63,6 +63,9 @@ class svector {
   }
   svector() {
   }
+  void reserve(typename std::vector<Dest>::size_type size) {
+    v.reserve(size);
+  }
   Dest& operator[](const Source& index) {
     return v[index];
   }
