@@ -737,7 +737,12 @@ TEST(SolutionDagTest, CreateSolutionDag) {
   BoardData<3, 2> data;
   State state(data);
   using namespace node;
-  SolutionDag solution(data, 10_nind);
+  NodeIndex max_nodes = 10_nind;
+  SolutionDag solution(data, max_nodes);
+  node::NodeP root = solution.get_root();
+  DagNode& root_node = solution.get_node(root);
+  EXPECT_EQ(0u, root_node.get_parents().size());
+  EXPECT_EQ(3_cind, root_node.children_size());
 }
 
 }
