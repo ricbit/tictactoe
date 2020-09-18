@@ -63,6 +63,9 @@ class svector {
   }
   svector() {
   }
+  bool empty() const {
+    return v.empty();
+  }
   void reserve(typename std::vector<Dest>::size_type size) {
     v.reserve(size);
   }

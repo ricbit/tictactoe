@@ -22,6 +22,10 @@ class NodeP {
   explicit NodeP(DagNode *node) : node(node) {
   }
 
+  NodeP operator=(const NodeP& other) {
+    return NodeP{other.node};
+  }
+
   DagNode& operator*() {
     return *node;
   }
@@ -56,7 +60,7 @@ class DagNode {
     return children[index];
   }
 
-  const auto get_parents() const {
+  const auto& get_parents() const {
     return parents;
   }
 
@@ -90,7 +94,7 @@ class SolutionDag {
     return NodeP{&nodes[0_nind]};
   }
 
-  const auto get_parents(const NodeP node) const {
+  const auto& get_parents(const NodeP node) const {
     return (*node).get_parents();
   }
 
@@ -100,6 +104,26 @@ class SolutionDag {
 
   const bag<Position> get_positions(const NodeP node) const {
     return {};
+  }
+
+  bool has_parent(const NodeP node) const {
+    return !get_parents(node).empty();
+  }
+
+  Turn get_turn(const NodeP node) const {
+    return get_depth(node) % 2 == 1 ? Turn::X : Turn::O;
+  }
+
+  int get_depth(const NodeP node) const {
+    int depth = 1;
+    for (NodeP p = node; has_parent(p); p = get_parents(p)[0_pind]) {
+      depth++;
+    }
+    return depth;
+  }
+
+  State<N, D> get_state(const NodeP node) {
+
   }
 
  private:
