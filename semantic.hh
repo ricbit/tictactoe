@@ -81,6 +81,12 @@ class svector {
   void push_back(const Dest& value) {
     v.push_back(value);
   }
+  auto rbegin() {
+    return v.rbegin();
+  }
+  auto rend() {
+    return v.rend();
+  }
   iterator begin() {
     return begin(v);
   }

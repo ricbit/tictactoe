@@ -754,7 +754,7 @@ TEST(SolutionDagTest, GetTurnOnRoot) {
   EXPECT_EQ(Turn::X, solution.get_turn(root));
 }
 
-/*TEST(SolutionDagTest, GetPositionsOnRoot) {
+TEST(SolutionDagTest, GetPositionsOnRoot) {
   BoardData<3, 2> data;
   State state(data);
   using namespace node;
@@ -764,6 +764,19 @@ TEST(SolutionDagTest, GetTurnOnRoot) {
   const auto positions = solution.get_positions(root);
   EXPECT_EQ(3u, positions.size());
   EXPECT_TRUE(is_sorted(begin(positions), end(positions)));
-}*/
+}
+
+TEST(SolutionDagTest, GetChildOnRoot) {
+  BoardData<3, 2> data;
+  State state(data);
+  using namespace node;
+  NodeIndex max_nodes = 10_nind;
+  SolutionDag solution(data, max_nodes);
+  node::NodeP root = solution.get_root();
+  auto child = solution.get_child(Child{root, 0_cind});
+  EXPECT_EQ(1u, solution.get_parents(child).size());
+  EXPECT_EQ(root, solution.get_parents(child)[0_pind]);
+  EXPECT_NE(root, child);
+}
 
 }

@@ -19,11 +19,19 @@ class NodeP {
   NodeP() : node(nullptr) {
   }
 
-  explicit NodeP(DagNode *node) : node(node) {
+  explicit NodeP(DagNode * node) : node(node) {
   }
 
   NodeP operator=(const NodeP& other) {
     return NodeP{other.node};
+  }
+
+  bool operator==(const NodeP& other) const {
+    return node == other.node;
+  }
+
+  bool operator!=(const NodeP& other) const {
+    return !(*this == other);
   }
 
   DagNode& operator*() {
@@ -56,19 +64,6 @@ class DagNode {
     }
   }
 
-  NodeP get_child(const ChildIndex index) {
-    return children[index];
-  }
-
-  const auto& get_parents() const {
-    return parents;
-  }
-
-  const ChildIndex children_size() const {
-    return static_cast<ChildIndex>(children.size());
-  }
-
- private:
   svector<ChildIndex, NodeP> children;
   svector<ParentIndex, NodeP> parents;
 };
@@ -83,11 +78,32 @@ class SolutionDag {
     nodes.push_back(DagNode{initial, NodeP{nullptr}, children_size});
   }
 
-  DagNode& get_node(const NodeP node) {
+  DagNode& get_node(const NodeP node) {    
     return *node;
   }
 
-  DagNode& get_child(const Child child) {
+  const DagNode& get_node(const NodeP node) const {    
+    return *node;
+  }
+
+  NodeP get_child(const Child child) {
+    // Create the node if doesn't exist
+    // AND
+    // with the right number of children based on ChainingStrategy and ForcingStrategy
+    // 
+    auto childp = get_node(child.parent).children[child.index];
+    if (!childp.empty()) {
+      return childp;
+    }
+    auto state = get_state(child.parent);
+    auto parent_positions = get_positions(child.parent);
+    auto parent_turn = get_turn(child.parent);
+    auto child_turn = flip(parent_turn);
+    state.play(parent_positions[child.index], to_mark(parent_turn));
+    ChildIndex children_size = static_cast<ChildIndex>(
+        state.get_open_positions(to_mark(child_turn)).count());
+    nodes.push_back(DagNode{state, child.parent, children_size});
+    return NodeP{&*nodes.rbegin()};
   }
 
   NodeP get_root() {
@@ -95,15 +111,16 @@ class SolutionDag {
   }
 
   const auto& get_parents(const NodeP node) const {
-    return (*node).get_parents();
+    return get_node(node).parents;
   }
 
   const ChildIndex children_size(const NodeP node) const {
-    return static_cast<ChildIndex>((*node).children_size());
+    return static_cast<ChildIndex>(get_node(node).children.size());
   }
 
   const bag<Position> get_positions(const NodeP node) const {
-    return {};
+    State<N, D> state = get_state(node);    
+    return state.get_open_positions(to_mark(get_turn(node))).get_bag();
   }
 
   bool has_parent(const NodeP node) const {
@@ -114,6 +131,25 @@ class SolutionDag {
     return get_depth(node) % 2 == 1 ? Turn::X : Turn::O;
   }
 
+  State<N, D> get_state(const NodeP node) const {
+    return get_state(node, get_turn(node));
+  }
+
+  State<N, D> get_state(const NodeP node, Turn turn) const {
+    if (!has_parent(node)) {
+      return State<N, D>{data};
+    }
+    return State<N, D>{data};
+  }
+
+  void add_variation(const bag<Position>& variation) {
+  }
+
+ private:
+  const BoardData<N, D>& data;
+  svector<NodeIndex, DagNode> nodes;
+  unordered_map<Zobrist, NodeP> zobrist_map;
+
   int get_depth(const NodeP node) const {
     int depth = 1;
     for (NodeP p = node; has_parent(p); p = get_parents(p)[0_pind]) {
@@ -121,15 +157,6 @@ class SolutionDag {
     }
     return depth;
   }
-
-  State<N, D> get_state(const NodeP node) {
-
-  }
-
- private:
-  const BoardData<N, D>& data;
-  svector<NodeIndex, DagNode> nodes;
-  unordered_map<Zobrist, NodeP> zobrist_map;
 };
 
 }

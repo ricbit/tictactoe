@@ -513,6 +513,9 @@ class Bitfield {
     }
     return ans;
   }
+  bag<Position> get_bag() const {
+    return get_vector();
+  }
   bool operator==(const Bitfield<N, D>& that) const {
     return bitfield == that.bitfield;
   }
