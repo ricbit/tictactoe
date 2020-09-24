@@ -741,6 +741,7 @@ TEST(SolutionDagTest, CreateSolutionDag) {
   SolutionDag solution(data, max_nodes);
   node::NodeP root = solution.get_root();
   EXPECT_EQ(0u, solution.get_parents(root).size());
+  EXPECT_FALSE(solution.has_parent(root));
   EXPECT_EQ(3_cind, solution.children_size(root));
 }
 
@@ -762,8 +763,8 @@ TEST(SolutionDagTest, GetPositionsOnRoot) {
   SolutionDag solution(data, max_nodes);
   node::NodeP root = solution.get_root();
   const auto positions = solution.get_positions(root);
-  EXPECT_EQ(3u, positions.size());
-  EXPECT_TRUE(is_sorted(begin(positions), end(positions)));
+  bag<Position> expected = {0_pos, 1_pos, 4_pos};
+  EXPECT_EQ(expected, positions);
 }
 
 TEST(SolutionDagTest, GetChildOnRoot) {
@@ -776,7 +777,21 @@ TEST(SolutionDagTest, GetChildOnRoot) {
   auto child = solution.get_child(Child{root, 0_cind});
   EXPECT_EQ(1u, solution.get_parents(child).size());
   EXPECT_EQ(root, solution.get_parents(child)[0_pind]);
+  EXPECT_EQ(child, solution.get_child(Child{root, 0_cind}));
   EXPECT_NE(root, child);
+  EXPECT_EQ(Turn::O, solution.get_turn(child));
 }
+
+/*TEST(SolutionDagTest, GetChildChaining33) {
+  BoardData<3, 3> data;
+  State state(data);
+  using namespace node;
+  NodeIndex max_nodes = 10_nind;
+  SolutionDag solution(data, max_nodes);
+  node::NodeP root = solution.get_root();
+  EXPECT_EQ(4u, solution.children_size(root));
+  auto variation = solution.get_variation(bag<Position>{13_pos, 0_pos});
+  EXPECT_EQ(0u, solution.children_size(variation));
+}*/
 
 }

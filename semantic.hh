@@ -88,16 +88,16 @@ class svector {
     return v.rend();
   }
   iterator begin() {
-    return begin(v);
+    return v.begin();
   }
   iterator end() {
-    return end(v);
+    return v.end();
   }
   iterator begin() const {
-    return begin(v);
+    return v.begin();
   }
   iterator end() const {
-    return end(v);
+    return v.end();
   }
  private:
   std::vector<Dest> v;

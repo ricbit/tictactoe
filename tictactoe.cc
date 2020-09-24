@@ -13,7 +13,7 @@
 #include "strategies.hh"
 
 int main() {
-  BoardData<4, 2> data;
+  BoardData<3, 3> data;
   cout << "num symmetries " << data.symmetries_size() << "\n";
   vector<int> search_tree(data.board_size);
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
