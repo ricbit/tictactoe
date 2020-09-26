@@ -782,7 +782,7 @@ TEST(SolutionDagTest, GetChildOnRoot) {
   EXPECT_EQ(Turn::O, solution.get_turn(child));
 }
 
-/*TEST(SolutionDagTest, GetChildChaining33) {
+TEST(SolutionDagTest, GetChildChaining33) {
   BoardData<3, 3> data;
   State state(data);
   using namespace node;
@@ -792,6 +792,6 @@ TEST(SolutionDagTest, GetChildOnRoot) {
   EXPECT_EQ(4u, solution.children_size(root));
   auto variation = solution.get_variation(bag<Position>{13_pos, 0_pos});
   EXPECT_EQ(0u, solution.children_size(variation));
-}*/
+}
 
 }

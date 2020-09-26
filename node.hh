@@ -96,8 +96,6 @@ class SolutionDag {
     if (!childp.empty()) {
       return childp;
     }
-    cout << "child " << child.parent.debug_int() << " index ";
-    cout << static_cast<int>(child.index) << "\n";
     auto state = get_state(child.parent);
     auto parent_positions = get_positions(child.parent);
     auto parent_turn = get_turn(child.parent);
@@ -118,7 +116,6 @@ class SolutionDag {
   bool has_chaining(State<N, D>& state, Turn turn) {
     auto c = ChainingStrategy(state);
     auto pos = c.search(to_mark(turn));
-    cout << "pos " << pos.has_value() <<"\n";
     return pos.has_value();
   }
 
@@ -160,38 +157,14 @@ class SolutionDag {
       return State<N, D>{data};
     }
     auto first_parent = get_parents(node)[0_pind];
-    auto state = get_state(first_parent, flip(turn));
-    state.play(get_position(first_parent, node), to_mark(turn));
+    auto state = get_state(first_parent, turn);
+    state.play(get_position(first_parent, node), to_mark(flip(turn)));
     return state;
   }
-
-  // lfold rfold
-  // reduce
-  // [1,2,3,4,5]
-  // A=Ab
-  //  ^
-  // [3,3,4,5]
-  //  ^
-  // [6,4,5]
-  //  ^
-  // [10,5]
-  // [15]
-  // [1,2,3,4,5]
-  // A=bA
-  //          ^
-  // [1,2,3,9]
-  //        ^
-  // [1,2,12]
-  // [1,14]
-  // [15]
 
   Position get_position(NodeP parent, NodeP child) {
     auto open_positions = get_positions(parent);
     auto children = get_children(parent);
-    cout << "child " << child.debug_int() << "\nparent \n";
-    for (ChildIndex i = 0_cind; i < children.size(); i++) {
-      cout << children[i].debug_int() << "\n";
-    }
     auto it = find(begin(children), end(children), child);
     assert(it != end(children));
     auto index = distance(begin(children), it);
