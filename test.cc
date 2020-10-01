@@ -803,6 +803,9 @@ TEST(SolutionDagTest, GetChildForcingMove32) {
   SolutionDag solution(data, max_nodes);
   auto variation = solution.get_variation(bag<Position>{1_pos, 4_pos, 0_pos});
   EXPECT_EQ(1u, solution.children_size(variation));
+  auto pos = solution.get_positions(variation);
+  EXPECT_EQ(1u, pos.size());
+  EXPECT_EQ(2_pos, pos[0]);
 }
 
 }
