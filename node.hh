@@ -88,10 +88,6 @@ class SolutionDag {
   }
 
   NodeP get_child(const Child child) {
-    // Create the node if doesn't exist
-    // AND
-    // with the right number of children based on ChainingStrategy and ForcingStrategy
-    // 
     auto& childp = get_node(child.parent).children[child.index];
     if (!childp.empty()) {
       return childp;
@@ -150,6 +146,14 @@ class SolutionDag {
 
   const bag<Position> get_positions(const NodeP node) {
     State<N, D> state = get_state(node);    
+    Turn turn = get_turn(node);
+    if (has_chaining(state, turn)) {
+      return {};
+    }
+    auto forcing_move = has_forcing_move(state, turn);
+    if (forcing_move.has_value()) {
+      return {*forcing_move};
+    }
     return state.get_open_positions(to_mark(get_turn(node))).get_bag();
   }
 
