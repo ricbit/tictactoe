@@ -21,7 +21,7 @@ struct DebugConfig {
 
 int main(int argc, char **argv) {
   constexpr int N = 3;
-  constexpr int D = 3;
+  constexpr int D = 2;
   BoardData<N, D> data;
   State state(data);
   cout << "sizeof(Node) = " << sizeof(Node<MiniMax<N, D>::M>) << "\n";

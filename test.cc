@@ -794,4 +794,14 @@ TEST(SolutionDagTest, GetChildChaining33) {
   EXPECT_EQ(0u, solution.children_size(variation));
 }
 
+TEST(SolutionDagTest, GetChildForcingMove32) {
+  BoardData<3, 2> data;
+  State state(data);
+  using namespace node;
+  NodeIndex max_nodes = 10_nind;
+  SolutionDag solution(data, max_nodes);
+  auto variation = solution.get_variation(bag<Position>{1_pos, 4_pos, 0_pos});
+  EXPECT_EQ(1u, solution.children_size(variation));
+}
+
 }

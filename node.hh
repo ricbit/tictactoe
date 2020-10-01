@@ -103,20 +103,33 @@ class SolutionDag {
     state.play(parent_positions[child.index], to_mark(parent_turn));
     if (has_chaining(state, child_turn)) {
       nodes.push_back(DagNode{state, child.parent, 0_cind});
-      auto new_childp = NodeP{&*nodes.rbegin()};
-      return childp = new_childp;
+      childp = NodeP{&*nodes.rbegin()};
+      return childp;
+    }
+    auto forcing_move = has_forcing_move(state, child_turn);
+    if (forcing_move.has_value()) {
+      nodes.push_back(DagNode{state, child.parent, 1_cind});
+      childp = NodeP{&*nodes.rbegin()};
+      return childp;
     }
     ChildIndex children_size = static_cast<ChildIndex>(
         state.get_open_positions(to_mark(child_turn)).count());
     nodes.push_back(DagNode{state, child.parent, children_size});
-    auto new_childp = NodeP{&*nodes.rbegin()};
-    return childp = new_childp;
+    childp = NodeP{&*nodes.rbegin()};
+    return childp;
   }
 
   bool has_chaining(State<N, D>& state, Turn turn) {
     auto c = ChainingStrategy(state);
     auto pos = c.search(to_mark(turn));
     return pos.has_value();
+  }
+
+  optional<Position> has_forcing_move(State<N, D>& state, Turn turn) {
+    auto c = ForcingMove<N ,D>(state);
+    auto available = state.get_open_positions(to_mark(turn));
+    auto pos = c.check(to_mark(turn), available);
+    return pos.first;
   }
 
   NodeP get_root() {
@@ -157,7 +170,7 @@ class SolutionDag {
       return State<N, D>{data};
     }
     auto first_parent = get_parents(node)[0_pind];
-    auto state = get_state(first_parent, turn);
+    auto state = get_state(first_parent, flip(turn));
     state.play(get_position(first_parent, node), to_mark(flip(turn)));
     return state;
   }
