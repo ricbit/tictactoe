@@ -70,8 +70,8 @@ class DagNode {
   }
 
   Turn turn;
-  Reason reason;
-  BoardValue value;
+  Reason reason = Reason::UNKNOWN;
+  BoardValue value = BoardValue::UNKNOWN;
   svector<ChildIndex, NodeP> children;
   svector<ParentIndex, NodeP> parents;
 };
@@ -162,6 +162,10 @@ class SolutionDag {
 
   Turn get_turn(const NodeP node) {
     return get_node(node).turn;
+  }
+
+  BoardValue get_value(const NodeP node) {
+    return get_node(node).value;
   }
 
   State<N, D> get_state(const NodeP node) {

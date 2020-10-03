@@ -810,4 +810,14 @@ TEST(SolutionDagTest, GetChildForcingMove32) {
   EXPECT_EQ(Turn::O, solution.get_turn(variation));
 }
 
+TEST(SolutionDagTest, GetValueOnRoot) {
+  BoardData<3, 2> data;
+  State state(data);
+  using namespace node;
+  NodeIndex max_nodes = 10_nind;
+  SolutionDag solution(data, max_nodes);
+  const node::NodeP root = solution.get_root();
+  EXPECT_EQ(BoardValue::UNKNOWN, solution.get_value(root));
+}
+
 }
