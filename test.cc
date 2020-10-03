@@ -793,6 +793,7 @@ TEST(SolutionDagTest, GetChildChaining33) {
   auto variation = solution.get_variation(bag<Position>{13_pos, 0_pos});
   EXPECT_EQ(0u, solution.children_size(variation));
   EXPECT_EQ(0u, solution.get_positions(variation).size());
+  EXPECT_EQ(Turn::X, solution.get_turn(variation));
 }
 
 TEST(SolutionDagTest, GetChildForcingMove32) {
@@ -806,6 +807,7 @@ TEST(SolutionDagTest, GetChildForcingMove32) {
   auto pos = solution.get_positions(variation);
   EXPECT_EQ(1u, pos.size());
   EXPECT_EQ(2_pos, pos[0]);
+  EXPECT_EQ(Turn::O, solution.get_turn(variation));
 }
 
 }

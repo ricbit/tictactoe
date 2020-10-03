@@ -62,13 +62,16 @@ struct Child {
 class DagNode {
  public:
   template<int N, int D>
-  DagNode(const State<N, D>& state, const NodeP parent, ChildIndex children_size)
-      : children(children_size) {
+  DagNode(const State<N, D>& state, const NodeP parent, ChildIndex children_size, Turn turn)
+      : turn(turn), children(children_size) {
     if (!parent.empty()) {
       parents.push_back(parent);
     }
   }
 
+  Turn turn;
+  Reason reason;
+  BoardValue value;
   svector<ChildIndex, NodeP> children;
   svector<ParentIndex, NodeP> parents;
 };
@@ -80,7 +83,7 @@ class SolutionDag {
     nodes.reserve(max_nodes);
     State<N, D> initial{data};
     ChildIndex children_size = static_cast<ChildIndex>(initial.get_open_positions(Mark::X).count());
-    nodes.push_back(DagNode{initial, NodeP{nullptr}, children_size});
+    nodes.push_back(DagNode{initial, NodeP{nullptr}, children_size, Turn::X});
   }
 
   DagNode& get_node(const NodeP node) {    
@@ -98,19 +101,19 @@ class SolutionDag {
     auto child_turn = flip(parent_turn);
     state.play(parent_positions[child.index], to_mark(parent_turn));
     if (has_chaining(state, child_turn)) {
-      nodes.push_back(DagNode{state, child.parent, 0_cind});
+      nodes.push_back(DagNode{state, child.parent, 0_cind, child_turn});
       childp = NodeP{&*nodes.rbegin()};
       return childp;
     }
     auto forcing_move = has_forcing_move(state, child_turn);
     if (forcing_move.has_value()) {
-      nodes.push_back(DagNode{state, child.parent, 1_cind});
+      nodes.push_back(DagNode{state, child.parent, 1_cind, child_turn});
       childp = NodeP{&*nodes.rbegin()};
       return childp;
     }
     ChildIndex children_size = static_cast<ChildIndex>(
         state.get_open_positions(to_mark(child_turn)).count());
-    nodes.push_back(DagNode{state, child.parent, children_size});
+    nodes.push_back(DagNode{state, child.parent, children_size, child_turn});
     childp = NodeP{&*nodes.rbegin()};
     return childp;
   }
@@ -136,10 +139,6 @@ class SolutionDag {
     return get_node(node).parents;
   }
 
-  const auto& get_children(const NodeP node) const {
-    return get_node(node).children;
-  }
-
   const ChildIndex children_size(const NodeP node) {
     return static_cast<ChildIndex>(get_node(node).children.size());
   }
@@ -162,7 +161,7 @@ class SolutionDag {
   }
 
   Turn get_turn(const NodeP node) {
-    return get_depth(node) % 2 == 1 ? Turn::X : Turn::O;
+    return get_node(node).turn;
   }
 
   State<N, D> get_state(const NodeP node) {
