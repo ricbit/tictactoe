@@ -100,6 +100,12 @@ class SolutionDag {
     auto parent_turn = get_turn(child.parent);
     auto child_turn = flip(parent_turn);
     state.play(parent_positions[child.index], to_mark(parent_turn));
+    if (state.get_open_positions(to_mark(child_turn)).none()) {
+      nodes.push_back(DagNode{state, child.parent, 0_cind, child_turn});
+      childp = NodeP{&*nodes.rbegin()};
+      get_node(childp).value = BoardValue::DRAW;
+      return childp;
+    }
     if (has_chaining(state, child_turn)) {
       nodes.push_back(DagNode{state, child.parent, 0_cind, child_turn});
       childp = NodeP{&*nodes.rbegin()};

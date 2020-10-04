@@ -821,4 +821,20 @@ TEST(SolutionDagTest, GetValueOnRoot) {
   EXPECT_EQ(BoardValue::UNKNOWN, solution.get_value(root));
 }
 
+TEST(SolutionDagTest, GetValueDraw) {
+  BoardData<3, 2> data;
+  State state(data);
+  using namespace node;
+  // 0 3 6
+  // 1 4 7
+  // 2 5 8
+  NodeIndex max_nodes = 10_nind;
+  SolutionDag solution(data, max_nodes);
+  auto variation = solution.get_variation(bag<Position>{
+     1_pos, 4_pos, 0_pos, 2_pos, 6_pos, 3_pos, 5_pos, 8_pos});
+  EXPECT_EQ(0u, solution.children_size(variation));
+  EXPECT_EQ(BoardValue::DRAW, solution.get_value(variation));
+}
+
+
 }
