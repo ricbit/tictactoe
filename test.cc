@@ -794,6 +794,7 @@ TEST(SolutionDagTest, GetChildChaining33) {
   EXPECT_EQ(0u, solution.children_size(variation));
   EXPECT_EQ(0u, solution.get_positions(variation).size());
   EXPECT_EQ(Turn::X, solution.get_turn(variation));
+  EXPECT_EQ(BoardValue::X_WIN, solution.get_value(variation));
 }
 
 TEST(SolutionDagTest, GetChildForcingMove32) {

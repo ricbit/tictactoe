@@ -103,6 +103,7 @@ class SolutionDag {
     if (has_chaining(state, child_turn)) {
       nodes.push_back(DagNode{state, child.parent, 0_cind, child_turn});
       childp = NodeP{&*nodes.rbegin()};
+      get_node(childp).value = child_turn == Turn::X ? BoardValue::X_WIN : BoardValue::O_WIN;
       return childp;
     }
     auto forcing_move = has_forcing_move(state, child_turn);
