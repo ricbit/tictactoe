@@ -155,19 +155,6 @@ class SolutionDag {
     return childp;
   }
 
-  bool has_chaining(State<N, D>& state, Turn turn) {
-    auto c = ChainingStrategy(state);
-    auto pos = c.search(to_mark(turn));
-    return pos.has_value();
-  }
-
-  optional<Position> has_forcing_move(State<N, D>& state, Turn turn) {
-    auto c = ForcingMove<N ,D>(state);
-    auto available = state.get_open_positions(to_mark(turn));
-    auto pos = c.check(to_mark(turn), available);
-    return pos.first;
-  }
-
   NodeP get_root() {
     return NodeP{&nodes[0_nind]};
   }
