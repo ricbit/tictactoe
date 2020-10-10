@@ -76,10 +76,49 @@ class DagNode {
   svector<ParentIndex, NodeP> parents;
 };
 
+enum class PositionReason {
+  CHAINING,
+  FORCING,
+  DRAW,
+  MULTIPLE
+};
+
+template<int N, int D>
+class PositionEvaluator {
+ public:
+  pair<bag<Position>, PositionReason> get_positions(const State<N, D>& state, const Turn turn) const {
+    if (has_chaining(state, turn)) {
+      return {{}, PositionReason::CHAINING};
+    }
+    auto forcing_move = has_forcing_move(state, turn);
+    if (forcing_move.has_value()) {
+      return {{*forcing_move}, PositionReason::FORCING};
+    }
+    auto positions = state.get_open_positions(to_mark(turn)).get_bag();
+    auto reason = positions.empty() ? PositionReason::DRAW : PositionReason::MULTIPLE;
+    return {positions, reason};
+  }
+
+ private:
+  bool has_chaining(const State<N, D>& state, Turn turn) const {
+    auto c = ChainingStrategy(state);
+    auto pos = c.search(to_mark(turn));
+    return pos.has_value();
+  }
+
+  optional<Position> has_forcing_move(const State<N, D>& state, Turn turn) const {
+    auto c = ForcingMove<N ,D>(state);
+    auto available = state.get_open_positions(to_mark(turn));
+    auto pos = c.check(to_mark(turn), available);
+    return pos.first;
+  }
+};
+
 template<int N, int D>
 class SolutionDag {
  public:
-  SolutionDag(const BoardData<N, D>& data, NodeIndex max_nodes) : data(data) {
+  SolutionDag(const BoardData<N, D>& data, const PositionEvaluator<N, D>& pos_eval, NodeIndex max_nodes)
+      : data(data), pos_eval(pos_eval) {
     nodes.reserve(max_nodes);
     State<N, D> initial{data};
     ChildIndex children_size = static_cast<ChildIndex>(initial.get_open_positions(Mark::X).count());
@@ -100,28 +139,19 @@ class SolutionDag {
     auto parent_turn = get_turn(child.parent);
     auto child_turn = flip(parent_turn);
     state.play(parent_positions[child.index], to_mark(parent_turn));
-    if (state.get_open_positions(to_mark(child_turn)).none()) {
-      nodes.push_back(DagNode{state, child.parent, 0_cind, child_turn});
-      childp = NodeP{&*nodes.rbegin()};
-      get_node(childp).value = BoardValue::DRAW;
-      return childp;
-    }
-    if (has_chaining(state, child_turn)) {
-      nodes.push_back(DagNode{state, child.parent, 0_cind, child_turn});
-      childp = NodeP{&*nodes.rbegin()};
-      get_node(childp).value = child_turn == Turn::X ? BoardValue::X_WIN : BoardValue::O_WIN;
-      return childp;
-    }
-    auto forcing_move = has_forcing_move(state, child_turn);
-    if (forcing_move.has_value()) {
-      nodes.push_back(DagNode{state, child.parent, 1_cind, child_turn});
-      childp = NodeP{&*nodes.rbegin()};
-      return childp;
-    }
-    ChildIndex children_size = static_cast<ChildIndex>(
-        state.get_open_positions(to_mark(child_turn)).count());
-    nodes.push_back(DagNode{state, child.parent, children_size, child_turn});
+    auto [positions, reason] = pos_eval.get_positions(state, child_turn);
+    nodes.push_back(DagNode{state, child.parent, static_cast<ChildIndex>(positions.size()), child_turn});
     childp = NodeP{&*nodes.rbegin()};
+    switch (reason) {
+      case PositionReason::DRAW:
+        get_node(childp).value = BoardValue::DRAW;
+        break;
+      case PositionReason::CHAINING:
+        get_node(childp).value = child_turn == Turn::X ? BoardValue::X_WIN : BoardValue::O_WIN;
+        break;
+      default:
+        break;
+    }
     return childp;
   }
 
@@ -151,16 +181,10 @@ class SolutionDag {
   }
 
   const bag<Position> get_positions(const NodeP node) {
-    State<N, D> state = get_state(node);    
+    State<N, D> state = get_state(node);
     Turn turn = get_turn(node);
-    if (has_chaining(state, turn)) {
-      return {};
-    }
-    auto forcing_move = has_forcing_move(state, turn);
-    if (forcing_move.has_value()) {
-      return {*forcing_move};
-    }
-    return state.get_open_positions(to_mark(get_turn(node))).get_bag();
+    auto position_pair = pos_eval.get_positions(state, turn);
+    return position_pair.first;
   }
 
   bool has_parent(const NodeP node) {
@@ -212,6 +236,7 @@ class SolutionDag {
 
  private:
   const BoardData<N, D>& data;
+  const PositionEvaluator<N, D>& pos_eval;
   svector<NodeIndex, DagNode> nodes;
   unordered_map<Zobrist, NodeP> zobrist_map;
 

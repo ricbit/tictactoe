@@ -738,7 +738,8 @@ TEST(SolutionDagTest, CreateSolutionDag) {
   State state(data);
   using namespace node;
   NodeIndex max_nodes = 10_nind;
-  SolutionDag solution(data, max_nodes);
+  PositionEvaluator<3, 2> eval;
+  SolutionDag solution(data, eval, max_nodes);
   node::NodeP root = solution.get_root();
   EXPECT_EQ(0u, solution.get_parents(root).size());
   EXPECT_FALSE(solution.has_parent(root));
@@ -750,7 +751,8 @@ TEST(SolutionDagTest, GetTurnOnRoot) {
   State state(data);
   using namespace node;
   NodeIndex max_nodes = 10_nind;
-  SolutionDag solution(data, max_nodes);
+  PositionEvaluator<3, 2> eval;
+  SolutionDag solution(data, eval, max_nodes);
   const node::NodeP root = solution.get_root();
   EXPECT_EQ(Turn::X, solution.get_turn(root));
 }
@@ -760,7 +762,8 @@ TEST(SolutionDagTest, GetPositionsOnRoot) {
   State state(data);
   using namespace node;
   NodeIndex max_nodes = 10_nind;
-  SolutionDag solution(data, max_nodes);
+  PositionEvaluator<3, 2> eval;
+  SolutionDag solution(data, eval, max_nodes);
   node::NodeP root = solution.get_root();
   const auto positions = solution.get_positions(root);
   bag<Position> expected = {0_pos, 1_pos, 4_pos};
@@ -772,7 +775,8 @@ TEST(SolutionDagTest, GetChildOnRoot) {
   State state(data);
   using namespace node;
   NodeIndex max_nodes = 10_nind;
-  SolutionDag solution(data, max_nodes);
+  PositionEvaluator<3, 2> eval;
+  SolutionDag solution(data, eval, max_nodes);
   node::NodeP root = solution.get_root();
   auto child = solution.get_child(Child{root, 0_cind});
   EXPECT_EQ(1u, solution.get_parents(child).size());
@@ -787,7 +791,8 @@ TEST(SolutionDagTest, GetChildChaining33) {
   State state(data);
   using namespace node;
   NodeIndex max_nodes = 10_nind;
-  SolutionDag solution(data, max_nodes);
+  PositionEvaluator<3, 3> eval;
+  SolutionDag solution(data, eval, max_nodes);
   node::NodeP root = solution.get_root();
   EXPECT_EQ(4u, solution.children_size(root));
   auto variation = solution.get_variation(bag<Position>{13_pos, 0_pos});
@@ -802,7 +807,8 @@ TEST(SolutionDagTest, GetChildForcingMove32) {
   State state(data);
   using namespace node;
   NodeIndex max_nodes = 10_nind;
-  SolutionDag solution(data, max_nodes);
+  PositionEvaluator<3, 2> eval;
+  SolutionDag solution(data, eval, max_nodes);
   auto variation = solution.get_variation(bag<Position>{1_pos, 4_pos, 0_pos});
   EXPECT_EQ(1u, solution.children_size(variation));
   auto pos = solution.get_positions(variation);
@@ -816,7 +822,8 @@ TEST(SolutionDagTest, GetValueOnRoot) {
   State state(data);
   using namespace node;
   NodeIndex max_nodes = 10_nind;
-  SolutionDag solution(data, max_nodes);
+  PositionEvaluator<3, 2> eval;
+  SolutionDag solution(data, eval, max_nodes);
   const node::NodeP root = solution.get_root();
   EXPECT_EQ(BoardValue::UNKNOWN, solution.get_value(root));
 }
@@ -825,11 +832,9 @@ TEST(SolutionDagTest, GetValueDraw) {
   BoardData<3, 2> data;
   State state(data);
   using namespace node;
-  // 0 3 6
-  // 1 4 7
-  // 2 5 8
   NodeIndex max_nodes = 10_nind;
-  SolutionDag solution(data, max_nodes);
+  PositionEvaluator<3, 2> eval;
+  SolutionDag solution(data, eval, max_nodes);
   auto variation = solution.get_variation(bag<Position>{
      1_pos, 4_pos, 0_pos, 2_pos, 6_pos, 3_pos, 5_pos, 8_pos});
   EXPECT_EQ(0u, solution.children_size(variation));
