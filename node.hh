@@ -125,7 +125,7 @@ class SolutionDag {
     nodes.push_back(DagNode{initial, NodeP{nullptr}, children_size, Turn::X});
   }
 
-  DagNode& get_node(const NodeP node) {    
+  DagNode& get_node(const NodeP node) {
     return *node;
   }
 
