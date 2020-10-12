@@ -142,17 +142,21 @@ class SolutionDag {
     auto [positions, reason] = pos_eval.get_positions(state, child_turn);
     nodes.push_back(DagNode{state, child.parent, static_cast<ChildIndex>(positions.size()), child_turn});
     childp = NodeP{&*nodes.rbegin()};
+    get_node(childp).value = get_default_value(reason, child_turn);
+    return childp;
+  }
+
+  BoardValue get_default_value(PositionReason reason, Turn turn) const {
     switch (reason) {
       case PositionReason::DRAW:
-        get_node(childp).value = BoardValue::DRAW;
-        break;
+        return BoardValue::DRAW;
+
       case PositionReason::CHAINING:
-        get_node(childp).value = child_turn == Turn::X ? BoardValue::X_WIN : BoardValue::O_WIN;
-        break;
+        return turn == Turn::X ? BoardValue::X_WIN : BoardValue::O_WIN;
+
       default:
-        break;
+        return BoardValue::UNKNOWN;
     }
-    return childp;
   }
 
   NodeP get_root() {
