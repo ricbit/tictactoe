@@ -107,12 +107,13 @@ class PositionEvaluator {
   }
 
   optional<Position> has_forcing_move(const State<N, D>& state, Turn turn) const {
-    auto c = ForcingMove<N ,D>(state);
+    auto c = ForcingMove<N, D>(state);
     auto available = state.get_open_positions(to_mark(turn));
     auto pos = c.check(to_mark(turn), available);
     return pos.first;
   }
 };
+
 
 template<int N, int D>
 class SolutionDag {
@@ -150,10 +151,8 @@ class SolutionDag {
     switch (reason) {
       case PositionReason::DRAW:
         return BoardValue::DRAW;
-
       case PositionReason::CHAINING:
         return turn == Turn::X ? BoardValue::X_WIN : BoardValue::O_WIN;
-
       default:
         return BoardValue::UNKNOWN;
     }
@@ -242,6 +241,34 @@ class SolutionDag {
       depth++;
     }
     return depth;
+  }
+};
+
+template<int N, int D>
+class MiniMax {
+ public:
+  MiniMax(SolutionDag<N, D>& solution) : solution(solution) {
+  }
+
+  //entra turn, node parent, [children]
+  optional<BoardValue> update_parent_value(NodeP parent, Turn parent_turn, bag<NodeP> children) {
+    auto valid_children = filter_unknowns(children);
+    if (parent_turn == Turn::X) {
+    } else {
+    }
+    return {};
+  }
+ private:
+  SolutionDag<N, D>& solution;
+
+  bag<NodeP> filter_unknowns(const bag<NodeP>& children) const {
+    bag<NodeP> filtered;
+    for (const auto& child : children) {
+      if (solution.get_value(child) != BoardValue::UNKNOWN) {
+        filtered.push_back(child);
+      }
+    }
+    return filtered;
   }
 };
 

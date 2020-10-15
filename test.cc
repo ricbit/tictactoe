@@ -841,5 +841,33 @@ TEST(SolutionDagTest, GetValueDraw) {
   EXPECT_EQ(BoardValue::DRAW, solution.get_value(variation));
 }
 
+template<int N, int D>
+vector<node::DagNode> build_dagnode(const State<N, D>& state, vector<BoardValue>& values) {
+  using namespace node;
+  vector<DagNode> result;
+  for (const auto& value : values) {
+    auto& dagnode = result.emplace_back(state, node::NodeP(nullptr), 0_cind, Turn::X);
+    dagnode.value = value;
+  }
+  return result;
+}
+
+TEST(NewMiniMaxTest, UpdateParentValue) {
+  BoardData<3, 2> data;
+  State state(data);
+  using namespace node;
+  NodeIndex max_nodes = 10_nind;
+  PositionEvaluator<3, 2> eval;
+  SolutionDag solution(data, eval, max_nodes);
+  vector<BoardValue> values{BoardValue::UNKNOWN, BoardValue::X_WIN, BoardValue::UNKNOWN};
+  auto dagnodes = build_dagnode(state, values);
+  node::MiniMax minimax(solution);
+  auto value = minimax.update_parent_value(node::NodeP{&dagnodes[0]}, Turn::X,
+      {node::NodeP{&dagnodes[1]}, node::NodeP{&dagnodes[2]}});
+  EXPECT_TRUE(value.has_value());
+  EXPECT_EQ(BoardValue::X_WIN, *minimax.update_parent_value(node::NodeP{&dagnodes[0]}, Turn::X,
+      {node::NodeP{&dagnodes[1]}, node::NodeP{&dagnodes[2]}}));
+}
+
 
 }
