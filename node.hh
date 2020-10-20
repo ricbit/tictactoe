@@ -188,6 +188,10 @@ class SolutionDag {
     return get_node(node).value;
   }
 
+  void set_value(const NodeP node, BoardValue value) {
+    get_node(node).value = value;
+  }
+
   State<N, D> get_state(const NodeP node) {
     return get_state(node, get_turn(node));
   }
@@ -252,8 +256,25 @@ class MiniMax {
   //entra turn, node parent, [children]
   optional<BoardValue> update_parent_value(NodeP parent, Turn parent_turn, bag<NodeP> children) {
     auto valid_children = filter_unknowns(children);
+    if (valid_children.empty()) {
+      return {};
+    }
+    auto min_child = [&](const auto& a, const auto& b) {
+      return solution.get_value(a) < solution.get_value(b);
+    };
+    auto max_child = [&](const auto& a, const auto& b) {
+      return solution.get_value(a) > solution.get_value(b);
+    };
+    BoardValue new_value;
     if (parent_turn == Turn::X) {
+      new_value = solution.get_value(*min_element(begin(valid_children), end(valid_children), min_child));
     } else {
+      new_value = solution.get_value(*min_element(begin(valid_children), end(valid_children), max_child));
+    }
+
+    if (solution.get_value(parent) != new_value) {
+      solution.set_value(parent, new_value);
+      return {new_value};
     }
     return {};
   }
