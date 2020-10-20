@@ -83,10 +83,9 @@ enum class PositionReason {
   MULTIPLE
 };
 
-template<int N, int D>
 class PositionEvaluator {
  public:
-  pair<bag<Position>, PositionReason> get_positions(const State<N, D>& state, const Turn turn) const {
+  pair<bag<Position>, PositionReason> get_positions(const auto& state, const Turn turn) const {
     if (has_chaining(state, turn)) {
       return {{}, PositionReason::CHAINING};
     }
@@ -100,14 +99,14 @@ class PositionEvaluator {
   }
 
  private:
-  bool has_chaining(const State<N, D>& state, Turn turn) const {
+  bool has_chaining(const auto& state, Turn turn) const {
     auto c = ChainingStrategy(state);
     auto pos = c.search(to_mark(turn));
     return pos.has_value();
   }
 
-  optional<Position> has_forcing_move(const State<N, D>& state, Turn turn) const {
-    auto c = ForcingMove<N, D>(state);
+  optional<Position> has_forcing_move(const auto& state, Turn turn) const {
+    auto c = ForcingMove(state);
     auto available = state.get_open_positions(to_mark(turn));
     auto pos = c.check(to_mark(turn), available);
     return pos.first;
@@ -118,7 +117,7 @@ class PositionEvaluator {
 template<int N, int D>
 class SolutionDag {
  public:
-  SolutionDag(const BoardData<N, D>& data, const PositionEvaluator<N, D>& pos_eval, NodeIndex max_nodes)
+  SolutionDag(const BoardData<N, D>& data, const PositionEvaluator& pos_eval, NodeIndex max_nodes)
       : data(data), pos_eval(pos_eval) {
     nodes.reserve(max_nodes);
     State<N, D> initial{data};
@@ -226,7 +225,7 @@ class SolutionDag {
 
  private:
   const BoardData<N, D>& data;
-  const PositionEvaluator<N, D>& pos_eval;
+  const PositionEvaluator& pos_eval;
   svector<NodeIndex, DagNode> nodes;
   unordered_map<Zobrist, NodeP> zobrist_map;
 
