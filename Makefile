@@ -4,20 +4,21 @@ HEADERS = boarddata.hh semantic.hh strategies.hh minimax.hh state.hh elevator.hh
           solutiontree.hh boardnode.hh traversal.hh node.hh
 OPT = -O3
 OPTTEST = -O0
+GCC = g++
 
 all : tictactoe heatmap test minimax
 
 tictactoe : tictactoe.cc ${HEADERS}
-	g++-10 -std=c++2a tictactoe.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
+	g++ -std=c++2a tictactoe.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 minimax : minimax.cc ${HEADERS}
-	g++-10 -std=c++2a minimax.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
+	g++ -std=c++2a minimax.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 minimaxc : minimax.cc ${HEADERS}
-	clang++-10 -std=c++2a minimax.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
+	clang++ -std=c++2a minimax.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 phasediag : phasediag.cc ${HEADERS}
-	g++-10 -std=c++2a phasediag.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
+	g++ -std=c++2a phasediag.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 draw : phasediag
 	./phasediag > phasediag.txt
@@ -25,27 +26,27 @@ draw : phasediag
 	| gnuplot -persist
 
 heatmap : heatmap.cc ${HEADERS}
-	g++-10 -std=c++2a heatmap.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
+	g++ -std=c++2a heatmap.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 heatmapc : heatmap.cc ${HEADERS}
-	clang++-10 -std=c++2a heatmap.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
+	clang++ -std=c++2a heatmap.cc -o $@ ${OPT} -Wall -g -march=native -ltbb -lpthread
 
 clang : tictactoe.cc ${HEADERS}
-	clang++-10 -std=c++2a tictactoe.cc -o $@ ${OPT} -Wall -g -march=native -ltbb
+	clang++ -std=c++2a tictactoe.cc -o $@ ${OPT} -Wall -g -march=native -ltbb
 
 test : test.cc ${HEADERS}
-	g++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPTTEST} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
+	g++ -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPTTEST} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
 	./test
 
 testcompile : test.cc ${HEADERS}
-	g++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPTTEST} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
+	g++ -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPTTEST} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
 
 singletest : test.cc ${HEADERS}
-	g++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPTTEST} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
+	g++ -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPTTEST} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
 	./singletest --gtest_filter=MiniMaxTest.Check32PNS* > sym.txt
 
 testc : test.cc ${HEADERS}
-	clang++-10 -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPTTEST} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
+	clang++ -std=c++2a -I${TEST_BASE}/include/ -L${TEST_BASE}/build/lib test.cc -o $@ ${OPTTEST} -Wall -g -march=native -ltbb -lgtest -lgtest_main -lpthread
 	./testc
 
 asm :
