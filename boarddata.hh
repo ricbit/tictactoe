@@ -519,10 +519,10 @@ class Bitfield {
   bool operator==(const Bitfield<N, D>& that) const {
     return bitfield == that.bitfield;
   }
-  Bitfield<N, D> operator&(const Bitfield<N, D>& that) const {
+  Bitfield operator&(const Bitfield<N, D>& that) const {
     return Bitfield<N, D>{bitfield & that.bitfield};
   }
-  Bitfield<N, D>() {
+  Bitfield() {
   }
 
  private:
@@ -535,7 +535,7 @@ class Bitfield {
     return pos;
   }
   constexpr static Position board_size = Geometry<N, D>::board_size;
-  Bitfield<N, D>(const bitset<board_size>& bits) : bitfield(bits) {
+  Bitfield(const bitset<board_size>& bits) : bitfield(bits) {
   }
   bitset<board_size> bitfield;
 };
